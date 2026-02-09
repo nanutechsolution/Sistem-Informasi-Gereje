@@ -11,8 +11,21 @@ class AuctionEvent extends Model
     use HasUuids, SoftDeletes;
     protected $guarded = [];
 
-    public function uniqueIds() { return ['uuid']; }
+    protected $casts = [
+        'tanggal_event' => 'date',
+    ];
 
-    public function fiscalYear() { return $this->belongsTo(FiscalYear::class); }
-    public function auctions() { return $this->hasMany(Auction::class); }
+    public function uniqueIds()
+    {
+        return ['uuid'];
+    }
+
+    public function fiscalYear()
+    {
+        return $this->belongsTo(FiscalYear::class);
+    }
+    public function auctions()
+    {
+        return $this->hasMany(Auction::class);
+    }
 }

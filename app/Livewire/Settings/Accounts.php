@@ -1,37 +1,59 @@
 <?php
 
-
 namespace App\Livewire\Settings;
 
 use App\Models\RefAccount;
 use Livewire\Component;
+use Livewire\WithPagination;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class Accounts extends Component
 {
+    use WithPagination;
+
+    // State UI
     public $search = '';
     public $isOpen = false;
-    public $accountId, $nama, $nomor_rekening, $jenis = 'kas_tunai';
+    public $accountId = null;
 
-    protected $rules = [
-        'nama' => 'required|min:3',
-        'jenis' => 'required|in:kas_tunai,bank',
-        'nomor_rekening' => 'nullable',
-    ];
+    // Properti Form
+    public $nama, $jenis = 'kas_tunai', $nomor_rekening, $is_active = true;
+
+    protected function rules()
+    {
+        return [
+            'nama' => [
+                'required', 
+                'min:3', 
+                'max:50',
+                Rule::unique('ref_accounts', 'nama')->ignore($this->accountId)
+            ],
+            'jenis' => 'required|in:kas_tunai,bank',
+            'nomor_rekening' => 'nullable|max:30',
+            'is_active' => 'boolean',
+        ];
+    }
+
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
 
     public function create()
     {
-        $this->resetInput();
+        $this->resetInputFields();
         $this->isOpen = true;
     }
 
     public function edit($id)
     {
-        $acc = RefAccount::findOrFail($id);
-        $this->accountId = $acc->id;
-        $this->nama = $acc->nama;
-        $this->nomor_rekening = $acc->nomor_rekening;
-        $this->jenis = $acc->jenis;
+        $account = RefAccount::findOrFail($id);
+        $this->accountId = $id;
+        $this->nama = $account->nama;
+        $this->jenis = $account->jenis;
+        $this->nomor_rekening = $account->nomor_rekening;
+        $this->is_active = $account->is_active;
         $this->isOpen = true;
     }
 
@@ -40,37 +62,51 @@ class Accounts extends Component
         $this->validate();
 
         RefAccount::updateOrCreate(['id' => $this->accountId], [
-            'uuid' => (string) Str::uuid(),
+            'uuid' => $this->accountId ? RefAccount::find($this->accountId)->uuid : (string) Str::uuid(),
             'nama' => $this->nama,
-            'nomor_rekening' => $this->nomor_rekening,
             'jenis' => $this->jenis,
-            'is_active' => true,
+            'nomor_rekening' => $this->jenis === 'bank' ? $this->nomor_rekening : null,
+            'is_active' => $this->is_active,
         ]);
 
-        $this->dispatch('notify', message: 'Dompet berhasil disimpan!', type: 'success');
-        $this->isOpen = false;
-        $this->resetInput();
+        $this->dispatch('notify', 
+            message: $this->accountId ? 'Akun berhasil diperbarui.' : 'Akun baru berhasil ditambahkan.', 
+            type: 'success'
+        );
+
+        $this->closeModal();
     }
 
     public function toggleStatus($id)
     {
-        $acc = RefAccount::findOrFail($id);
-        $acc->update(['is_active' => !$acc->is_active]);
-        $this->dispatch('notify', message: 'Status akun diperbarui', type: 'success');
+        $account = RefAccount::findOrFail($id);
+        $account->update(['is_active' => !$account->is_active]);
+        
+        $this->dispatch('notify', message: 'Status akun berhasil diubah.', type: 'success');
     }
 
-    private function resetInput()
+    public function closeModal()
+    {
+        $this->isOpen = false;
+        $this->resetInputFields();
+    }
+
+    private function resetInputFields()
     {
         $this->accountId = null;
         $this->nama = '';
-        $this->nomor_rekening = '';
         $this->jenis = 'kas_tunai';
+        $this->nomor_rekening = '';
+        $this->is_active = true;
     }
 
     public function render()
     {
         return view('livewire.settings.accounts', [
-            'accounts' => RefAccount::where('nama', 'like', '%' . $this->search . '%')->get()
+            'accounts' => RefAccount::where('nama', 'like', '%' . $this->search . '%')
+                ->orderBy('is_active', 'desc')
+                ->orderBy('nama', 'asc')
+                ->paginate(10)
         ]);
     }
 }
