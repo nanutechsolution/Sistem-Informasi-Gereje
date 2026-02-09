@@ -3,7 +3,6 @@
 namespace App\Livewire\Officers;
 
 use App\Models\ChurchOfficer;
-use App\Models\OfficerHistory;
 use Livewire\Component;
 
 class Show extends Component
@@ -12,8 +11,13 @@ class Show extends Component
 
     public function mount(ChurchOfficer $officer)
     {
-        // Load relasi agar performa cepat
-        $this->officer = $officer->load(['member', 'position', 'histories.user']);
+        // Eager load data dinamis
+        $this->officer = $officer->load([
+            'member', 
+            'position', 
+            'salaryComponents.budgetPost', // Load pos anggaran per komponen
+            'histories.user'
+        ]);
     }
 
     public function toggleStatus()

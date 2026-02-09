@@ -12,7 +12,7 @@ class Index extends Component
     use WithPagination;
 
     public $search = '';
-    public $filterStatus = 'aktif'; // Default tampilkan yang aktif
+    public $filterStatus = 'aktif';
     public $filterPosition = '';
 
     public function delete($id)
@@ -28,14 +28,14 @@ class Index extends Component
 
     public function render()
     {
-        $query = ChurchOfficer::with(['member', 'position'])
-            ->when($this->search, function($q) {
-                $q->whereHas('member', fn($mq) => $mq->where('nama', 'like', '%'.$this->search.'%'))
-                  ->orWhere('nip_gereja', 'like', '%'.$this->search.'%');
+        $query = ChurchOfficer::with(['member', 'position', 'salaryComponents']) // Load komponen gaji
+            ->when($this->search, function ($q) {
+                $q->whereHas('member', fn($mq) => $mq->where('nama', 'like', '%' . $this->search . '%'))
+                    ->orWhere('nip_gereja', 'like', '%' . $this->search . '%');
             })
             ->when($this->filterPosition, fn($q) => $q->where('ref_position_id', $this->filterPosition));
 
-        // Logic filter status aktif/non-aktif
+        // Logic filter status
         if ($this->filterStatus === 'aktif') {
             $query->active();
         } elseif ($this->filterStatus === 'non-aktif') {

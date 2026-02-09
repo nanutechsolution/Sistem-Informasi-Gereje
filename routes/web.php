@@ -21,12 +21,16 @@ use App\Livewire\Members\Show;
 use App\Livewire\Officers\Create as OfficersCreate;
 use App\Livewire\Officers\Edit as OfficersEdit;
 use App\Livewire\Officers\Index as OfficersIndex;
+use App\Livewire\Officers\Show as OfficersShow;
 use App\Livewire\Reports\BudgetRealization;
 use App\Livewire\Reports\GeneralLedger;
 use App\Livewire\Reports\Weekly;
+use App\Livewire\Schedules\GroupManager;
 use App\Livewire\Schedules\MySchedules;
+use App\Livewire\Schedules\PksScheduler;
 use App\Livewire\Schedules\ScheduleManager;
 use App\Livewire\Settings\Accounts as AccountsGereja;
+use App\Livewire\Settings\ActivityTypes;
 use App\Livewire\Settings\BudgetPosts;
 use App\Livewire\Settings\MasterData;
 use App\Livewire\Transactions\Create as TransactionsCreate;
@@ -56,6 +60,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/members/{member}/edit', MembersEdit::class)->name('members.edit');
     Route::get('/members', MembersIndex::class)->name('members.index');
     Route::get('/members/{member}', Show::class)->name('members.show');
+    Route::get('/settings/positions', \App\Livewire\Settings\Positions::class)->name('settings.positions');
+    Route::get('/settings/activity-types', App\Livewire\Settings\ActivityTypes::class)->name('settings.activity-types');
     Route::get('/settings/{type}', MasterData::class)->name('settings.master');
 
     // keuangan
@@ -78,12 +84,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/officers', OfficersIndex::class)->name('officers.index');
     Route::get('/officers/create', OfficersCreate::class)->name('officers.create');
     Route::get('/officers/{officer}/edit', OfficersEdit::class)->name('officers.edit');
+    Route::get('/officers/{officer}/show', OfficersShow::class)->name('officers.show');
     Route::get('/finance/payroll', PayrollManager::class)->name('finance.payroll');
     Route::get('/finance/payroll/slip/{uuid}', App\Livewire\Finance\PayrollSlip::class)->name('payroll.slip');
     Route::get('/schedules', ScheduleManager::class)->name('schedules.index');
+    Route::get('/schedules/pks', PksScheduler::class)->name('schedules.pks');
     Route::get('/schedules/{schedule}/servants', App\Livewire\Schedules\ServantManager::class)->name('schedules.servants');
     Route::get('/schedules/pks/verify', \App\Livewire\Schedules\PksVerification::class)->name('schedules.pks.verify');
     Route::get('/my-schedules', MySchedules::class)->name('schedules.my');
+    Route::get('/schedules/groups', GroupManager::class)->name('schedules.groups');
 });
 
 

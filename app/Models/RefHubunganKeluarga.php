@@ -10,4 +10,9 @@ class RefHubunganKeluarga extends Model
 {
     use HasUuids, SoftDeletes;
     protected $guarded = [];
+
+    public function uniqueIds()
+    {
+        return ['uuid'];
+    }
 }

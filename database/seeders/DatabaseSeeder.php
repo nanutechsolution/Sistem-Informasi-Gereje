@@ -16,8 +16,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
         // 1. Buat Akun Super Admin
         User::create([
             'name' => 'Administrator GKS',
@@ -25,23 +23,6 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
             'password' => Hash::make('password'), // Password default: password
         ]);
-
-        // 2. Buat Akun Pendeta
-        User::create([
-            'name' => 'Pendeta Jemaat',
-            'email' => 'pendeta@gks.id',
-            'role' => 'pendeta',
-            'password' => Hash::make('password'),
-        ]);
-
-        // 3. Buat Akun Majelis (Contoh)
-        User::create([
-            'name' => 'Majelis Jemaat',
-            'email' => 'majelis@gks.id',
-            'role' => 'majelis',
-            'password' => Hash::make('password'),
-        ]);
-
         // 4. Buat Akun Operator (Untuk input data harian)
         User::create([
             'name' => 'Operator Multimedia',
@@ -56,9 +37,11 @@ class DatabaseSeeder extends Seeder
             RefPekerjaanSeeder::class,
             RefHubunganKeluargaSeeder::class,
             FinanceSeeder::class,
-            // AuctionSeeder::class,
             PositionSeeder::class,
-            FamilySeeder::class,
+            ActivityTypeSeeder::class,
+            ConstructionSeeder::class,
+            FullDeploymentSeeder::class,
+            ServiceGroupSeeder::class,
         ]);
     }
 }

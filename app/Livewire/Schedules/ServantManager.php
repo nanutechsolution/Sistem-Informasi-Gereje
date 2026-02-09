@@ -21,49 +21,23 @@ class ServantManager extends Component
     // Search Helper
     public $searchMember = '', $foundMembers = [], $selectedMemberName = '';
 
-    /**
-     * Pesan Error Bahasa Indonesia (UX Production)
-     */
     protected $messages = [
-        'member_id.required' => 'Pilih jemaat yang bertugas.',
-        'peran.required' => 'Isi peran pelayanan (contoh: Liturgos).',
-        'nominal_persembahan.numeric' => 'Nominal harus berupa angka.',
+        'member_id.required' => 'Silakan cari dan pilih jemaat terlebih dahulu.',
+        'peran.required' => 'Peran pelayanan wajib diisi (misal: Liturgos).',
     ];
 
     public function mount(ActivitySchedule $schedule)
     {
         $this->schedule = $schedule->load(['servants.member', 'type', 'wilayah', 'family']);
-        // Load data kolekte jika sudah ada
-        $this->nominal_persembahan = number_format($schedule->nominal_persembahan, 0, ',', '.');
+        // Format nominal saat load agar ada pemisah ribuan
+        $this->nominal_persembahan = number_format($this->schedule->nominal_persembahan, 0, ',', '.');
     }
 
-    /**
-     * Menyimpan data persembahan (Audit Ready)
-     */
-    public function saveCollection()
-    {
-        // Bersihkan format titik ribuan
-        $cleanNominal = (float) str_replace(['.', ','], '', $this->nominal_persembahan);
-        
-        $this->schedule->update([
-            'nominal_persembahan' => $cleanNominal,
-            'status_setoran' => 'pending' // Default ke pending untuk verifikasi Bendahara di hari Minggu
-        ]);
-
-        $this->dispatch('notify', message: 'Kolekte berhasil diperbarui.', type: 'success');
-        $this->schedule->refresh();
-    }
-
-    /**
-     * Pencarian Jemaat Real-time
-     */
+    // --- LOGIKA PENCARIAN JEMAAT ---
     public function updatedSearchMember($value)
     {
         $this->foundMembers = strlen($value) > 2 
-            ? Member::where('nama', 'like', "%{$value}%")
-                ->limit(5)
-                ->get()
-                ->toArray() 
+            ? Member::where('nama', 'like', "%{$value}%")->limit(5)->get()->toArray() 
             : [];
     }
 
@@ -71,24 +45,23 @@ class ServantManager extends Component
     {
         $this->member_id = $id;
         $this->selectedMemberName = $name;
-        $this->reset(['searchMember', 'foundMembers']);
+        $this->searchMember = '';
+        $this->foundMembers = [];
     }
 
-    /**
-     * Tambah Anggota Tim Pelayan
-     */
+    // --- MANAJEMEN PELAYAN ---
     public function addServant()
     {
         $this->validate(['member_id' => 'required', 'peran' => 'required']);
 
-        // Cek duplikasi peran pada jadwal yang sama
+        // Cek duplikasi: Orang yang sama dengan peran yang sama di jadwal yang sama
         $exists = ActivityServant::where('activity_schedule_id', $this->schedule->id)
             ->where('member_id', $this->member_id)
             ->where('peran', $this->peran)
             ->exists();
 
         if ($exists) {
-            $this->dispatch('notify', message: 'Jemaat sudah terdaftar dengan peran tersebut.', type: 'warning');
+            $this->dispatch('notify', message: 'Jemaat ini sudah terdaftar dengan peran tersebut.', type: 'error');
             return;
         }
 
@@ -100,22 +73,32 @@ class ServantManager extends Component
 
         $this->reset(['member_id', 'peran', 'selectedMemberName']);
         $this->schedule->refresh();
-        $this->dispatch('notify', message: 'Tim pelayan diperbarui.', type: 'success');
+        $this->dispatch('notify', message: 'Pelayan berhasil ditambahkan.', type: 'success');
     }
 
-    /**
-     * Hapus Anggota Tim (Hanya Admin/Pendeta/Sekretaris)
-     */
     public function removeServant($id)
     {
         if (!in_array(Auth::user()->role, ['admin', 'pendeta', 'sekretaris'])) {
-            $this->dispatch('notify', message: 'Anda tidak memiliki izin menghapus penugasan.', type: 'error');
+            $this->dispatch('notify', message: 'Anda tidak memiliki izin menghapus.', type: 'error');
             return;
         }
 
         ActivityServant::findOrFail($id)->delete();
         $this->schedule->refresh();
-        $this->dispatch('notify', message: 'Pelayan dihapus.', type: 'warning');
+        $this->dispatch('notify', message: 'Pelayan dihapus dari jadwal.', type: 'warning');
+    }
+
+    // --- MANAJEMEN KOLEKTE (PKS) ---
+    public function saveCollection()
+    {
+        $cleanNominal = (float) str_replace(['.', ','], '', $this->nominal_persembahan);
+        
+        $this->schedule->update([
+            'nominal_persembahan' => $cleanNominal,
+            'status_setoran' => 'pending' // Reset ke pending agar diverifikasi ulang oleh Bendahara
+        ]);
+
+        $this->dispatch('notify', message: 'Data persembahan berhasil dicatat.', type: 'success');
     }
 
     public function render()

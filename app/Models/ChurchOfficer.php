@@ -13,77 +13,90 @@ class ChurchOfficer extends Model
 
     protected $guarded = [];
 
-    // Konfigurasi UUID
     public function uniqueIds(): array
     {
         return ['uuid'];
     }
-
     public function getRouteKeyName(): string
     {
         return 'uuid';
     }
 
-    // Cast data agar otomatis menjadi objek Carbon
     protected $casts = [
         'tanggal_mulai' => 'date',
         'tanggal_selesai' => 'date',
         'is_active' => 'boolean',
+        'gaji_pokok' => 'float',
+        'tunjangan_perumahan' => 'float',
+        'tunjangan_lain' => 'float',
+        'iuran_pensiun' => 'float',
     ];
 
     /**
      * RELASI
      */
-
-    // Terhubung ke data jemaat
     public function member()
     {
         return $this->belongsTo(Member::class);
     }
-
-    // Terhubung ke jabatan
     public function position()
     {
         return $this->belongsTo(RefPosition::class, 'ref_position_id');
     }
-
-    // Terhubung ke wilayah tugas
-    public function wilayah()
-    {
-        return $this->belongsTo(RefWilayah::class, 'ref_wilayah_id');
-    }
-
-    // Riwayat kenaikan gaji/jabatan
     public function histories()
     {
         return $this->hasMany(OfficerHistory::class);
     }
-
+    public function serviceGroups()
+    {
+        return $this->belongsToMany(ServiceGroup::class, 'service_group_members')->withPivot('peran_default')->withTimestamps();
+    }
+    // RELASI BARU: Komponen Gaji Fleksibel
+    public function salaryComponents()
+    {
+        return $this->hasMany(OfficerSalaryComponent::class);
+    }
+    // Legacy Relations (Untuk data lama sebelum migrasi penuh)
+    public function budgetPost()
+    {
+        return $this->belongsTo(RefBudgetPost::class, 'ref_budget_post_id');
+    }
+    public function budgetPostPerumahan()
+    {
+        return $this->belongsTo(RefBudgetPost::class, 'ref_perumahan_post_id');
+    }
+    public function budgetPostPensiun()
+    {
+        return $this->belongsTo(RefBudgetPost::class, 'ref_pensiun_post_id');
+    }
     /**
-     * ACCESSOR & LOGIC
+     * LOGIKA GAJI DINAMIS (HYBRID)
+     * Jika ada data di tabel komponen, pakai itu. Jika tidak, pakai kolom lama.
      */
+    public function getTotalEarningsAttribute(): float
+    {
+        if ($this->salaryComponents()->exists()) {
+            return $this->salaryComponents()->active()->where('jenis', 'penerimaan')->sum('nominal');
+        }
+        return $this->gaji_pokok + $this->tunjangan_perumahan + $this->tunjangan_lain;
+    }
 
-    // Hitung Gaji Bersih (Netto)
+    public function getTotalDeductionsAttribute(): float
+    {
+        if ($this->salaryComponents()->exists()) {
+            return $this->salaryComponents()->active()->where('jenis', 'potongan')->sum('nominal');
+        }
+        // Sesuai putusan sebelumnya: Pensiun bukan potongan gaji, jadi deduction default 0
+        // Kecuali ada kebijakan baru nanti
+        return 0;
+    }
+
+    // THP = Total Penerimaan - Total Potongan
     public function getNetSalaryAttribute(): float
     {
-        $pendapatan = $this->gaji_pokok + $this->tunjangan_perumahan + $this->tunjangan_lain;
-        return $pendapatan - $this->iuran_pensiun;
+        return $this->total_earnings - $this->total_deductions;
     }
 
-    // Cek apakah masa tugas (Vicaris/Kontrak) sudah berakhir
-    public function getIsExpiredAttribute(): bool
-    {
-        if ($this->tanggal_selesai && Carbon::now()->gt($this->tanggal_selesai)) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * SCOPES
-     */
-
-    // Ambil yang benar-benar aktif (Status Aktif & Belum Expired)
     public function scopeActive($query)
     {
         return $query->where('is_active', true)

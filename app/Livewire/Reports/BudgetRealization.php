@@ -14,70 +14,82 @@ class BudgetRealization extends Component
 
     public function mount()
     {
-        // Default ke tahun anggaran aktif
         $active = FiscalYear::where('is_active', true)->first();
-        $this->fiscalYearId = $active ? $active->id : null;
+        $this->fiscalYearId = $active ? $active->id : FiscalYear::latest('tahun')->first()?->id;
     }
 
     public function render()
     {
         $fiscalYear = FiscalYear::find($this->fiscalYearId);
-        
-        // Ambil struktur budget mulai dari Root (Level 1)
-        $budgetPosts = RefBudgetPost::with(['children'])
-            ->whereNull('parent_id')
-            ->when($this->search, function($q) {
-                $q->where('nama', 'like', '%'.$this->search.'%')
-                  ->orWhere('kode', 'like', '%'.$this->search.'%');
-            })
-            ->orderBy('kode')
-            ->get();
 
-        // Transformasi data secara rekursif agar detail sub-pos terbawa
-        $reportData = $budgetPosts->map(function($post) use ($fiscalYear) {
-            return $this->formatPostData($post, $fiscalYear);
-        });
+        if (!$fiscalYear) {
+            return view('livewire.reports.budget-realization', [
+                'reportData' => collect(),
+                'fiscalYears' => FiscalYear::orderBy('tahun', 'desc')->get(),
+                'selectedYear' => null
+            ]);
+        }
+
+        // Eager Load data hingga 3 level kedalaman untuk efisiensi
+        $posts = RefBudgetPost::with([
+            'children.children',
+            // Load Relasi Budget (Target)
+            'budgets' => fn($q) => $q->where('fiscal_year_id', $this->fiscalYearId),
+            'children.budgets' => fn($q) => $q->where('fiscal_year_id', $this->fiscalYearId),
+            'children.children.budgets' => fn($q) => $q->where('fiscal_year_id', $this->fiscalYearId),
+            // Load Relasi Transaction (Realisasi)
+            'transactions' => fn($q) => $q->where('fiscal_year_id', $this->fiscalYearId),
+            'children.transactions' => fn($q) => $q->where('fiscal_year_id', $this->fiscalYearId),
+            'children.children.transactions' => fn($q) => $q->where('fiscal_year_id', $this->fiscalYearId),
+        ])
+        ->whereNull('parent_id')
+        ->when($this->search, fn($q) => $q->where('nama', 'like', '%'.$this->search.'%'))
+        ->orderBy('kode')
+        ->get();
+
+        // Proses kalkulasi hierarki
+        $reportData = $posts->map(fn($post) => $this->calculateNode($post));
 
         return view('livewire.reports.budget-realization', [
             'reportData' => $reportData,
             'fiscalYears' => FiscalYear::orderBy('tahun', 'desc')->get(),
-            'activeYear' => $fiscalYear
+            'selectedYear' => $fiscalYear
         ]);
     }
 
-    /**
-     * Fungsi Rekursif: Menghitung Realisasi & Target termasuk semua anak-cucunya
-     */
-    private function formatPostData($post, $fiscalYear)
+    private function calculateNode($post)
     {
-        // 1. Ambil Target Langsung di Pos ini
-        $target = $post->budgets()->where('fiscal_year_id', $this->fiscalYearId)->first()?->nominal_target ?? 0;
+        // 1. Nilai Diri Sendiri
+        $selfTarget = $post->budgets->first()?->nominal_target ?? 0;
+        $selfRealization = $post->transactions->sum('nominal');
 
-        // 2. Ambil Realisasi Langsung dari Transaksi di Pos ini
-        $realization = Transaction::where('ref_budget_post_id', $post->id)
-            ->where('fiscal_year_id', $this->fiscalYearId)
-            ->sum('nominal');
+        // 2. Proses Anak-anak (Rekursif)
+        $children = $post->children->map(fn($child) => $this->calculateNode($child));
 
-        // 3. Proses Anak-anak secara rekursif
-        $children = $post->children->map(function($child) use ($fiscalYear) {
-            return $this->formatPostData($child, $fiscalYear);
-        });
+        // 3. Akumulasi Total (Self + Children)
+        // FIX: Menggunakan key 'totalTarget' dari hasil rekursif anak
+        $totalTarget = $selfTarget + $children->sum('totalTarget');
+        $totalRealization = $selfRealization + $children->sum('totalRealization');
 
-        // 4. Akumulasi Total (Diri Sendiri + Semua Keturunan)
-        // Penting: Induk (2.1) akan otomatis menjumlahkan semua sub-pos (2.1.1, 2.1.2, dst)
-        $totalTarget = $target + $children->sum('totalTarget');
-        $totalRealization = $realization + $children->sum('totalRealization');
+        $percentage = $totalTarget > 0 ? ($totalRealization / $totalTarget) * 100 : 0;
+        $diff = $totalTarget - $totalRealization;
 
         return [
             'id' => $post->id,
             'kode' => $post->kode,
             'nama' => $post->nama,
             'jenis' => $post->jenis,
-            'target' => $target,
-            'realization' => $realization,
+            
+            // Nilai Murni Pos Ini
+            'selfTarget' => $selfTarget,
+            'selfRealization' => $selfRealization,
+            
+            // Nilai Akumulasi (Untuk Summary)
             'totalTarget' => $totalTarget,
             'totalRealization' => $totalRealization,
-            'percentage' => $totalTarget > 0 ? ($totalRealization / $totalTarget) * 100 : 0,
+            
+            'diff' => $diff,
+            'percentage' => $percentage,
             'children' => $children,
             'has_children' => $children->count() > 0
         ];

@@ -1,149 +1,237 @@
-<div class="py-6 sm:py-10 bg-slate-100 min-h-screen">
-    <div class="max-w-5xl mx-auto px-4">
+<div class="py-10 bg-gray-100 min-h-screen font-sans text-slate-900">
+    <div class="max-w-[210mm] mx-auto"> <!-- Ukuran A4 -->
         
-        <!-- Toolbar Kontrol -->
-        <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 mb-8 flex flex-wrap gap-4 items-end print:hidden">
+        <!-- CONTROL BAR (SCREEN ONLY) -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-8 flex flex-wrap gap-4 items-end print:hidden">
             <div class="flex-1">
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Periode Laporan Keuangan</label>
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Periode Laporan</label>
                 <div class="flex items-center gap-2 mt-1">
-                    <input wire:model.live="startDate" type="date" class="w-full border-slate-200 rounded-xl text-sm font-bold">
-                    <span class="text-slate-300 font-bold">s/d</span>
-                    <input wire:model.live="endDate" type="date" class="w-full border-slate-200 rounded-xl text-sm font-bold">
+                    <input wire:model.live="startDate" type="date" class="border-slate-200 rounded-lg text-sm font-semibold focus:ring-primary">
+                    <span class="text-slate-400 font-bold">-</span>
+                    <input wire:model.live="endDate" type="date" class="border-slate-200 rounded-lg text-sm font-semibold focus:ring-primary">
                 </div>
             </div>
-            <button onclick="window.print()" class="px-8 py-3 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:scale-105 transition-all">
-                Cetak Warta Utuh
+            <button onclick="window.print()" class="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition shadow-lg flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                Cetak Dokumen
             </button>
         </div>
 
-        <!-- HALAMAN KERTAS WARTA -->
-        <div class="bg-white p-10 sm:p-20 shadow-2xl min-h-[297mm] text-slate-900 border border-slate-200 print:shadow-none print:p-0">
+        <!-- DOKUMEN CETAK -->
+        <div class="bg-white p-12 shadow-2xl min-h-[297mm] print:shadow-none print:p-0">
             
-            <!-- Kop Warta -->
-            <div class="text-center border-b-4 border-double border-slate-900 pb-8 mb-12">
-                <h1 class="text-3xl font-black uppercase tracking-[0.2em] leading-tight">Gereja Kristen Sumba</h1>
-                <h2 class="text-xl font-bold text-slate-600 mt-1 uppercase italic">Jemaat Reda Pada</h2>
-                <div class="mt-6 inline-block border-2 border-slate-900 px-8 py-1.5 text-[12px] font-black tracking-[0.4em] uppercase">
+            <!-- KOP -->
+            <div class="text-center border-b-4 border-double border-slate-900 pb-6 mb-8">
+                <h1 class="text-2xl font-black uppercase tracking-widest leading-none">Gereja Kristen Sumba</h1>
+                <h2 class="text-xl font-bold text-slate-600 uppercase mt-1">Jemaat Reda Pada</h2>
+                <div class="mt-4 inline-block bg-slate-900 text-white px-8 py-1.5 text-xs font-black tracking-[0.3em] uppercase">
                     Warta Jemaat
                 </div>
-                <p class="text-xs font-bold mt-6 text-slate-400 italic">Edisi Minggu, {{ \Carbon\Carbon::parse($endDate)->isoFormat('D MMMM Y') }}</p>
+                <p class="text-xs font-semibold mt-3 text-slate-500 italic">
+                    Edisi: {{ \Carbon\Carbon::parse($startDate)->isoFormat('D MMMM') }} s/d {{ \Carbon\Carbon::parse($endDate)->isoFormat('D MMMM Y') }}
+                </p>
             </div>
 
-            <!-- BAGIAN I: AGENDA PELAYANAN PEKAN INI -->
-            <div class="mb-16">
-                <h3 class="text-xs font-black bg-slate-900 text-white px-5 py-2.5 rounded-lg inline-block uppercase tracking-[0.2em] mb-8 italic">I. Agenda & Jadwal Pelayanan</h3>
-                
-                <div class="space-y-10">
-                    @forelse($schedules as $sch)
-                    <div class="border-l-4 border-slate-200 pl-6 relative">
-                        <div class="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-white border-4 border-slate-900"></div>
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="text-sm font-black uppercase tracking-tight text-primary">{{ $sch->type->nama }} - {{ $sch->tema ?? 'Rutin' }}</h4>
-                            <span class="text-[10px] font-black text-slate-400 uppercase italic">{{ $sch->tanggal->isoFormat('dddd, D MMM Y') }} • {{ $sch->jam_mulai->format('H:i') }}</span>
-                        </div>
-                        <p class="text-xs font-bold text-slate-500 mb-4">Lokasi: {{ $sch->lokasi_display }}</p>
-                        
-                        <!-- List Pelayan -->
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                            @foreach($sch->servants as $servant)
-                            <div>
-                                <p class="text-[9px] font-black text-slate-300 uppercase tracking-tighter">{{ $servant->peran }}</p>
-                                <p class="text-[11px] font-bold text-slate-700 italic">{{ $servant->member->nama }}</p>
+            <div class="grid grid-cols-1 gap-10">
+
+                <!-- 1. AGENDA PELAYANAN -->
+                <section>
+                    <h3 class="text-sm font-black uppercase tracking-widest border-b-2 border-slate-200 pb-2 mb-4 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-slate-900 rounded-full"></span>
+                        Jadwal Pelayanan Sepekan
+                    </h3>
+                    @if($schedules->isNotEmpty())
+                        <div class="space-y-4">
+                            @foreach($schedules as $sch)
+                            <div class="flex items-start gap-4 p-3 border border-slate-100 rounded-xl bg-slate-50/50 print:border-none print:p-0 print:bg-transparent">
+                                <div class="w-20 pt-1 text-center border-r border-slate-200 pr-4 print:border-r print:border-slate-400">
+                                    <span class="block text-xs font-black uppercase">{{ $sch->tanggal->isoFormat('dddd') }}</span>
+                                    <span class="block text-lg font-black text-slate-700 leading-none">{{ $sch->tanggal->format('d') }}</span>
+                                    <span class="block text-[10px] font-bold text-slate-400 uppercase">{{ $sch->tanggal->format('M') }} • {{ $sch->jam_mulai->format('H:i') }}</span>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start">
+                                        <h4 class="font-bold text-sm text-slate-900 uppercase tracking-tight">
+                                            {{ $sch->tema ?? ($sch->family ? 'Ibadah Syukur Kel. '.$sch->family->kepala_keluarga : $sch->type->nama) }}
+                                        </h4>
+                                        <span class="text-[10px] font-bold bg-white border border-slate-200 px-2 py-0.5 rounded uppercase text-slate-500 print:hidden">{{ $sch->wilayah->nama ?? 'Umum' }}</span>
+                                    </div>
+                                    <p class="text-xs text-slate-500 mb-2 italic">Lokasi: {{ $sch->lokasi_display }}</p>
+                                    
+                                    <!-- Tim -->
+                                    <div class="text-xs grid grid-cols-2 gap-x-4 gap-y-1 mt-2 border-t border-slate-200 pt-2 border-dashed">
+                                        <div class="flex gap-2">
+                                            <span class="font-bold text-slate-400 w-16">Firman:</span>
+                                            <span class="font-bold text-slate-800">{{ $sch->servants->where('peran', 'Pembaca Firman')->first()->member->nama ?? '-' }}</span>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <span class="font-bold text-slate-400 w-16">Tim:</span>
+                                            <span class="text-slate-600 truncate">{{ $sch->servants->where('peran', 'Pendamping')->count() }} Orang Pendamping</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             @endforeach
                         </div>
-                    </div>
-                    @empty
-                    <p class="text-sm text-slate-300 italic text-center py-10 border-2 border-dashed border-slate-100 rounded-3xl">Belum ada agenda yang divalidasi.</p>
-                    @endforelse
-                </div>
-            </div>
+                    @else
+                        <p class="text-center text-sm text-slate-400 italic py-4">Belum ada agenda pelayanan.</p>
+                    @endif
+                </section>
 
-            <!-- BAGIAN II: LAPORAN KEUANGAN PEKAN LALU -->
-            <div class="mb-16 break-inside-avoid">
-                <h3 class="text-xs font-black bg-slate-900 text-white px-5 py-2.5 rounded-lg inline-block uppercase tracking-[0.2em] mb-8 italic">II. Realisasi Keuangan Kas Jemaat</h3>
-                
-                <table class="w-full text-[11px] border-collapse">
-                    <thead>
-                        <tr class="bg-slate-50 border-y-2 border-slate-900 font-black uppercase italic">
-                            <td class="py-3 px-3">Uraian / Pos Anggaran</td>
-                            <td class="py-3 px-3 text-right">Pemasukan</td>
-                            <td class="py-3 px-3 text-right">Pengeluaran</td>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="font-bold text-slate-400 border-b border-slate-100">
-                            <td class="py-3 px-3 italic">Saldo Awal per {{ \Carbon\Carbon::parse($startDate)->format('d/m') }}</td>
-                            <td class="py-3 px-3 text-right font-mono">Rp {{ number_format($saldoAwal, 0, ',', '.') }}</td>
-                            <td class="py-3 px-3 text-right">-</td>
-                        </tr>
+                <!-- 2. INFO JEMAAT (ULANG TAHUN) -->
+                @if($birthdays->isNotEmpty())
+                <section class="break-inside-avoid">
+                    <h3 class="text-sm font-black uppercase tracking-widest border-b-2 border-slate-200 pb-2 mb-4 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                        Jemaat Berulang Tahun
+                    </h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                        @foreach($birthdays as $bday)
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-slate-400 w-8">{{ $bday->tanggal_lahir->format('d/m') }}</span>
+                            <span class="font-bold text-slate-700">{{ $bday->nama }}</span>
+                            <span class="text-[9px] text-slate-400 italic">({{ $bday->tanggal_lahir->age + 1 }} Th)</span>
+                        </div>
+                        @endforeach
+                    </div>
+                </section>
+                @endif
+
+                <!-- 3. HIGHLIGHT KEUANGAN (MIMBAR) -->
+                <section class="break-inside-avoid">
+                    <h3 class="text-sm font-black uppercase tracking-widest border-b-2 border-slate-200 pb-2 mb-4 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                        Informasi Persembahan (Mimbar)
+                    </h3>
+                    
+                    <div class="grid grid-cols-2 gap-8 mb-6">
+                        <div class="bg-slate-50 p-4 border-l-4 border-slate-300 print:bg-transparent print:border-l-2 print:border-slate-800 print:p-2">
+                            <p class="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Persembahan Minggu Lalu</p>
+                            <p class="text-lg font-black text-slate-900">Rp {{ number_format($totalMingguLalu, 0, ',', '.') }}</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 border-l-4 border-emerald-300 print:bg-transparent print:border-l-2 print:border-slate-800 print:p-2">
+                            <p class="text-[10px] font-bold uppercase text-emerald-600 print:text-slate-500 tracking-wider">Anak Sekolah Minggu</p>
+                            <p class="text-lg font-black text-slate-900">Rp {{ number_format($totalASM, 0, ',', '.') }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Rincian PKS & Lelang -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-900 uppercase mb-2 border-b border-dotted border-slate-300 pb-1">Rincian PKS Rumah Tangga</h4>
+                            @if($detailPKS->isNotEmpty())
+                                <ul class="text-[11px] space-y-1">
+                                    @foreach($detailPKS as $pks)
+                                    <li class="flex justify-between">
+                                        <span class="text-slate-600 truncate w-2/3">{{ $pks->keterangan }}</span>
+                                        <span class="font-bold text-slate-900">Rp {{ number_format($pks->nominal, 0, ',', '.') }}</span>
+                                    </li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                <p class="text-[10px] text-slate-400 italic">- Nihil -</p>
+                            @endif
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-900 uppercase mb-2 border-b border-dotted border-slate-300 pb-1">Rincian Lelang & Pembangunan</h4>
+                            @if($detailLelang->isNotEmpty())
+                                <ul class="text-[11px] space-y-1">
+                                    @foreach($detailLelang as $l)
+                                    <li class="flex justify-between">
+                                        <span class="text-slate-600 truncate w-2/3">{{ $l->keterangan }}</span>
+                                        <span class="font-bold text-slate-900">Rp {{ number_format($l->nominal, 0, ',', '.') }}</span>
+                                    </li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                <p class="text-[10px] text-slate-400 italic">- Nihil -</p>
+                            @endif
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. REKAPITULASI KAS (TABEL) -->
+                <section class="break-inside-avoid">
+                    <h3 class="text-sm font-black uppercase tracking-widest border-b-2 border-slate-200 pb-2 mb-4 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-600 rounded-full"></span>
+                        Rekapitulasi Kas Jemaat (Umum)
+                    </h3>
+
+                    <table class="w-full text-xs border-collapse">
+                        <thead>
+                            <tr class="border-y-2 border-slate-800 font-bold uppercase text-slate-700">
+                                <th class="py-2 text-left">Uraian</th>
+                                <th class="py-2 text-right">Masuk</th>
+                                <th class="py-2 text-right">Keluar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="font-bold text-slate-500 border-b border-slate-100 italic">
+                                <td class="py-2">Saldo Awal Periode</td>
+                                <td class="py-2 text-right">{{ number_format($saldoAwalUmum, 0, ',', '.') }}</td>
+                                <td class="py-2 text-right">-</td>
+                            </tr>
+                            @foreach($pemasukanUmum as $p)
+                            <tr class="border-b border-slate-50">
+                                <td class="py-1.5 text-slate-700 pl-4 indent-[-4px]">• {{ $p->budgetPost->nama ?? 'Lainnya' }}</td>
+                                <td class="py-1.5 text-right font-medium">{{ number_format($p->total, 0, ',', '.') }}</td>
+                                <td class="py-1.5 text-right">-</td>
+                            </tr>
+                            @endforeach
+                            @foreach($pengeluaranUmum as $p)
+                            <tr class="border-b border-slate-50">
+                                <td class="py-1.5 text-slate-700 pl-4 indent-[-4px]">• {{ $p->budgetPost->nama ?? 'Lainnya' }}</td>
+                                <td class="py-1.5 text-right">-</td>
+                                <td class="py-1.5 text-right font-medium">{{ number_format($p->total, 0, ',', '.') }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot>
+                            <tr class="border-t-2 border-slate-800 font-black bg-slate-50 print:bg-transparent">
+                                <td class="py-2 uppercase">Saldo Akhir</td>
+                                <td colspan="2" class="py-2 text-right text-base">Rp {{ number_format($saldoAwalUmum + $totalMasukUmum - $totalKeluarUmum, 0, ',', '.') }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </section>
+
+                <!-- 5. KAS PEMBANGUNAN -->
+                <section class="break-inside-avoid">
+                    <h3 class="text-sm font-black uppercase tracking-widest border-b-2 border-slate-200 pb-2 mb-4 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
+                        Rekapitulasi Dana Pembangunan
+                    </h3>
+                    <div class="grid grid-cols-2 text-xs border border-slate-200 rounded-lg p-4 gap-y-2 print:border-slate-800">
+                        <div class="text-slate-500">Saldo Awal Pembangunan</div>
+                        <div class="text-right font-bold">{{ number_format($saldoAwalBangun, 0, ',', '.') }}</div>
                         
-                        {{-- Pemasukan --}}
-                        @foreach($pemasukan as $p)
-                        <tr class="border-b border-slate-50">
-                            <td class="py-2.5 px-3 text-slate-700 font-medium">{{ $p->budgetPost->nama ?? 'Lain-lain' }}</td>
-                            <td class="py-2.5 px-3 text-right font-bold text-emerald-700">Rp {{ number_format($p->total, 0, ',', '.') }}</td>
-                            <td class="py-2.5 px-3 text-right">-</td>
-                        </tr>
-                        @endforeach
-
-                        {{-- Pengeluaran --}}
-                        @foreach($pengeluaran as $p)
-                        <tr class="border-b border-slate-50">
-                            <td class="py-2.5 px-3 text-slate-700 font-medium">{{ $p->budgetPost->nama ?? 'Umum' }}</td>
-                            <td class="py-2.5 px-3 text-right">-</td>
-                            <td class="py-2.5 px-3 text-right font-bold text-rose-700">Rp {{ number_format($p->total, 0, ',', '.') }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot>
-                        <tr class="bg-slate-900 text-white font-black text-xs italic">
-                            <td class="py-4 px-3 uppercase tracking-tighter">Saldo Akhir Kas (Tersedia)</td>
-                            <td colspan="2" class="py-4 px-3 text-right text-sm font-mono tracking-tighter">
-                                Rp {{ number_format($saldoAwal + $totalMasuk - $totalKeluar, 0, ',', '.') }}
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            <!-- BAGIAN III: INFO JEMAAT (ULANG TAHUN) -->
-            <div class="mb-12 break-inside-avoid">
-                <h3 class="text-xs font-black bg-slate-900 text-white px-5 py-2.5 rounded-lg inline-block uppercase tracking-[0.2em] mb-8 italic">III. Kabar Sukacita Jemaat</h3>
-                <div class="p-6 bg-yellow-50 rounded-3xl border-2 border-yellow-100 flex flex-wrap gap-8 justify-center">
-                    @forelse($birthdays as $bday)
-                    <div class="text-center">
-                        <p class="text-[11px] font-black text-slate-900 uppercase leading-none">{{ $bday->nama }}</p>
-                        <p class="text-[9px] font-bold text-yellow-600 mt-1 italic">{{ $bday->tanggal_lahir->format('d F') }}</p>
+                        <div class="text-slate-500">Penerimaan Minggu Ini</div>
+                        <div class="text-right font-bold text-emerald-700 print:text-black">+ {{ number_format($totalMasukBangun, 0, ',', '.') }}</div>
+                        
+                        <div class="text-slate-500">Pengeluaran Minggu Ini</div>
+                        <div class="text-right font-bold text-rose-700 print:text-black">- {{ number_format($totalKeluarBangun, 0, ',', '.') }}</div>
+                        
+                        <div class="border-t border-slate-300 col-span-2 my-1"></div>
+                        
+                        <div class="font-black text-slate-900 uppercase tracking-wide">Saldo Akhir Pembangunan</div>
+                        <div class="text-right font-black text-sm">Rp {{ number_format($saldoAwalBangun + $totalMasukBangun - $totalKeluarBangun, 0, ',', '.') }}</div>
                     </div>
-                    @empty
-                    <p class="text-[10px] text-slate-300 font-bold italic">Pekan ini tidak ada jemaat yang berulang tahun.</p>
-                    @endforelse
-                </div>
+                </section>
+
             </div>
 
-            <!-- PENUTUP & TTD -->
-            <div class="mt-24 grid grid-cols-2 text-center text-[11px] break-inside-avoid">
-                <div class="px-10">
-                    <p class="mb-24 font-black uppercase tracking-widest text-slate-400">Ketua Majelis Jemaat</p>
-                    <p class="font-black border-b-2 border-slate-900 pb-1 italic uppercase">Pdt. Alponia Malo, S.Th</p>
+            <!-- TTD -->
+            <div class="mt-20 grid grid-cols-2 text-center text-xs break-inside-avoid">
+                <div class="px-8">
+                    <p class="mb-20 font-bold uppercase text-slate-500">Ketua Majelis Jemaat</p>
+                    <p class="font-bold border-b border-slate-900 pb-1">Pdt. .....................................</p>
                 </div>
-                <div class="px-10">
-                    <p class="mb-24 font-black uppercase tracking-widest text-slate-400 text-right">Lolo Ole, {{ date('d F Y') }}<br><span class="text-slate-900">Bendahara Jemaat</span></p>
-                    <p class="font-black border-b-2 border-slate-900 pb-1 uppercase">{{ auth()->user()->name }}</p>
+                <div class="px-8">
+                    <p class="mb-20 font-bold uppercase text-slate-500">Bendahara Jemaat</p>
+                    <p class="font-bold border-b border-slate-900 pb-1 uppercase">{{ auth()->user()->name }}</p>
                 </div>
             </div>
 
         </div>
     </div>
-
-<style>
-@media print {
-    body { background: white !important; }
-    .bg-slate-100 { background-color: white !important; }
-    nav, .print\:hidden { display: none !important; }
-    .shadow-2xl { box-shadow: none !important; }
-}
-</style>
-
 </div>
