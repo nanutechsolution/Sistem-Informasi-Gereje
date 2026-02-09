@@ -24,6 +24,8 @@ use App\Livewire\Officers\Index as OfficersIndex;
 use App\Livewire\Reports\BudgetRealization;
 use App\Livewire\Reports\GeneralLedger;
 use App\Livewire\Reports\Weekly;
+use App\Livewire\Schedules\MySchedules;
+use App\Livewire\Schedules\ScheduleManager;
 use App\Livewire\Settings\Accounts as AccountsGereja;
 use App\Livewire\Settings\BudgetPosts;
 use App\Livewire\Settings\MasterData;
@@ -78,7 +80,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/officers/{officer}/edit', OfficersEdit::class)->name('officers.edit');
     Route::get('/finance/payroll', PayrollManager::class)->name('finance.payroll');
     Route::get('/finance/payroll/slip/{uuid}', App\Livewire\Finance\PayrollSlip::class)->name('payroll.slip');
+    Route::get('/schedules', ScheduleManager::class)->name('schedules.index');
+    Route::get('/schedules/{schedule}/servants', App\Livewire\Schedules\ServantManager::class)->name('schedules.servants');
+    Route::get('/schedules/pks/verify', \App\Livewire\Schedules\PksVerification::class)->name('schedules.pks.verify');
+    Route::get('/my-schedules', MySchedules::class)->name('schedules.my');
 });
+
 
 // Route Logout (FIX: Menggunakan Request yang benar)
 Route::post('/logout', function (Request $request) {

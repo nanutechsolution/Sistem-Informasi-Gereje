@@ -3,98 +3,82 @@
 namespace App\Livewire\Reports;
 
 use App\Models\Transaction;
-use App\Models\FiscalYear;
-use App\Models\OpeningBalance;
+use App\Models\ActivitySchedule;
+use App\Models\Member;
 use App\Models\RefAccount;
+use App\Models\OpeningBalance;
+use App\Models\FiscalYear;
 use Livewire\Component;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class Weekly extends Component
 {
-    public $startDate;
-    public $endDate;
+    public $startDate, $endDate; // Periode Laporan Keuangan (Pekan Lalu)
+    public $nextStartDate, $nextEndDate; // Periode Agenda (Pekan Depan)
 
     public function mount()
     {
-        // Default: Senin s/d Minggu pekan ini
-        $this->startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
-        $this->endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
+        // Keuangan: Senin - Minggu kemarin
+        $this->startDate = Carbon::now()->subWeek()->startOfWeek()->format('Y-m-d');
+        $this->endDate = Carbon::now()->subWeek()->endOfWeek()->format('Y-m-d');
+
+        // Agenda: Senin - Minggu besok
+        $this->nextStartDate = Carbon::now()->startOfWeek()->format('Y-m-d');
+        $this->nextEndDate = Carbon::now()->endOfWeek()->format('Y-m-d');
     }
 
     public function render()
     {
         $activeYear = FiscalYear::active();
+        $kasUmum = RefAccount::where('nama', 'like', '%Umum%')->first() ?: RefAccount::first();
+
+        // 1. DATA KEUANGAN (PEKAN LALU)
+        $saldoAwal = $this->calculateOpeningBalance($kasUmum, $activeYear);
         
-        // 1. IDENTIFIKASI AKUN (Lebih Robust)
-        // Mencari akun Kas Umum (baik yang ada nama 'Umum' atau akun kas_tunai pertama)
-        $kasUmum = RefAccount::where('nama', 'like', '%Umum%')
-                    ->orWhere('jenis', 'kas_tunai')
-                    ->first();
-        
-        $kasBangun = RefAccount::where('nama', 'like', '%Pembangunan%')->first();
+        $pemasukan = Transaction::with('budgetPost')
+            ->where('ref_account_id', $kasUmum->id)
+            ->where('jenis', 'masuk')
+            ->whereBetween('tanggal', [$this->startDate, $this->endDate])
+            ->select('ref_budget_post_id', DB::raw('sum(nominal) as total'))
+            ->groupBy('ref_budget_post_id')->get();
 
-        // 2. HITUNG SALDO AWAL
-        $saldoAwalUmum = $this->calculateOpeningBalance($kasUmum, $activeYear);
-        $saldoAwalBangun = $this->calculateOpeningBalance($kasBangun, $activeYear);
+        $pengeluaran = Transaction::with('budgetPost')
+            ->where('ref_account_id', $kasUmum->id)
+            ->where('jenis', 'keluar')
+            ->whereBetween('tanggal', [$this->startDate, $this->endDate])
+            ->select('ref_budget_post_id', DB::raw('sum(nominal) as total'))
+            ->groupBy('ref_budget_post_id')->get();
 
-        // 3. DATA HIGHLIGHTS (Untuk Ibadah Rumah Tangga & Lelang)
-        $detailPKS = Transaction::whereHas('budgetPost', fn($q) => $q->where('kode', 'like', '1.2%'))
-            ->whereBetween('tanggal', [$this->startDate, $this->endDate])->get();
+        // 2. AGENDA PELAYANAN (PEKAN INI/DEPAN)
+        $schedules = ActivitySchedule::with(['type', 'servants.member', 'family'])
+            ->whereBetween('tanggal', [$this->nextStartDate, $this->nextEndDate])
+            ->orderBy('tanggal')
+            ->orderBy('jam_mulai')
+            ->get();
 
-        $detailLelang = Transaction::whereHas('budgetPost', fn($q) => $q->whereIn('kode', ['1.11', '1.21.1']))
-            ->whereBetween('tanggal', [$this->startDate, $this->endDate])->get();
-
-        // 4. REKAPITULASI TABEL (Summary per Pos Anggaran)
-        $pemasukanUmum = $this->getSummary($kasUmum, 'masuk');
-        $pengeluaranUmum = $this->getSummary($kasUmum, 'keluar');
-        
-        $pemasukanBangun = $this->getSummary($kasBangun, 'masuk');
-        $pengeluaranBangun = $this->getSummary($kasBangun, 'keluar');
+        // 3. JEMAAT ULANG TAHUN
+        $birthdays = Member::whereRaw("DATE_FORMAT(tanggal_lahir, '%m-%d') BETWEEN ? AND ?", [
+            Carbon::parse($this->nextStartDate)->format('m-d'),
+            Carbon::parse($this->nextEndDate)->format('m-d')
+        ])->get();
 
         return view('livewire.reports.weekly', [
-            'saldoAwalUmum' => $saldoAwalUmum,
-            'saldoAwalBangun' => $saldoAwalBangun,
-            'detailPKS' => $detailPKS,
-            'detailLelang' => $detailLelang,
-            'pemasukanUmum' => $pemasukanUmum,
-            'pengeluaranUmum' => $pengeluaranUmum,
-            'pemasukanBangun' => $pemasukanBangun,
-            'pengeluaranBangun' => $pengeluaranBangun,
-            'totalMasukUmum' => $pemasukanUmum->sum('total'),
-            'totalKeluarUmum' => $pengeluaranUmum->sum('total'),
-            'totalMasukBangun' => $pemasukanBangun->sum('total'),
-            'totalKeluarBangun' => $pengeluaranBangun->sum('total'),
+            'saldoAwal' => $saldoAwal,
+            'pemasukan' => $pemasukan,
+            'pengeluaran' => $pengeluaran,
+            'schedules' => $schedules,
+            'birthdays' => $birthdays,
+            'totalMasuk' => $pemasukan->sum('total'),
+            'totalKeluar' => $pengeluaran->sum('total'),
         ]);
     }
 
-    private function calculateOpeningBalance($account, $activeYear)
+    private function calculateOpeningBalance($account, $year)
     {
-        if (!$account || !$activeYear) return 0;
-
-        $base = OpeningBalance::where('fiscal_year_id', $activeYear->id)
-            ->where('ref_account_id', $account->id)->sum('nominal');
-
-        $mutasi = Transaction::where('ref_account_id', $account->id)
-            ->where('tanggal', '<', $this->startDate);
-
-        $masuk = (clone $mutasi)->where('jenis', 'masuk')->sum('nominal');
-        $keluar = (clone $mutasi)->whereIn('jenis', ['keluar', 'pindah_buku'])->sum('nominal');
-
-        return $base + $masuk - $keluar;
-    }
-
-    private function getSummary($account, $jenis)
-    {
-        if (!$account) return collect();
-
-        // Ambil transaksi, group berdasarkan Pos Anggaran agar diringkas (misal: semua Gaji jadi satu baris)
-        return Transaction::with('budgetPost')
-            ->where('ref_account_id', $account->id)
-            ->where('jenis', $jenis)
-            ->whereBetween('tanggal', [$this->startDate, $this->endDate])
-            ->select('ref_budget_post_id', DB::raw('sum(nominal) as total'))
-            ->groupBy('ref_budget_post_id')
-            ->get();
+        if (!$account || !$year) return 0;
+        $base = OpeningBalance::where('fiscal_year_id', $year->id)->where('ref_account_id', $account->id)->sum('nominal');
+        $prevMutasi = Transaction::where('ref_account_id', $account->id)->where('tanggal', '<', $this->startDate);
+        return $base + $prevMutasi->where('jenis', 'masuk')->sum('nominal') - $prevMutasi->whereIn('jenis', ['keluar', 'pindah_buku'])->sum('nominal');
     }
 }
