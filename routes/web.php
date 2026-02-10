@@ -96,6 +96,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/schedules/groups', Schedules\GroupManager::class)->name('schedules.groups');
         Route::get('/schedules/pks/print', [App\Http\Controllers\PrintScheduleController::class, 'pks'])->name('schedules.pks.print');
         Route::get('/news/manage', NewsManager::class)->name('news.manage');
+        Route::get('/settings/profile', \App\Livewire\Settings\ChurchProfile::class)->name('settings.profile');
     });
 
     // C. KEUANGAN (Bendahara & Admin) -> Transaksi, Lelang, Gaji

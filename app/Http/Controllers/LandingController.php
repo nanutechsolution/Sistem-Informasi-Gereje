@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Family;
 use App\Models\Member;
 use App\Models\ActivitySchedule;
+use App\Models\ChurchSetting;
 use App\Models\RefAccount;
 use App\Models\Transaction;
 use App\Models\FiscalYear;
@@ -22,6 +23,7 @@ class LandingController extends Controller
      */
     public function index()
     {
+        $setting = ChurchSetting::current();
         $today = Carbon::today();
         $activeYear = FiscalYear::active();
 
@@ -55,7 +57,7 @@ class LandingController extends Controller
         // Mengambil saldo akun yang mengandung nama 'Umum'
         $kasUmum = RefAccount::where('nama', 'like', '%Umum%')->first();
         $saldo = 0;
-        
+
         if ($kasUmum && $activeYear) {
             $base = OpeningBalance::where('fiscal_year_id', $activeYear->id)
                 ->where('ref_account_id', $kasUmum->id)->sum('nominal');
@@ -63,8 +65,6 @@ class LandingController extends Controller
             $keluar = Transaction::where('ref_account_id', $kasUmum->id)->whereIn('jenis', ['keluar', 'pindah_buku'])->sum('nominal');
             $saldo = $base + $masuk - $keluar;
         }
-
-        // Kirim semua data ke resources/views/public/index.blade.php
         return view('public.index', compact('stats', 'schedules', 'posts', 'galleries', 'saldo'));
     }
 }
