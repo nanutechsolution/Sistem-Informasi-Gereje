@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Member extends Model
@@ -50,5 +51,15 @@ class Member extends Model
     public function latestEvent()
     {
         return $this->hasOne(MemberEvent::class)->latestOfMany('tanggal');
+    }
+
+
+
+    /**
+     * Relasi ke riwayat sakramen jemaat.
+     */
+    public function sacraments(): HasMany
+    {
+        return $this->hasMany(SacramentRecord::class);
     }
 }

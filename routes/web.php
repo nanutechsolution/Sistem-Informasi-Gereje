@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Auth;
 
 // Controllers
 use App\Http\Controllers\PrintTransactionController;
-
+use App\Http\Controllers\SacramentPrintController;
 // Livewire Components
 use App\Livewire\Auth\Login;
 use App\Livewire\Dashboard;
@@ -21,6 +21,7 @@ use App\Livewire\Reports;
 use App\Livewire\Settings;
 use App\Livewire\Schedules;
 use App\Livewire\Auctions;
+use App\Livewire\Clerical\SacramentManager;
 use App\Livewire\Letters;
 use App\Livewire\Settings\Accounts;
 
@@ -81,6 +82,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/officers/{officer}/edit', Officers\Edit::class)->name('officers.edit');
         Route::get('/officers/{officer}/show', Officers\Show::class)->name('officers.show');
 
+        Route::get('/pastoral/visits', \App\Livewire\Pastoral\PastoralManager::class)->name('pastoral.visits');
+        Route::get('/clerical/sacraments', SacramentManager::class)->name('clerical.sacraments');
+        Route::get('/clerical/sacraments/{record}/print', [SacramentPrintController::class, 'show'])->name('clerical.sacraments.print');
         // Surat & Jadwal Umum
         Route::get('/letters', Letters\LetterManager::class)->name('letters.index');
         Route::get('/schedules', Schedules\ScheduleManager::class)->name('schedules.index');
@@ -104,6 +108,7 @@ Route::middleware('auth')->group(function () {
         // Lelang
         Route::get('/auctions', Auctions\EventIndex::class)->name('auctions.index');
         Route::get('/auctions/receivables', \App\Livewire\Auctions\Receivables::class)->name('auctions.receivables');
+        Route::get('/finance/diakonia', \App\Livewire\Finance\DiakoniaManager::class)->name('finance.diakonia');
         Route::get('/auctions/{event}', Auctions\ItemManager::class)->name('auctions.items');
         Route::get('/finance/flexible-dues', \App\Livewire\Finance\FlexibleDuesManager::class)->name('finance.flexible-dues');
     });

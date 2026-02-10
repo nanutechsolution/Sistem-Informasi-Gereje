@@ -116,6 +116,7 @@
                                 <a href="{{ route('families.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Data Keluarga (KK)</a>
                                 <div class="h-px bg-slate-100 my-1"></div>
                                 <a href="{{ route('officers.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 text-primary">Pejabat & Pelayan</a>
+                                <a href="{{ route('pastoral.visits') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 text-primary">Kunjungan</a>
                                 <a href="{{ route('letters.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Surat Menyurat</a>
                             </div>
                         </div>
@@ -158,6 +159,7 @@
                                 <a href="{{ route('reports.monthly') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Laporan Bulanan</a>
                                 <a href="{{ route('reports.census') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Laporan Sensus Jemaat</a>
                                 @endcan
+                                <a href="{{ route('clerical.sacraments') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Administrasi Sakramen</a>
                             </div>
                         </div>
 
@@ -178,6 +180,7 @@
                                 <a href="{{ route('reports.budget-realization') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Laporan Realisasi</a>
                                 <a href="{{ route('reports.general-ledger') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Buku Kas Umum (BKU)</a>
                                 <a href="{{ route('finance.flexible-dues') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Tanggungan Jemaat</a>
+                                <a href="{{ route('finance.diakonia') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Diakonia</a>
                             </div>
                         </div>
                         @endcan
