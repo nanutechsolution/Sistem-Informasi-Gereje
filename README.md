@@ -91,3 +91,34 @@ cd sig-gks
 ```bash
 composer install
 npm install && npm run build
+composer install
+npm install && npm run build
+cp .env.example .env
+php artisan key:generate
+php artisan migrate:fresh --seed --class=FullDeploymentSeeder
+php artisan serve
+
+## 🔐 Akses & Role
+| Role       | Email                                         | Password | Akses Utama                  |
+| ---------- | --------------------------------------------- | -------- | ---------------------------- |
+| Admin      | [admin@gks.id](mailto:admin@gks.id)           | password | Akses Penuh (System Setting) |
+| Pendeta    | [pendeta@gks.id](mailto:pendeta@gks.id)       | password | Supervisi, Laporan, Approval |
+| Bendahara  | [bendahara@gks.id](mailto:bendahara@gks.id)   | password | Keuangan, Payroll, Aset      |
+| Sekretaris | [sekretaris@gks.id](mailto:sekretaris@gks.id) | password | Database, Jadwal, Surat      |
+| Majelis    | [majelis1@gks.id](mailto:majelis1@gks.id)     | password | Input PKS, Jadwal Pribadi    |
+
+
+| Catatan: Segera ganti password default setelah deployment produksi.
+
+⚠️ Lisensi & Larangan
+Perangkat lunak PROPRIETARY dan dilindungi UU Hak Cipta.
+✅ Diizinkan
+Digunakan oleh GKS Jemaat Reda Pada
+Dimodifikasi internal untuk kebutuhan jemaat
+Dicadangkan (backup) demi keamanan data
+🚫 Dilarang
+Menjual kembali kode atau aplikasi tanpa izin
+Distribusi ulang publik tanpa lisensi
+Menghapus hak cipta / klaim kepemilikan
+Menggunakan kode untuk produk komersial lain
+
