@@ -115,7 +115,7 @@ php artisan serve
 | Sekretaris | [sekretaris@gks.id](mailto:sekretaris@gks.id) | password | Database, Jadwal, Surat      |
 | Majelis    | [majelis1@gks.id](mailto:majelis1@gks.id)     | password | Input PKS, Jadwal Pribadi    |
 
-> [!Catatan]
+> [!NOTE]
 > Segera ganti password default setelah deployment produksi.
 
 ### ⚠️ Lisensi & Larangan
