@@ -82,21 +82,29 @@ Sistem ini mendukung **penggunaan jangka panjang (>20 Tahun)** dengan:
 
 ---
 
-## 💻 Instalasi
-1. **Clone Repositori**  
-```bash
+## **💻 Instalasi**   
+```
 git clone https://github.com/username/sig-gks.git
 cd sig-gks
-1. **ClInstall Dependensi**  
-```bash
+```
+1. **Install Dependensi**  
+```
 composer install
 npm install && npm run build
-composer install
-npm install && npm run build
+```
+3. **Konfigurasi environment**
+```
 cp .env.example .env
 php artisan key:generate
+
+```
+> Sesuaikan koneksi database di file .env.
+
+4. **Migrasi & seeding database**
+```
 php artisan migrate:fresh --seed --class=FullDeploymentSeeder
 php artisan serve
+```
 
 ## 🔐 Akses & Role
 | Role       | Email                                         | Password | Akses Utama                  |
@@ -107,18 +115,20 @@ php artisan serve
 | Sekretaris | [sekretaris@gks.id](mailto:sekretaris@gks.id) | password | Database, Jadwal, Surat      |
 | Majelis    | [majelis1@gks.id](mailto:majelis1@gks.id)     | password | Input PKS, Jadwal Pribadi    |
 
+> [!Catatan]
+> Segera ganti password default setelah deployment produksi.
 
-| Catatan: Segera ganti password default setelah deployment produksi.
+### ⚠️ Lisensi & Larangan
 
-⚠️ Lisensi & Larangan
-Perangkat lunak PROPRIETARY dan dilindungi UU Hak Cipta.
-✅ Diizinkan
-Digunakan oleh GKS Jemaat Reda Pada
-Dimodifikasi internal untuk kebutuhan jemaat
-Dicadangkan (backup) demi keamanan data
-🚫 Dilarang
-Menjual kembali kode atau aplikasi tanpa izin
-Distribusi ulang publik tanpa lisensi
-Menghapus hak cipta / klaim kepemilikan
-Menggunakan kode untuk produk komersial lain
+Perangkat lunak ini **PROPRIETARY** dan dilindungi oleh **UU Hak Cipta**.
 
+#### ✅ Diizinkan
+- Digunakan oleh **GKS Jemaat Reda Pada** untuk operasional gereja.
+- Dimodifikasi secara **internal** untuk kebutuhan jemaat.
+- Dicadangkan (backup) demi **keamanan data**.
+
+#### 🚫 Dilarang
+- Menjual kembali kode atau aplikasi **tanpa izin**.
+- Distribusi ulang secara publik **tanpa lisensi resmi**.
+- Menghapus hak cipta atau klaim kepemilikan pada kode sumber.
+- Menggunakan kode ini untuk membangun produk **komersial lain**.
