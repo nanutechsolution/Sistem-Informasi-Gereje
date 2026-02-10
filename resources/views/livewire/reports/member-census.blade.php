@@ -101,4 +101,4 @@
             <span>DATA PER {{ date('d F Y') }}</span>
         </div>
     </div>
-</div>
+</div

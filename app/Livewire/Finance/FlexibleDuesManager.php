@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Finance;
 
-use App\Models\Asset;
 use App\Models\Member;
 use App\Models\Family;
 use App\Models\FiscalYear;
@@ -11,8 +10,8 @@ use App\Models\DuesRegistry;
 use App\Models\DuesLog;
 use App\Models\Transaction;
 use App\Models\RefAccount;
-use App\Models\RefPekerjaan;
 use App\Models\RefBudgetPost;
+use App\Models\Asset;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Str;
@@ -22,84 +21,115 @@ use Illuminate\Support\Facades\Auth;
 class FlexibleDuesManager extends Component
 {
     use WithPagination;
+    protected $paginationTheme = 'tailwind';
 
-    public $filterYear, $search = '', $typeFilter = '';
+    // State Filter & UI
+    public $search = '', $filterYear, $typeFilter = '';
     public $isModalOpen = false, $isPayModalOpen = false, $isSingleModalOpen = false;
 
-    // Form Bulk Assign
-    public $due_type_id, $assign_method = 'pekerjaan';
-    public $pekerjaan_id, $nominal_standar = 0;
+    // Form Properti: Generate Masal (Otomatis)
+    public $due_type_id, $nominal_standar = 0, $qty_standar = 0;
 
-    // Form Tambah Manual (Flexible)
+    // Form Properti: Input Manual (Single)
     public $single_due_type_id, $single_target_nominal = 0, $single_target_qty = 0;
-    public $searchAssignee = '', $foundAssignees = [], $selectedAssigneeId, $selectedAssigneeType, $selectedAssigneeName;
+    public $searchAssignee = '', $selectedAssigneeId, $selectedAssigneeType, $selectedAssigneeName;
+    public $foundAssignees = [];
 
-    // Form Pembayaran
+    // Form Properti: Bayar/Update
     public $activeDue, $pay_nominal, $pay_qty, $ref_account_id, $ref_budget_post_id;
 
-    protected function rules()
-    {
-        return [
-            'due_type_id' => 'nullable|exists:ref_due_types,id',
-            'single_due_type_id' => 'nullable|exists:ref_due_types,id',
-            'nominal_standar' => 'nullable|numeric',
-            'pay_nominal' => 'nullable',
-            'ref_account_id' => 'nullable|exists:ref_accounts,id',
-            'ref_budget_post_id' => 'nullable|exists:ref_budget_posts,id',
-        ];
-    }
-
-    /**
-     * Helper: Menentukan kategori aset secara otomatis berdasarkan nama barang
-     */
-    private function inferCategory($name)
-    {
-        $name = strtolower($name);
-        if (Str::contains($name, ['semen', 'batu', 'pasir', 'bambu', 'cat', 'keramik'])) return 'Bangunan';
-        if (Str::contains($name, ['kursi', 'meja', 'lemari', 'mimbar'])) return 'Mebeul';
-        if (Str::contains($name, ['mic', 'sound', 'speaker', 'lampu', 'kabel'])) return 'Elektronik';
-        return 'Lainnya';
-    }
+    protected $queryString = ['search', 'filterYear', 'typeFilter'];
 
     public function mount()
     {
-        $this->filterYear = FiscalYear::active()?->id;
-        $acc = RefAccount::where('nama', 'like', '%Umum%')->first() ?: RefAccount::where('jenis', 'kas_tunai')->first();
+        $activeYear = FiscalYear::active();
+        $this->filterYear = $activeYear ? $activeYear->id : FiscalYear::latest('tahun')->first()?->id;
+
+        $acc = RefAccount::where('nama', 'like', '%Umum%')->first();
         $this->ref_account_id = $acc?->id;
     }
 
-    // --- FITUR BARU: INPUT MANUAL FLEXIBLE ---
-
-    public function openSingleModal()
+    // --- FITUR GENERATE OTOMATIS (MASAL) ---
+    public function generateBulk()
     {
-        $this->reset(['single_due_type_id', 'single_target_nominal', 'single_target_qty', 'searchAssignee', 'foundAssignees', 'selectedAssigneeId', 'selectedAssigneeType', 'selectedAssigneeName']);
-        $this->isSingleModalOpen = true;
+        $this->validate([
+            'due_type_id' => 'required|exists:ref_due_types,id',
+        ], [
+            'due_type_id.required' => 'Pilih jenis iuran yang akan digenerate.',
+        ]);
+
+        $dueType = RefDueType::find($this->due_type_id);
+        $nominal = (float) str_replace(['.', ','], '', $this->nominal_standar);
+
+        // Ambil sasaran (Member atau Family)
+        $targets = $dueType->target_level === 'member'
+            ? Member::where('is_active', true)->get()
+            : Family::where('status', 'aktif')->get();
+
+        $count = 0;
+        foreach ($targets as $target) {
+            $exists = DuesRegistry::where('ref_due_type_id', $this->due_type_id)
+                ->where('fiscal_year_id', $this->filterYear)
+                ->where('assignee_id', $target->id)
+                ->where('assignee_type', get_class($target))
+                ->exists();
+
+            if (!$exists) {
+                DuesRegistry::create([
+                    'uuid' => (string) Str::uuid(),
+                    'ref_due_type_id' => $this->due_type_id,
+                    'fiscal_year_id' => $this->filterYear,
+                    'assignee_id' => $target->id,
+                    'assignee_type' => get_class($target), // Menyimpan App\Models\Member atau App\Models\Family
+                    'target_nominal' => $nominal,
+                    'target_qty' => $this->qty_standar ?: 0,
+                    'status' => 'belum'
+                ]);
+                $count++;
+            }
+        }
+
+        $this->dispatch('notify', message: "$count data iuran berhasil dibuat otomatis.", type: 'success');
+        $this->isModalOpen = false;
+    }
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+    public function updatedTypeFilter()
+    {
+        $this->resetPage();
+    }
+    public function updatedFilterYear()
+    {
+        $this->resetPage();
     }
 
+    // --- LOGIKA PENCARIAN SUBJEK ---
     public function updatedSearchAssignee($value)
     {
-        if (strlen($value) < 2) {
+        if (strlen($value) < 3) {
             $this->foundAssignees = [];
             return;
         }
 
-        // Cari di Member
-        $members = Member::where('nama', 'like', "%{$value}%")->limit(5)->get()->map(fn($m) => [
-            'id' => $m->id,
-            'type' => Member::class,
-            'nama' => $m->nama,
-            'label' => '(Jiwa) ' . $m->nama
-        ]);
+        $members = Member::where('nama', 'like', "%{$value}%")
+            ->limit(5)->get()->map(fn($m) => [
+                'id' => $m->id,
+                'type' => Member::class, // Full Class Path
+                'nama' => $m->nama,
+                'label' => "👤 Jiwa: {$m->nama}"
+            ]);
 
-        // Cari di Keluarga
-        $families = Family::where('kepala_keluarga', 'like', "%{$value}%")->limit(5)->get()->map(fn($f) => [
-            'id' => $f->id,
-            'type' => Family::class,
-            'nama' => $f->kepala_keluarga,
-            'label' => '(KK) ' . $f->kepala_keluarga
-        ]);
+        $families = Family::where('kepala_keluarga', 'like', "%{$value}%")
+            ->limit(5)->get()->map(fn($f) => [
+                'id' => $f->id,
+                'type' => Family::class, // Full Class Path
+                'nama' => $f->kepala_keluarga,
+                'label' => "🏠 KK: {$f->kepala_keluarga}"
+            ]);
 
-        $this->foundAssignees = $members->merge($families)->toArray();
+        $this->foundAssignees = $members->concat($families)->toArray();
     }
 
     public function selectAssignee($id, $type, $name)
@@ -107,113 +137,47 @@ class FlexibleDuesManager extends Component
         $this->selectedAssigneeId = $id;
         $this->selectedAssigneeType = $type;
         $this->selectedAssigneeName = $name;
-        $this->searchAssignee = $name;
+        $this->searchAssignee = '';
         $this->foundAssignees = [];
     }
 
+    // --- SIMPAN PENDAFTARAN MANUAL (SINGLE) ---
     public function saveSingle()
     {
         $this->validate([
-            'single_due_type_id' => 'required',
             'selectedAssigneeId' => 'required',
+            'single_due_type_id' => 'required|exists:ref_due_types,id',
+        ], [
+            'selectedAssigneeId.required' => 'Wajib memilih Jemaat/KK dari hasil pencarian.',
         ]);
 
-        $exists = DuesRegistry::where('ref_due_type_id', $this->single_due_type_id)
-            ->where('fiscal_year_id', $this->filterYear)
-            ->where('assignee_type', $this->selectedAssigneeType)
-            ->where('assignee_id', $this->selectedAssigneeId)
-            ->exists();
+        $nominal = (float) str_replace(['.', ','], '', $this->single_target_nominal);
 
-        if ($exists) {
-            $this->dispatch('notify', message: 'Gagal! Orang/Keluarga ini sudah terdaftar di iuran tersebut.', type: 'error');
-            return;
-        }
-
-        DuesRegistry::create([
-            'uuid' => Str::uuid(),
+        DuesRegistry::updateOrCreate([
             'ref_due_type_id' => $this->single_due_type_id,
             'fiscal_year_id' => $this->filterYear,
-            'assignee_type' => $this->selectedAssigneeType,
             'assignee_id' => $this->selectedAssigneeId,
-            'target_nominal' => (float) $this->single_target_nominal,
-            'target_qty' => (int) $this->single_target_qty,
+            'assignee_type' => $this->selectedAssigneeType,
+        ], [
+            'uuid' => (string) Str::uuid(),
+            'target_nominal' => $nominal,
+            'target_qty' => $this->single_target_qty ?: 0,
+            'status' => 'belum'
         ]);
 
-        $this->dispatch('notify', message: 'Tanggungan manual berhasil ditambahkan.', type: 'success');
+        $this->dispatch('notify', message: 'Tanggungan berhasil didaftarkan.', type: 'success');
         $this->isSingleModalOpen = false;
+        $this->reset(['selectedAssigneeId', 'selectedAssigneeType', 'selectedAssigneeName', 'single_due_type_id', 'single_target_nominal', 'single_target_qty']);
     }
 
-    // --- FITUR LAMA (BULK, PAYMENT) ---
-
-    public function bulkAssign()
-    {
-        $this->validate([
-            'due_type_id' => 'required',
-            'nominal_standar' => 'required|numeric|min:1'
-        ]);
-
-        $type = RefDueType::find($this->due_type_id);
-        $count = 0;
-
-        if ($type->target_level == 'member') {
-            $members = Member::where('status_sidi', 'Sudah')
-                ->when($this->pekerjaan_id, fn($q) => $q->where('pekerjaan_id', $this->pekerjaan_id))
-                ->get();
-
-            foreach ($members as $m) {
-                $exists = DuesRegistry::where('ref_due_type_id', $this->due_type_id)
-                    ->where('fiscal_year_id', $this->filterYear)
-                    ->where('assignee_type', Member::class)
-                    ->where('assignee_id', $m->id)
-                    ->exists();
-
-                if (!$exists) {
-                    DuesRegistry::create([
-                        'uuid' => Str::uuid(),
-                        'ref_due_type_id' => $this->due_type_id,
-                        'fiscal_year_id' => $this->filterYear,
-                        'assignee_type' => Member::class,
-                        'assignee_id' => $m->id,
-                        'target_nominal' => $this->nominal_standar,
-                    ]);
-                    $count++;
-                }
-            }
-        } else {
-            $families = Family::active()->get();
-            foreach ($families as $f) {
-                $exists = DuesRegistry::where('ref_due_type_id', $this->due_type_id)
-                    ->where('fiscal_year_id', $this->filterYear)
-                    ->where('assignee_type', Family::class)
-                    ->where('assignee_id', $f->id)
-                    ->exists();
-
-                if (!$exists) {
-                    DuesRegistry::create([
-                        'uuid' => Str::uuid(),
-                        'ref_due_type_id' => $this->due_type_id,
-                        'fiscal_year_id' => $this->filterYear,
-                        'assignee_type' => Family::class,
-                        'assignee_id' => $f->id,
-                        'target_nominal' => $this->nominal_standar,
-                    ]);
-                    $count++;
-                }
-            }
-        }
-
-        $this->dispatch('notify', message: "$count data baru berhasil dibuat.", type: 'success');
-        $this->isModalOpen = false;
-    }
-
+    // --- LOGIKA SETORAN ---
     public function openPayModal($id)
     {
-        $this->activeDue = DuesRegistry::with(['assignee', 'dueType'])->findOrFail($id);
+        $this->activeDue = DuesRegistry::with(['dueType', 'assignee'])->findOrFail($id);
         $this->pay_nominal = number_format($this->activeDue->sisa_nominal, 0, ',', '.');
         $this->pay_qty = $this->activeDue->sisa_qty;
 
-        $keyword = Str::contains(strtolower($this->activeDue->dueType->nama), 'pembangunan') ? 'Pembangunan' : 'Iuran';
-        $pos = RefBudgetPost::where('nama', 'like', "%$keyword%")->where('jenis', 'pemasukan')->first();
+        $pos = RefBudgetPost::where('nama', 'like', "%{$this->activeDue->dueType->nama}%")->first();
         $this->ref_budget_post_id = $pos?->id;
 
         $this->isPayModalOpen = true;
@@ -221,26 +185,13 @@ class FlexibleDuesManager extends Component
 
     public function savePayment()
     {
-        $validationRules = [];
-        if ($this->activeDue->dueType->unit_type == 'money') {
-            $validationRules = [
-                'pay_nominal' => 'required',
-                'ref_account_id' => 'required|exists:ref_accounts,id',
-                'ref_budget_post_id' => 'required|exists:ref_budget_posts,id',
-            ];
-        } else {
-            $validationRules = ['pay_qty' => 'required|numeric|min:1'];
-        }
-
-        $this->validate($validationRules);
+        $this->validate(['ref_account_id' => 'required']);
 
         DB::transaction(function () {
             $nominal = (float) str_replace(['.', ','], '', $this->pay_nominal);
             $qty = (int) $this->pay_qty;
-
             $trxId = null;
 
-            // LOGIKA 1: Jika Uang -> Masuk Jurnal Transaksi
             if ($this->activeDue->dueType->unit_type == 'money') {
                 $trx = Transaction::create([
                     'uuid' => Str::uuid(),
@@ -254,34 +205,23 @@ class FlexibleDuesManager extends Component
                     'user_id' => Auth::id(),
                 ]);
                 $trxId = $trx->id;
-            }
-
-            // LOGIKA 2: Jika Barang -> Masuk Inventaris Aset (OTOMATIS)
-            else {
-                // Cari aset dengan nama yang sama
-                $existingAsset = Asset::where('nama_aset', $this->activeDue->dueType->nama)->first();
-
-                if ($existingAsset) {
-                    // Jika sudah ada, tambahkan jumlahnya saja
-                    $existingAsset->increment('jumlah', $qty);
-                    $existingAsset->update(['kondisi' => 'baik']); // Reset status jika ada penambahan baru
+            } else {
+                $asset = Asset::where('nama_aset', $this->activeDue->dueType->nama)->first();
+                if ($asset) {
+                    $asset->increment('jumlah', $qty);
                 } else {
-                    // Jika belum ada, buat record aset baru
                     Asset::create([
                         'uuid' => (string) Str::uuid(),
                         'nama_aset' => $this->activeDue->dueType->nama,
-                        'kategori' => $this->inferCategory($this->activeDue->dueType->nama),
+                        'kategori' => 'Bangunan',
                         'jumlah' => $qty,
-                        'satuan' => $this->activeDue->dueType->satuan_barang,
+                        'satuan' => $this->activeDue->dueType->satuan_barang ?? 'Unit',
                         'asal_perolehan' => 'hibah_jemaat',
-                        'member_id' => $this->activeDue->assignee_type === Member::class ? $this->activeDue->assignee_id : null,
                         'tanggal_perolehan' => now(),
-                        'catatan' => 'Input otomatis via Setoran Tanggungan Natura.',
                     ]);
                 }
             }
 
-            // Simpan Log Tanggungan
             DuesLog::create([
                 'uuid' => Str::uuid(),
                 'dues_registry_id' => $this->activeDue->id,
@@ -292,7 +232,6 @@ class FlexibleDuesManager extends Component
                 'user_id' => Auth::id(),
             ]);
 
-            // Update Status Progress Tanggungan Jemaat
             $this->activeDue->update([
                 'current_paid_nominal' => $this->activeDue->current_paid_nominal + $nominal,
                 'current_paid_qty' => $this->activeDue->current_paid_qty + $qty,
@@ -306,27 +245,33 @@ class FlexibleDuesManager extends Component
             $this->activeDue->update(['status' => $isLunas ? 'lunas' : 'cicil']);
         });
 
-        $this->isPayModalOpen = false;
         $this->dispatch('notify', message: 'Setoran berhasil disimpan.', type: 'success');
+        $this->isPayModalOpen = false;
     }
 
     public function render()
     {
-        $query = DuesRegistry::with(['assignee', 'dueType', 'fiscalYear'])
+        $query = DuesRegistry::with(['dueType', 'assignee', 'fiscalYear'])
             ->where('fiscal_year_id', $this->filterYear)
             ->when($this->typeFilter, fn($q) => $q->where('ref_due_type_id', $this->typeFilter))
             ->where(function ($q) {
-                $q->whereHasMorph('assignee', [Member::class], fn($m) => $m->where('nama', 'like', "%{$this->search}%"))
-                    ->orWhereHasMorph('assignee', [Family::class], fn($f) => $f->where('kepala_keluarga', 'like', "%{$this->search}%"));
+                if ($this->search) {
+                    $q->whereHasMorph('assignee', [Member::class, Family::class], function ($mq, $type) {
+                        if ($type === Member::class) {
+                            $mq->where('nama', 'like', "%{$this->search}%");
+                        } else {
+                            $mq->where('kepala_keluarga', 'like', "%{$this->search}%");
+                        }
+                    });
+                }
             });
 
         return view('livewire.finance.flexible-dues-manager', [
-            'dues' => $query->paginate(15),
-            'dueTypes' => RefDueType::active()->get(),
-            'pekerjaans' => RefPekerjaan::all(),
-            'years' => FiscalYear::orderBy('tahun', 'desc')->get(),
+            'dues' => $query->latest()->paginate(15),
+            'dueTypes' => RefDueType::where('is_active', true)->get(),
             'accounts' => RefAccount::where('is_active', true)->get(),
-            'budgetPosts' => RefBudgetPost::where('jenis', 'pemasukan')->whereNotNull('parent_id')->orderBy('kode')->get()
+            'budgetPosts' => RefBudgetPost::where('jenis', 'pemasukan')->orderBy('kode')->get(),
+            'years' => FiscalYear::orderBy('tahun', 'desc')->get(),
         ]);
     }
 }
