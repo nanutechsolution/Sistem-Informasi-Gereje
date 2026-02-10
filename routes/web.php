@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LandingController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,10 +24,13 @@ use App\Livewire\Schedules;
 use App\Livewire\Auctions;
 use App\Livewire\Clerical\SacramentManager;
 use App\Livewire\Letters;
+use App\Livewire\Public\NewsManager;
 use App\Livewire\Settings\Accounts;
 
 // --- 1. HALAMAN LOGIN (Publik) ---
-Route::get('/', Login::class)->name('login');
+Route::get('/', [LandingController::class, 'index'])->name('landing');
+
+Route::get('/login', Login::class)->name('login');
 
 // --- 2. AREA LOGIN (Wajib Auth) ---
 Route::middleware('auth')->group(function () {
@@ -91,6 +95,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/schedules/{schedule}/servants', Schedules\ServantManager::class)->name('schedules.servants');
         Route::get('/schedules/groups', Schedules\GroupManager::class)->name('schedules.groups');
         Route::get('/schedules/pks/print', [App\Http\Controllers\PrintScheduleController::class, 'pks'])->name('schedules.pks.print');
+        Route::get('/news/manage', NewsManager::class)->name('news.manage');
     });
 
     // C. KEUANGAN (Bendahara & Admin) -> Transaksi, Lelang, Gaji
