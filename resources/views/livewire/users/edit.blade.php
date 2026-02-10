@@ -1,122 +1,86 @@
-<div class="py-6 sm:py-12 bg-gray-50 min-h-screen">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="py-6 sm:py-12 bg-slate-50 min-h-screen">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <!-- Header Navigasi -->
-        <div class="mb-8">
-            <a href="{{ route('users.index') }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-primary transition-colors mb-2">
-                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                Kembali ke Daftar
-            </a>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-primary tracking-tight">Edit Personil</h1>
-            <p class="text-gray-500 mt-1">Perbarui data untuk <span class="font-bold text-gray-800">{{ $user->name }}</span>.</p>
+        <!-- Header -->
+        <div class="mb-10 flex items-center justify-between">
+            <div>
+                <a href="{{ route('users.index') }}" class="text-xs font-bold text-slate-400 hover:text-primary flex items-center gap-2 mb-2 transition-colors group">
+                    <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    Kembali ke Daftar
+                </a>
+                <h1 class="text-3xl font-black text-slate-900 tracking-tight leading-none uppercase italic">Edit Pengguna</h1>
+                <p class="text-slate-500 mt-2 font-medium italic border-l-4 border-amber-400 pl-4">Perbarui informasi akun dan hak akses login.</p>
+            </div>
+            
+            <div class="h-16 w-16 rounded-3xl bg-slate-900 text-white flex items-center justify-center font-black text-2xl shadow-xl">
+                {{ substr($name, 0, 1) }}
+            </div>
         </div>
 
-        <form wire:submit="update">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <form wire:submit="save" class="bg-white rounded-[40px] p-8 sm:p-12 shadow-xl border border-slate-100 relative overflow-hidden">
+            <!-- Dekorasi Atas -->
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-400 to-primary"></div>
+
+            <div class="space-y-8">
                 
-                <!-- KOLOM KIRI: Form Input -->
-                <div class="lg:col-span-2 space-y-6">
-                    
-                    <!-- Kartu Identitas -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
-                        <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
-                            <span class="bg-blue-100 text-primary p-2 rounded-lg mr-3">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                            </span>
-                            Edit Identitas
-                        </h3>
-
-                        <div class="space-y-5">
-                            <!-- Input Nama -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Lengkap</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span class="text-gray-400 font-bold text-sm">Aa</span>
-                                    </div>
-                                    <input wire:model="name" type="text" 
-                                        class="pl-10 w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary block p-3 transition-all" 
-                                        placeholder="Contoh: Pdt. John Doe">
-                                </div>
-                                @error('name') <p class="mt-2 text-sm text-red-600 flex items-center"><svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>{{ $message }}</p> @enderror
-                            </div>
-
-                            <!-- Input Email -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Alamat Email</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
-                                    </div>
-                                    <input wire:model="email" type="email" 
-                                        class="pl-10 w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary block p-3 transition-all" 
-                                        placeholder="nama@gereja.id">
-                                </div>
-                                @error('email') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
-                            </div>
-                        </div>
+                <!-- Identitas Utama -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nama Lengkap</label>
+                        <input wire:model="name" type="text" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-4 focus:ring-primary/10 transition-all">
+                        @error('name') <span class="text-rose-500 text-[10px] font-bold block mt-1 ml-1 uppercase">{{ $message }}</span> @enderror
                     </div>
-
-                    <!-- Kartu Keamanan -->
-                    <div class="bg-yellow-50 rounded-2xl shadow-sm border border-yellow-100 p-6 sm:p-8">
-                         <h3 class="text-lg font-bold text-yellow-800 mb-4 flex items-center">
-                            <span class="bg-white text-yellow-600 p-1.5 rounded-lg mr-3 border border-yellow-200 shadow-sm">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                            </span>
-                            Ubah Password (Opsional)
-                        </h3>
-
-                        <div class="bg-white p-4 rounded-xl border border-yellow-200">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Password Baru</label>
-                            <input wire:model="password" type="text" 
-                                class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 block p-3 transition-all" 
-                                placeholder="Kosongkan jika tidak ingin mengubah...">
-                            <p class="text-xs text-gray-500 mt-2 flex items-center">
-                                <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                Isi hanya jika personil lupa password atau ingin menggantinya.
-                            </p>
-                            @error('password') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Email Login</label>
+                        <input wire:model="email" type="email" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-4 focus:ring-primary/10 transition-all">
+                        @error('email') <span class="text-rose-500 text-[10px] font-bold block mt-1 ml-1 uppercase">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
-                <!-- KOLOM KANAN: Sidebar Role & Aksi -->
-                <div class="space-y-6">
-                    
-                    <!-- Pilihan Role -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        <label class="block text-sm font-bold text-gray-900 mb-4">Peran Pengguna (Role)</label>
-                        
-                        <div class="space-y-3">
-                            @foreach(['operator' => 'Operator Multimedia', 'admin' => 'Administrator', 'pendeta' => 'Pendeta', 'majelis' => 'Majelis Jemaat', 'bendahara' => 'Bendahara', 'sekretaris' => 'Sekretaris'] as $val => $label)
-                            <label class="flex items-center p-3 border rounded-xl cursor-pointer transition-colors hover:bg-gray-50 {{ $role === $val ? 'border-primary bg-blue-50/50 ring-1 ring-primary' : 'border-gray-200' }}">
-                                <input type="radio" wire:model="role" value="{{ $val }}" class="h-4 w-4 text-primary border-gray-300 focus:ring-primary">
-                                <span class="ml-3 block text-sm font-medium text-gray-700">
-                                    {{ $label }}
-                                </span>
-                            </label>
-                            @endforeach
-                        </div>
-                        @error('role') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
-                    </div>
+                <hr class="border-slate-100">
 
-                    <!-- Tombol Aksi -->
-                    <div class="pt-4">
-                        <button type="submit" 
-                            wire:loading.attr="disabled"
-                            class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-primary hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
-                            
-                            <span wire:loading.remove>Simpan Perubahan</span>
-                            <span wire:loading class="flex items-center">
-                                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                Menyimpan...
-                            </span>
-                        </button>
-                        
-                        <a href="{{ route('users.index') }}" class="mt-3 w-full flex justify-center py-3 px-4 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none transition-all">
-                            Batal
-                        </a>
+                <!-- Pilihan Role -->
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Hak Akses (Role)</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        @foreach($roles as $r)
+                        <label class="cursor-pointer group">
+                            <input type="radio" wire:model="role" value="{{ $r->name }}" class="peer sr-only">
+                            <div class="p-4 rounded-2xl border-2 border-slate-50 bg-slate-50 hover:border-primary/20 peer-checked:border-primary peer-checked:bg-blue-50 peer-checked:text-primary transition-all text-center">
+                                <span class="block font-black text-slate-400 peer-checked:text-primary uppercase text-[10px] tracking-widest">{{ $r->name }}</span>
+                            </div>
+                        </label>
+                        @endforeach
                     </div>
+                    @error('role') <span class="text-rose-500 text-[10px] font-bold block mt-3 uppercase">{{ $message }}</span> @enderror
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- Keamanan -->
+                <div class="bg-amber-50 rounded-3xl p-6 border border-amber-100">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-2 bg-white rounded-xl shadow-sm text-amber-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </div>
+                        <h4 class="text-sm font-black text-amber-900 uppercase italic">Ganti Password</h4>
+                    </div>
+                    
+                    <p class="text-[10px] text-amber-600 font-bold mb-4 uppercase tracking-wide">Isi jika ingin mengganti password, jika tidak biarkan kosong.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input wire:model="password" type="password" class="w-full bg-white border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-4 focus:ring-amber-200 shadow-sm" placeholder="Password baru...">
+                    </div>
+                    @error('password') <span class="text-rose-500 text-[10px] font-bold block mt-2 ml-1 uppercase">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- Tombol Aksi -->
+                <div class="pt-6 flex flex-col sm:flex-row gap-4">
+                    <button type="submit" wire:loading.attr="disabled" class="flex-[2] py-5 bg-primary text-white rounded-[28px] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-blue-500/40 hover:scale-[1.02] transition-all active:scale-95 disabled:opacity-70">
+                        <span wire:loading.remove italic>Update Data Pengguna</span>
+                        <span wire:loading>Memproses Perubahan...</span>
+                    </button>
+                    <a href="{{ route('users.index') }}" class="flex-1 py-5 bg-slate-100 text-slate-400 rounded-[28px] font-black text-xs text-center uppercase tracking-[0.2em] hover:bg-slate-200 transition-all italic">Batal</a>
                 </div>
 
             </div>

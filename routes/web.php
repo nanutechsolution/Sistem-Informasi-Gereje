@@ -1,108 +1,134 @@
 <?php
 
-use App\Http\Controllers\PrintTransactionController;
-use App\Livewire\Auctions\EventIndex;
-use App\Livewire\Auctions\ItemManager;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Livewire\Auth\Login;
-use App\Livewire\Budgets\Manage;
-use App\Livewire\Dashboard;
-use App\Livewire\Families\Create as FamiliesCreate;
-use App\Livewire\Families\Edit as FamiliesEdit;
-use App\Livewire\Families\Index as FamiliesIndex;
-use App\Livewire\Finance\OpeningBalances;
-use App\Livewire\Finance\PayrollManager;
-use App\Livewire\Members\Create as MembersCreate;
-use App\Livewire\Members\Edit as MembersEdit;
-use App\Livewire\Members\Index as MembersIndex;
-use App\Livewire\Members\Show;
-use App\Livewire\Officers\Create as OfficersCreate;
-use App\Livewire\Officers\Edit as OfficersEdit;
-use App\Livewire\Officers\Index as OfficersIndex;
-use App\Livewire\Officers\Show as OfficersShow;
-use App\Livewire\Reports\BudgetRealization;
-use App\Livewire\Reports\GeneralLedger;
-use App\Livewire\Reports\Weekly;
-use App\Livewire\Schedules\GroupManager;
-use App\Livewire\Schedules\MySchedules;
-use App\Livewire\Schedules\PksScheduler;
-use App\Livewire\Schedules\ScheduleManager;
-use App\Livewire\Settings\Accounts as AccountsGereja;
-use App\Livewire\Settings\ActivityTypes;
-use App\Livewire\Settings\BudgetPosts;
-use App\Livewire\Settings\MasterData;
-use App\Livewire\Transactions\Create as TransactionsCreate;
-use App\Livewire\Transactions\Edit as TransactionsEdit;
-use App\Livewire\Transactions\Index as TransactionsIndex;
-use App\Livewire\Users\Index;
-use App\Livewire\Users\Create;
-use App\Livewire\Users\Edit;
 
-// Halaman Login (Utama)
+// Controllers
+use App\Http\Controllers\PrintTransactionController;
+
+// Livewire Components
+use App\Livewire\Auth\Login;
+use App\Livewire\Dashboard;
+use App\Livewire\Users;
+use App\Livewire\Families;
+use App\Livewire\Members;
+use App\Livewire\Officers;
+use App\Livewire\Transactions;
+use App\Livewire\Budgets;
+use App\Livewire\Finance;
+use App\Livewire\Reports;
+use App\Livewire\Settings;
+use App\Livewire\Schedules;
+use App\Livewire\Auctions;
+use App\Livewire\Letters;
+use App\Livewire\Settings\Accounts;
+
+// --- 1. HALAMAN LOGIN (Publik) ---
 Route::get('/', Login::class)->name('login');
 
-// Group Middleware Auth (Hanya bisa diakses jika login)
+// --- 2. AREA LOGIN (Wajib Auth) ---
 Route::middleware('auth')->group(function () {
+
+    // AKSES UMUM (Semua User Login Bisa Masuk)
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
-    // Manajemen Users
-    Route::get('/users', Index::class)->name('users.index');
-    Route::get('/users/create', Create::class)->name('users.create');
-    Route::get('/users/{user}/edit', Edit::class)->name('users.edit');
+    Route::get('/my-schedules', Schedules\MySchedules::class)->name('schedules.my'); // Jadwal Pribadi
+    // LOGOUT
+    Route::post('/logout', function (Request $request) {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect('/');
+    })->name('logout');
 
 
+    // --- HAK AKSES KHUSUS (ROLE & PERMISSION) ---
 
-    Route::get('/families', FamiliesIndex::class)->name('families.index');
-    Route::get('/families/create', FamiliesCreate::class)->name('families.create');
-    Route::get('/families/{family}/edit', FamiliesEdit::class)->name('families.edit');
-    Route::get('/families/{family}/members/create', MembersCreate::class)->name('members.create');
-    Route::get('/members/{member}/edit', MembersEdit::class)->name('members.edit');
-    Route::get('/members', MembersIndex::class)->name('members.index');
-    Route::get('/members/{member}', Show::class)->name('members.show');
-    Route::get('/settings/positions', \App\Livewire\Settings\Positions::class)->name('settings.positions');
-    Route::get('/settings/activity-types', App\Livewire\Settings\ActivityTypes::class)->name('settings.activity-types');
-    Route::get('/settings/{type}', MasterData::class)->name('settings.master');
+    // A. SUPER ADMIN (Manajemen User & Sistem)
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/users', Users\Index::class)->name('users.index');
+        Route::get('/users/create', Users\Create::class)->name('users.create');
+        Route::get('/users/{user}/edit', Users\Edit::class)->name('users.edit');
 
-    // keuangan
-    Route::get('/transactions', TransactionsIndex::class)->name('transactions.index');
-    Route::get('/transactions/create', TransactionsCreate::class)->name('transactions.create');
-    Route::get('/transactions/{transaction}/edit', TransactionsEdit::class)->name('transactions.edit');
-    Route::get('/reports/budget-realization', BudgetRealization::class)->name('reports.budget-realization');
-    Route::get('/reports/general-ledger', GeneralLedger::class)->name('reports.general-ledger');
+        // Master Data & Settings
+        Route::get('/settings/positions', Settings\Positions::class)->name('settings.positions');
+        Route::get('/settings/activity-types', Settings\ActivityTypes::class)->name('settings.activity-types');
+        Route::get('/budgets/budget-posts', Settings\BudgetPosts::class)->name('settings.budget-posts');
+        Route::get('/settings/accounts', Settings\Accounts::class)->name('settings.accounts'); // Disesuaikan nama rutenya
+        Route::get('/settings/accounts/dompet', Accounts::class)->name('settings.accounts.dompet');
+        Route::get('/settings/roles', \App\Livewire\Settings\RoleManager::class)->name('settings.roles');
+        Route::get('/settings/assets', \App\Livewire\Settings\AssetManager::class)->middleware(['auth'])->name('settings.assets');
+        Route::get('/settings/{type}', Settings\MasterData::class)->name('settings.master');
+    });
 
-    // print
-    Route::get('/transactions/{transaction}/print', [PrintTransactionController::class, 'show'])->name('transactions.print');
-    Route::get('/budgets/manage', Manage::class)->name('budgets.manage');
-    Route::get('/budgets/budget-posts', BudgetPosts::class)->name('settings.budget-posts');
-    Route::get('/finance/opening-balances', OpeningBalances::class)->name('finance.opening-balances');
-    Route::get('/reports/weekly', Weekly::class)->name('reports.weekly');
-    Route::get('/settings/accounts/dompet', AccountsGereja::class)->name('settings.accounts.dompet');
-    Route::get('/auctions', EventIndex::class)->name('auctions.index');
-    Route::get('/auctions/{event}', ItemManager::class)->name('auctions.items');
+    // B. SEKRETARIAT (Sekretaris & Admin) -> Database Jemaat & Jadwal
+    Route::middleware(['permission:manage_database|manage_schedules'])->group(function () {
+        // Keluarga
+        Route::get('/families', Families\Index::class)->name('families.index');
+        Route::get('/families/create', Families\Create::class)->name('families.create');
+        Route::get('/families/{family}', \App\Livewire\Families\Show::class)->name('families.show');
+        Route::get('/families/{family}/edit', Families\Edit::class)->name('families.edit');
+        Route::get('/families/{family}/members/create', Members\Create::class)->name('members.create');
 
-    Route::get('/officers', OfficersIndex::class)->name('officers.index');
-    Route::get('/officers/create', OfficersCreate::class)->name('officers.create');
-    Route::get('/officers/{officer}/edit', OfficersEdit::class)->name('officers.edit');
-    Route::get('/officers/{officer}/show', OfficersShow::class)->name('officers.show');
-    Route::get('/finance/payroll', PayrollManager::class)->name('finance.payroll');
-    Route::get('/finance/payroll/slip/{uuid}', App\Livewire\Finance\PayrollSlip::class)->name('payroll.slip');
-    Route::get('/schedules', ScheduleManager::class)->name('schedules.index');
-    Route::get('/schedules/pks', PksScheduler::class)->name('schedules.pks');
-    Route::get('/schedules/{schedule}/servants', App\Livewire\Schedules\ServantManager::class)->name('schedules.servants');
-    Route::get('/schedules/pks/verify', \App\Livewire\Schedules\PksVerification::class)->name('schedules.pks.verify');
-    Route::get('/my-schedules', MySchedules::class)->name('schedules.my');
-    Route::get('/schedules/groups', GroupManager::class)->name('schedules.groups');
+        // Jemaat
+        Route::get('/members', Members\Index::class)->name('members.index');
+        Route::get('/members/{member}/edit', Members\Edit::class)->name('members.edit');
+        Route::get('/members/{member}', Members\Show::class)->name('members.show');
+
+        // Pejabat (HR)
+        Route::get('/officers', Officers\Index::class)->name('officers.index');
+        Route::get('/officers/create', Officers\Create::class)->name('officers.create');
+        Route::get('/officers/{officer}/edit', Officers\Edit::class)->name('officers.edit');
+        Route::get('/officers/{officer}/show', Officers\Show::class)->name('officers.show');
+
+        // Surat & Jadwal Umum
+        Route::get('/letters', Letters\LetterManager::class)->name('letters.index');
+        Route::get('/schedules', Schedules\ScheduleManager::class)->name('schedules.index');
+        Route::get('/schedules/{schedule}/servants', Schedules\ServantManager::class)->name('schedules.servants');
+        Route::get('/schedules/groups', Schedules\GroupManager::class)->name('schedules.groups');
+        Route::get('/schedules/pks/print', [App\Http\Controllers\PrintScheduleController::class, 'pks'])->name('schedules.pks.print');
+    });
+
+    // C. KEUANGAN (Bendahara & Admin) -> Transaksi, Lelang, Gaji
+    Route::middleware(['permission:manage_finance'])->group(function () {
+        // Jurnal Kas
+        Route::get('/transactions', Transactions\Index::class)->name('transactions.index');
+        Route::get('/transactions/create', Transactions\Create::class)->name('transactions.create');
+        Route::get('/transactions/{transaction}/edit', Transactions\Edit::class)->name('transactions.edit');
+        Route::get('/transactions/{transaction}/print', [PrintTransactionController::class, 'show'])->name('transactions.print');
+
+        // Payroll
+        Route::get('/finance/payroll', Finance\PayrollManager::class)->name('finance.payroll');
+        Route::get('/finance/payroll/slip/{uuid}', Finance\PayrollSlip::class)->name('payroll.slip');
+
+        // Lelang
+        Route::get('/auctions', Auctions\EventIndex::class)->name('auctions.index');
+        Route::get('/auctions/receivables', \App\Livewire\Auctions\Receivables::class)->name('auctions.receivables');
+        Route::get('/auctions/{event}', Auctions\ItemManager::class)->name('auctions.items');
+        Route::get('/finance/flexible-dues', \App\Livewire\Finance\FlexibleDuesManager::class)->name('finance.flexible-dues');
+    });
+
+    // D. KONTROL ANGGARAN (Bendahara) -> RAPB & Saldo Awal
+    Route::middleware(['permission:manage_budget'])->group(function () {
+        Route::get('/budgets/manage', Budgets\Manage::class)->name('budgets.manage');
+        Route::get('/finance/opening-balances', Finance\OpeningBalances::class)->name('finance.opening-balances');
+
+        // Verifikasi PKS (Hanya Bendahara yang boleh terima uang)
+        Route::get('/schedules/pks/verify', Schedules\PksVerification::class)->name('schedules.pks.verify');
+    });
+
+    // E. INPUT LAPANGAN (Majelis Wilayah / Operator) -> Input PKS
+    Route::middleware(['permission:input_pks'])->group(function () {
+        Route::get('/schedules/pks', Schedules\PksScheduler::class)->name('schedules.pks');
+    });
+
+    // F. LAPORAN (Semua Pejabat Inti)
+    Route::middleware(['permission:view_reports'])->group(function () {
+        Route::get('/reports/weekly', Reports\Weekly::class)->name('reports.weekly');
+        Route::get('/reports/budget-realization', Reports\BudgetRealization::class)->name('reports.budget-realization');
+        Route::get('/reports/general-ledger', Reports\GeneralLedger::class)->name('reports.general-ledger');
+        Route::get('/reports/finance', \App\Livewire\Reports\FinanceMonthly::class)->name('reports.monthly');
+        Route::get('/reports/census', \App\Livewire\Reports\MemberCensus::class)->name('reports.census');
+    });
+    Route::get('/finance/due-types', \App\Livewire\Settings\DueTypeManager::class)->middleware(['auth', 'can:manage_settings'])->name('settings.due-types');
 });
-
-
-// Route Logout (FIX: Menggunakan Request yang benar)
-Route::post('/logout', function (Request $request) {
-    Auth::logout();
-
-    // Invalidate session
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-
-    return redirect('/');
-})->name('logout');

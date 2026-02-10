@@ -1,121 +1,89 @@
-<div class="py-6 sm:py-12 bg-gray-50 min-h-screen">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="py-6 sm:py-12 bg-slate-50 min-h-screen">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <!-- Header Navigasi -->
-        <div class="mb-8">
-            <a href="{{ route('users.index') }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-primary transition-colors mb-2">
-                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                Kembali ke Daftar
+        <div class="mb-10">
+            <a href="{{ route('users.index') }}" class="text-xs font-bold text-slate-400 hover:text-primary flex items-center gap-2 mb-2 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                Kembali
             </a>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-primary tracking-tight">Tambah Personil Baru</h1>
-            <p class="text-gray-500 mt-1">Daftarkan pengurus atau staf gereja baru ke dalam sistem.</p>
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight leading-none uppercase">User Baru</h1>
+            <p class="text-slate-500 mt-2 font-medium">Buat akun login untuk pengurus gereja.</p>
         </div>
 
-        <form wire:submit="save">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <form wire:submit="save" class="bg-white rounded-[40px] p-8 sm:p-12 shadow-xl border border-slate-100 relative overflow-visible">
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-primary rounded-t-[40px]"></div>
+
+            <div class="space-y-8">
                 
-                <!-- KOLOM KIRI: Form Input -->
-                <div class="lg:col-span-2 space-y-6">
-                    
-                    <!-- Kartu Identitas -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
-                        <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
-                            <span class="bg-blue-100 text-primary p-2 rounded-lg mr-3">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                            </span>
-                            Identitas Pengguna
-                        </h3>
-
-                        <div class="space-y-5">
-                            <!-- Input Nama -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Lengkap</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span class="text-gray-400 font-bold text-sm">Aa</span>
-                                    </div>
-                                    <input wire:model="name" type="text" 
-                                        class="pl-10 w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary block p-3 transition-all" 
-                                        placeholder="Contoh: Pdt. John Doe">
-                                </div>
-                                @error('name') <p class="mt-2 text-sm text-red-600 flex items-center"><svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>{{ $message }}</p> @enderror
-                            </div>
-
-                            <!-- Input Email -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Alamat Email</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
-                                    </div>
-                                    <input wire:model="email" type="email" 
-                                        class="pl-10 w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary block p-3 transition-all" 
-                                        placeholder="nama@gereja.id">
-                                </div>
-                                @error('email') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
-                            </div>
+                <!-- Link ke Jemaat (Opsional) -->
+                <div class="relative">
+                    <label class="block text-[10px] font-black text-primary uppercase tracking-widest mb-2 ml-1">Tautkan ke Data Jemaat (Opsional)</label>
+                    @if($selectedMemberName)
+                        <div class="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex justify-between items-center animate-in zoom-in-95">
+                            <span class="font-bold text-blue-900">{{ $selectedMemberName }}</span>
+                            <button type="button" wire:click="$set('selectedMemberName', null)" class="text-[10px] font-black uppercase text-blue-400 underline">Batalkan</button>
                         </div>
+                    @else
+                        <input wire:model.live.debounce.300ms="searchMember" type="text" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-slate-300" placeholder="Cari nama jemaat untuk auto-fill...">
+                        @if(count($foundMembers) > 0)
+                            <div class="absolute z-10 w-full mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden divide-y divide-slate-50">
+                                @foreach($foundMembers as $m)
+                                <button type="button" wire:click="selectMember({{ $m->id }}, '{{ $m->nama }}')" class="w-full text-left p-4 hover:bg-slate-50 font-bold text-sm text-slate-700">{{ $m->nama }}</button>
+                                @endforeach
+                            </div>
+                        @endif
+                    @endif
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- Form Utama -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nama Lengkap</label>
+                        <input wire:model="name" type="text" class="w-full bg-white border-2 border-slate-100 rounded-2xl p-4 font-bold text-slate-900 focus:border-primary focus:ring-0 transition-all">
+                        @error('name') <span class="text-rose-500 text-[10px] font-bold block mt-1">{{ $message }}</span> @enderror
                     </div>
-
-                    <!-- Kartu Keamanan -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
-                         <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
-                            <span class="bg-yellow-100 text-yellow-700 p-2 rounded-lg mr-3">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                            </span>
-                            Keamanan Akun
-                        </h3>
-
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Password Awal</label>
-                            <input wire:model="password" type="text" 
-                                class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary block p-3 transition-all" 
-                                placeholder="Minimal 6 karakter...">
-                            <p class="text-xs text-gray-500 mt-2">Disarankan menggunakan kombinasi huruf dan angka.</p>
-                            @error('password') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Email Login</label>
+                        <input wire:model="email" type="email" class="w-full bg-white border-2 border-slate-100 rounded-2xl p-4 font-bold text-slate-900 focus:border-primary focus:ring-0 transition-all">
+                        @error('email') <span class="text-rose-500 text-[10px] font-bold block mt-1">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
-                <!-- KOLOM KANAN: Sidebar Role & Aksi -->
-                <div class="space-y-6">
-                    
-                    <!-- Pilihan Role -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        <label class="block text-sm font-bold text-gray-900 mb-4">Peran Pengguna (Role)</label>
-                        
-                        <div class="space-y-3">
-                            @foreach(['operator' => 'Operator Multimedia', 'admin' => 'Administrator', 'pendeta' => 'Pendeta', 'majelis' => 'Majelis Jemaat', 'bendahara' => 'Bendahara', 'sekretaris' => 'Sekretaris'] as $val => $label)
-                            <label class="flex items-center p-3 border rounded-xl cursor-pointer transition-colors hover:bg-gray-50 {{ $role === $val ? 'border-primary bg-blue-50/50 ring-1 ring-primary' : 'border-gray-200' }}">
-                                <input type="radio" wire:model="role" value="{{ $val }}" class="h-4 w-4 text-primary border-gray-300 focus:ring-primary">
-                                <span class="ml-3 block text-sm font-medium text-gray-700">
-                                    {{ $label }}
-                                </span>
-                            </label>
-                            @endforeach
-                        </div>
-                        @error('role') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Hak Akses (Role)</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        @foreach($roles as $r)
+                        <label class="cursor-pointer group">
+                            <input type="radio" wire:model="role" value="{{ $r->name }}" class="peer sr-only">
+                            <div class="p-4 rounded-2xl border-2 border-slate-100 bg-white hover:border-primary/30 peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
+                                <span class="block font-black text-slate-700 peer-checked:text-primary uppercase text-xs tracking-wider">{{ $r->name }}</span>
+                            </div>
+                        </label>
+                        @endforeach
                     </div>
+                    @error('role') <span class="text-rose-500 text-[10px] font-bold block mt-2">{{ $message }}</span> @enderror
+                </div>
 
-                    <!-- Tombol Aksi (Sticky Bottom di Mobile jika mau, tapi ini standar) -->
-                    <div class="pt-4">
-                        <button type="submit" 
-                            wire:loading.attr="disabled"
-                            class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-primary hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
-                            
-                            <span wire:loading.remove>Simpan Data Baru</span>
-                            <span wire:loading class="flex items-center">
-                                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                Menyimpan...
-                            </span>
-                        </button>
-                        
-                        <a href="{{ route('users.index') }}" class="mt-3 w-full flex justify-center py-3 px-4 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none transition-all">
-                            Batal
-                        </a>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Password</label>
+                        <input wire:model="password" type="password" class="w-full bg-white border-2 border-slate-100 rounded-2xl p-4 font-bold text-slate-900 focus:border-primary focus:ring-0 transition-all">
+                        @error('password') <span class="text-rose-500 text-[10px] font-bold block mt-1">{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Konfirmasi Password</label>
+                        <input wire:model="password_confirmation" type="password" class="w-full bg-white border-2 border-slate-100 rounded-2xl p-4 font-bold text-slate-900 focus:border-primary focus:ring-0 transition-all">
                     </div>
                 </div>
 
+                <div class="pt-6">
+                    <button type="submit" wire:loading.attr="disabled" class="w-full py-5 bg-slate-900 text-white rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:scale-[1.02] transition-transform active:scale-95 disabled:opacity-70">
+                        <span wire:loading.remove>Simpan User Baru</span>
+                        <span wire:loading>Memproses...</span>
+                    </button>
+                </div>
             </div>
         </form>
     </div>

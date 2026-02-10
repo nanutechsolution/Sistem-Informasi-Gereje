@@ -23,7 +23,7 @@ class FullDeploymentSeeder extends Seeder
 
         // 2. BUAT 60 KARTU KELUARGA (KK) & ANGGOTA JEMAAT
         $this->command->info('Sedang membuat 60 KK dan Jemaat...');
-        $allMembers = $this->createFamiliesAndMembers(60);
+        $allMembers = $this->createFamiliesAndMembers(10);
 
         // 3. ANGKAT PEJABAT (20 Orang) DARI JEMAAT YANG ADA
         // 1 Pendeta, 1 Vicaris, 18 Majelis/Staf
@@ -166,7 +166,7 @@ class FullDeploymentSeeder extends Seeder
         $this->createOfficerAccount($shuffled->pop(), $posBen, 'bendahara@gks.id', 'bendahara', 'non_organik', 750000);
 
         // 5. MAJELIS / STAFF LAIN (16 Orang)
-        for ($i = 1; $i <= 16; $i++) {
+        for ($i = 1; $i <= 10; $i++) {
             $majelis = $shuffled->pop();
             $email = "majelis{$i}@gks.id";
             $this->createOfficerAccount($majelis, $posPnt, $email, 'majelis', 'majelis', 0);

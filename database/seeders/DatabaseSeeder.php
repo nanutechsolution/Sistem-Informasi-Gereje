@@ -40,6 +40,8 @@ class DatabaseSeeder extends Seeder
             PositionSeeder::class,
             ActivityTypeSeeder::class,
             ConstructionSeeder::class,
+            DueTypeSeeder::class,
+            RoleSeeder::class,
             FullDeploymentSeeder::class,
             ServiceGroupSeeder::class,
         ]);

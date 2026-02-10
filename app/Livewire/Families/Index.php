@@ -34,11 +34,11 @@ class Index extends Component
     {
         $families = Family::query()
             ->with('refWilayah') // Eager load relasi Master Wilayah agar cepat
-            ->when($this->search, function($q) {
+            ->when($this->search, function ($q) {
                 $q->where('kepala_keluarga', 'like', '%' . $this->search . '%')
-                  ->orWhere('nomor_kk', 'like', '%' . $this->search . '%');
+                    ->orWhere('nomor_kk', 'like', '%' . $this->search . '%');
             })
-            ->when($this->statusFilter, function($q) {
+            ->when($this->statusFilter, function ($q) {
                 $q->where('status', $this->statusFilter);
             })
             ->latest()

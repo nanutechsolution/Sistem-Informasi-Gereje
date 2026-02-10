@@ -85,12 +85,12 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-20">
 
-                <!-- BRANDING & DESKTOP MENU -->
+                <!-- BRANDING -->
                 <div class="flex items-center gap-8">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group">
                         <div class="h-11 w-11 bg-accent rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
                             <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m8-10h2m-2 4h2m-4-8h2m-2-4h2m-4 8h2m-2 4h2m-2-4h2m-2-4h2m-2-4h2m-2-4h2m-2-4h2m-2 4h2m-2 4h2"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m8-10h2m-2 4h2m-4-8h2m-2-4h2m-4 8h2m-2 4h2m-2-4h2m-2-4h2m-2-4h2m-2 4h2m-2 4h2"></path>
                             </svg>
                         </div>
                         <div class="leading-none">
@@ -99,26 +99,29 @@
                         </div>
                     </a>
 
-                    <!-- DESKTOP MENU GROUPING -->
+                    <!-- DESKTOP MENU -->
                     <div class="hidden lg:flex items-center space-x-1">
                         <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl text-sm font-bold transition {{ request()->routeIs('dashboard') ? 'bg-white/10 text-white' : 'text-blue-100 hover:bg-white/5' }}">Home</a>
 
-                        <!-- Dropdown Database (Jemaat & Pelayan) -->
+                        <!-- 1. DATABASE (Sekretaris & Admin) -->
+                        @can('manage_database')
                         <div class="relative" @click.away="dbOpen = false">
                             <button @click="dbOpen = !dbOpen" class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition {{ request()->is('members*') || request()->is('families*') || request()->is('officers*') ? 'bg-white/10 text-white' : 'text-blue-100 hover:bg-white/5' }}">
                                 Database <svg class="w-4 h-4 transition-transform" :class="dbOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
-                            <div x-show="dbOpen" x-cloak class="absolute left-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl py-2 text-slate-700 ring-1 ring-black/5 animate-fade-in-down">
+                            <div x-show="dbOpen" x-cloak class="absolute left-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl py-2 text-slate-700 ring-1 ring-black/5 animate-fade-in-down">
                                 <a href="{{ route('members.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Data Jemaat (Jiwa)</a>
                                 <a href="{{ route('families.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Data Keluarga (KK)</a>
                                 <div class="h-px bg-slate-100 my-1"></div>
                                 <a href="{{ route('officers.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 text-primary">Pejabat & Pelayan</a>
+                                <a href="{{ route('letters.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Surat Menyurat</a>
                             </div>
                         </div>
+                        @endcan
 
-                        <!-- Dropdown Pelayanan (PKS & Minggu) -->
+                        <!-- 2. PELAYANAN (Campuran) -->
                         <div class="relative" @click.away="serviceOpen = false">
                             <button @click="serviceOpen = !serviceOpen" class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition {{ request()->is('schedules*') ? 'bg-white/10 text-white' : 'text-blue-100 hover:bg-white/5' }}">
                                 Pelayanan <svg class="w-4 h-4 transition-transform" :class="serviceOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,20 +129,40 @@
                                 </svg>
                             </button>
                             <div x-show="serviceOpen" x-cloak class="absolute left-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl py-2 text-slate-700 ring-1 ring-black/5 animate-fade-in-down">
-                                <a href="{{ route('schedules.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Agenda Pelayanan</a>
+                                <!-- Jadwal Umum (Sekretaris) -->
+                                @can('manage_schedules')
+                                <a href="{{ route('schedules.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Agenda Jemaat</a>
+                                <a href="{{ route('schedules.groups') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Kelompok Pelayanan</a>
+                                @endcan
+                                <!-- Input PKS (Majelis & Sekretaris) -->
+                                @can('input_pks')
                                 <a href="{{ route('schedules.pks') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Jadwal PKS</a>
+                                @endcan
+
+                                <!-- Tugas Saya (Semua Pelayan) -->
                                 <a href="{{ route('schedules.my') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 flex items-center justify-between">
                                     Tugas Saya
-                                    <span class="px-1.5 py-0.5 rounded-md bg-accent text-primary text-[9px] font-black uppercase">Majelis</span>
+                                    <span class="px-1.5 py-0.5 rounded-md bg-accent text-primary text-[9px] font-black uppercase">Personal</span>
                                 </a>
+
+                                <!-- Verifikasi (Bendahara) -->
+                                @can('approve_transaction')
                                 <div class="h-px bg-slate-100 my-1"></div>
                                 <a href="{{ route('schedules.pks.verify') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 text-amber-600 italic">Verifikasi Kolekte PKS</a>
+                                @endcan
+
+                                <!-- Laporan Warta (Semua) -->
+                                @can('view_reports')
+                                <div class="h-px bg-slate-100 my-1"></div>
                                 <a href="{{ route('reports.weekly') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Laporan Warta Jemaat</a>
-                                <a href="{{ route('schedules.groups') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Group Pelayanan</a>
+                                <a href="{{ route('reports.monthly') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Laporan Bulanan</a>
+                                <a href="{{ route('reports.census') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Laporan Sensus Jemaat</a>
+                                @endcan
                             </div>
                         </div>
 
-                        <!-- Dropdown Keuangan -->
+                        <!-- 3. KEUANGAN (Bendahara & Admin) -->
+                        @can('manage_finance')
                         <div class="relative" @click.away="financeOpen = false">
                             <button @click="financeOpen = !financeOpen" class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition {{ request()->is('transactions*') || request()->is('auctions*') ? 'bg-white/10 text-white' : 'text-blue-100 hover:bg-white/5' }}">
                                 Keuangan <svg class="w-4 h-4 transition-transform" :class="financeOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,32 +172,52 @@
                             <div x-show="financeOpen" x-cloak class="absolute left-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl py-2 text-slate-700 ring-1 ring-black/5 animate-fade-in-down">
                                 <a href="{{ route('transactions.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Jurnal Kas Umum</a>
                                 <a href="{{ route('auctions.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Manajemen Lelang</a>
+                                <a href="{{ route('auctions.receivables') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Manajemen Piutang Lelang</a>
                                 <a href="{{ route('finance.payroll') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Payroll / Gaji</a>
-                                <a href="{{ route('settings.positions') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Master Jabatan</a>
                                 <div class="h-px bg-slate-100 my-1"></div>
                                 <a href="{{ route('reports.budget-realization') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Laporan Realisasi</a>
                                 <a href="{{ route('reports.general-ledger') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Buku Kas Umum (BKU)</a>
+                                <a href="{{ route('finance.flexible-dues') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Tanggungan Jemaat</a>
                             </div>
                         </div>
+                        @endcan
 
-                        <!-- Dropdown Admin -->
+                        <!-- 4. SISTEM (Admin Only) -->
+                        @if(auth()->user()->hasRole('admin') || auth()->user()->can('manage_finance'))
                         <div class="relative" @click.away="adminOpen = false">
                             <button @click="adminOpen = !adminOpen" class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition {{ request()->is('settings*') || request()->is('budgets*') ? 'bg-white/10 text-white' : 'text-blue-100 hover:bg-white/5' }}">
-                                Sistem <svg class="w-4 h-4 transition-transform" :class="adminOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                Sistem
+                                <svg class="w-4 h-4 transition-transform" :class="adminOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
+
                             <div x-show="adminOpen" x-cloak class="absolute left-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl py-2 text-slate-700 ring-1 ring-black/5 animate-fade-in-down">
+
+                                @role('admin')
                                 <a href="{{ route('budgets.manage') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Pengaturan RAPB</a>
                                 <a href="{{ route('settings.accounts.dompet') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Manajemen Dompet</a>
                                 <a href="{{ route('settings.budget-posts') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Pos Anggaran</a>
                                 <a href="{{ route('finance.opening-balances') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Saldo Awal Tahun</a>
+
                                 <div class="h-px bg-slate-100 my-1"></div>
-                                <a href="{{ route('users.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Manajemen Login User</a>
-                                <a href="{{ route('settings.master', 'wilayah') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Data Wilayah & Master</a>
-                                <a href="{{ route('settings.activity-types') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Aktivitas</a>
+
+                                <a href="{{ route('users.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Manajemen User</a>
+                                <a href="{{ route('settings.roles') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Manajemen Hak Akses</a>
+                                <a href="{{ route('settings.master', 'wilayah') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Data Wilayah</a>
+                                <a href="{{ route('settings.activity-types') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Jenis Kegiatan</a>
+                                <a href="{{ route('settings.positions') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Master Jabatan</a>
+                                @endrole
+
+                                @can('manage_finance')
+                                <a href="{{ route('settings.due-types') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Master Iuran</a>
+                                @endcan
+                                <a href="{{ route('settings.assets') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Manajemen Aset</a>
+
                             </div>
                         </div>
+                        @endif
+
                     </div>
                 </div>
 
@@ -183,7 +226,7 @@
                     <div class="hidden lg:flex items-center gap-3 pl-6 border-l border-white/10">
                         <div class="text-right">
                             <div class="text-sm font-bold leading-none">{{ auth()->user()->name }}</div>
-                            <div class="text-[10px] text-accent font-extrabold uppercase mt-1 tracking-widest italic">{{ auth()->user()->role }}</div>
+                            <div class="text-[10px] text-accent font-extrabold uppercase mt-1 tracking-widest italic">{{ auth()->user()->getRoleNames()->first() ?? 'User' }}</div>
                         </div>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
@@ -195,6 +238,7 @@
                         </form>
                     </div>
 
+                    <!-- HAMBURGER MOBILE -->
                     <button @click="open = !open" class="lg:hidden p-2.5 rounded-xl bg-white/10 border border-white/20 hover:scale-95 transition-all">
                         <svg x-show="!open" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -207,54 +251,54 @@
             </div>
         </div>
 
-        <!-- MENU MOBILE (Full Screen Overlay) -->
+        <!-- MENU MOBILE (Full Screen) -->
         <div x-show="open" x-cloak x-transition class="lg:hidden fixed inset-0 z-40 bg-primary/98 backdrop-blur-xl pt-24 px-6 overflow-y-auto">
             <div class="space-y-6 pb-20">
-                <!-- Group 1: Database & Pelayanan -->
-                <div class="grid grid-cols-2 gap-3">
-                    <a href="{{ route('members.index') }}" class="p-4 rounded-2xl bg-white/5 border border-white/10 text-center flex flex-col items-center gap-2">
-                        <span class="text-xl">👥</span><span class="text-[10px] font-bold uppercase tracking-widest">Data Jemaat</span>
-                    </a>
-                    <a href="{{ route('schedules.index') }}" class="p-4 rounded-2xl bg-white/5 border border-white/10 text-center flex flex-col items-center gap-2">
-                        <span class="text-xl">📅</span><span class="text-[10px] font-bold uppercase tracking-widest">Agenda</span>
-                    </a>
-                    <a href="{{ route('schedules.pks') }}" class="p-4 rounded-2xl bg-white/5 border border-white/10 text-center flex flex-col items-center gap-2">
-                        <span class="text-xl">📅</span><span class="text-[10px] font-bold uppercase tracking-widest">Agenda</span>
-                    </a>
-                </div>
 
-                <!-- Group 2: Khusus Majelis/Pendeta -->
-                <div class="space-y-2">
-                    <p class="text-[10px] font-black text-accent uppercase tracking-widest pl-2 italic">Pelayanan Kelompok PKS</p>
-                    <div class="bg-white/5 rounded-3xl border border-white/10 overflow-hidden divide-y divide-white/5">
-                        <a href="{{ route('schedules.my') }}" class="block p-4 text-sm font-bold hover:bg-white/5 flex items-center justify-between text-white">
-                            Tugas Pelayanan Saya
-                            <span class="bg-accent text-primary text-[8px] px-1.5 py-0.5 rounded font-black">NEW</span>
-                        </a>
-                        <a href="{{ route('schedules.pks.verify') }}" class="block p-4 text-sm font-bold hover:bg-white/5 text-blue-200">Verifikasi Kolekte Wilayah</a>
-                    </div>
-                </div>
+                <!-- Home -->
+                <a href="{{ route('dashboard') }}" class="p-4 rounded-2xl bg-white/5 border border-white/10 text-center flex flex-col items-center gap-2">
+                    <span class="text-xl">🏠</span><span class="text-xs font-bold uppercase tracking-widest">Dashboard</span>
+                </a>
 
-                <!-- Group 3: Keuangan -->
+                <!-- Database (Admin/Sekretaris) -->
+                @can('manage_database')
                 <div class="space-y-2">
-                    <p class="text-[10px] font-black text-blue-300 uppercase tracking-widest pl-2">Jurnal & Keuangan</p>
+                    <p class="text-[10px] font-black text-blue-300 uppercase tracking-widest pl-2">Database Jemaat</p>
                     <div class="grid grid-cols-2 gap-3">
-                        <a href="{{ route('transactions.index') }}" class="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-center flex flex-col items-center gap-2">
-                            <span class="text-xl">💰</span><span class="text-[10px] font-bold uppercase tracking-widest">Kas Umum</span>
-                        </a>
-                        <a href="{{ route('auctions.index') }}" class="p-4 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 text-center flex flex-col items-center gap-2">
-                            <span class="text-xl">🔨</span><span class="text-[10px] font-bold uppercase tracking-widest">Lelang</span>
-                        </a>
+                        <a href="{{ route('members.index') }}" class="p-4 rounded-2xl bg-white/5 border border-white/10 text-center"><span class="text-xl">👥</span><br><span class="text-[10px] font-bold uppercase">Jemaat</span></a>
+                        <a href="{{ route('families.index') }}" class="p-4 rounded-2xl bg-white/5 border border-white/10 text-center"><span class="text-xl">🏠</span><br><span class="text-[10px] font-bold uppercase">Keluarga</span></a>
+                    </div>
+                </div>
+                @endcan
+
+                <!-- Pelayanan (PKS) -->
+                <div class="space-y-2">
+                    <p class="text-[10px] font-black text-accent uppercase tracking-widest pl-2 italic">Pelayanan</p>
+                    <div class="bg-white/5 rounded-3xl border border-white/10 overflow-hidden divide-y divide-white/5">
+                        <a href="{{ route('schedules.my') }}" class="block p-4 text-sm font-bold text-white flex justify-between">Tugas Saya <span class="bg-accent text-primary px-1 rounded text-[8px] font-black">NEW</span></a>
+                        @can('input_pks') <a href="{{ route('schedules.pks') }}" class="block p-4 text-sm font-bold text-white">Input Jadwal PKS</a> @endcan
+                        @can('approve_transaction') <a href="{{ route('schedules.pks.verify') }}" class="block p-4 text-sm font-bold text-amber-300">Verifikasi Setoran</a> @endcan
                     </div>
                 </div>
 
-                <!-- Action Bottom -->
+                <!-- Keuangan -->
+                @can('manage_finance')
+                <div class="space-y-2">
+                    <p class="text-[10px] font-black text-emerald-300 uppercase tracking-widest pl-2">Keuangan</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <a href="{{ route('transactions.index') }}" class="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-center"><span class="text-xl">💰</span><br><span class="text-[10px] font-bold uppercase">Kas</span></a>
+                        <a href="{{ route('finance.payroll') }}" class="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-center"><span class="text-xl">💸</span><br><span class="text-[10px] font-bold uppercase">Gaji</span></a>
+                    </div>
+                </div>
+                @endcan
+
+                <!-- Logout Mobile -->
                 <div class="pt-6 border-t border-white/10">
                     <div class="flex items-center gap-4 mb-6">
                         <div class="h-14 w-14 rounded-2xl bg-accent flex items-center justify-center text-primary font-black text-xl">{{ substr(auth()->user()->name, 0, 1) }}</div>
                         <div class="flex-1">
                             <div class="text-lg font-extrabold leading-none">{{ auth()->user()->name }}</div>
-                            <div class="text-xs text-blue-300 font-bold uppercase mt-2 italic">{{ auth()->user()->role }}</div>
+                            <div class="text-xs text-blue-300 font-bold uppercase mt-2 italic">{{ auth()->user()->getRoleNames()->first() ?? '-' }}</div>
                         </div>
                     </div>
                     <form method="POST" action="{{ route('logout') }}">
@@ -274,11 +318,9 @@
     <!-- 4. FOOTER -->
     <footer class="hidden sm:block bg-white border-t border-slate-200 py-10 mt-12">
         <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="text-sm font-bold text-slate-400">&copy; {{ date('Y') }} Sistem Informasi SIG-GKS Jemaat Reda Pada</p>
-            <p class="text-[10px] text-slate-300 mt-2 uppercase tracking-[0.5em]">Melayani dengan Kasih, Mengelola dengan Transparansi</p>
+            <p class="text-sm font-bold text-slate-400">&copy; {{ date('Y') }} SIG-GKS Jemaat Reda Pada</p>
         </div>
     </footer>
-
 </body>
 
 </html>

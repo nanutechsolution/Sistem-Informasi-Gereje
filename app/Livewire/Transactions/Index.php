@@ -21,7 +21,7 @@ class Index extends Component
     public $filterAccount = '';
     public $filterJenis = '';
 
-    protected $queryString = ['search', 'startDate', 'endDate', 'filterAccount'];
+    protected $queryString = ['search', 'startDate', 'endDate', 'filterAccount', 'filterJenis'];
 
     public function mount()
     {
@@ -32,7 +32,8 @@ class Index extends Component
 
     public function delete($id)
     {
-        if (!in_array(Auth::user()->role, ['admin', 'bendahara'])) {
+        // PENGATURAN PERMISSION: Hanya yang punya izin manage_finance (Admin, Bendahara, Panitia Pembangunan)
+        if (!Auth::user()->can('manage_finance')) {
             $this->dispatch('notify', message: 'AKSES DITOLAK: Anda tidak berhak menghapus transaksi.', type: 'error');
             return;
         }
@@ -46,7 +47,7 @@ class Index extends Component
             }
             
             $trx->delete();
-            $this->dispatch('notify', message: 'Transaksi berhasil dihapus (Saldo dikembalikan).', type: 'success');
+            $this->dispatch('notify', message: 'Transaksi berhasil dihapus.', type: 'success');
         }
     }
 
@@ -66,10 +67,15 @@ class Index extends Component
             ->latest('tanggal')
             ->latest('created_at');
 
-        // Hitung Ringkasan untuk Periode Ini (Sebelum Pagination)
+        // Hitung Ringkasan Dinamis (Mendukung filter Panitia Pembangunan)
         $summaryQuery = clone $query;
         $totalMasuk = (clone $summaryQuery)->where('jenis', 'masuk')->sum('nominal');
         $totalKeluar = (clone $summaryQuery)->where('jenis', 'keluar')->sum('nominal');
+
+        // Tambahan khusus: Saldo Kas Pembangunan dalam periode ini
+        $kasBangun = (clone $summaryQuery)
+            ->whereHas('account', fn($q) => $q->where('nama', 'like', '%Pembangunan%'))
+            ->get();
 
         return view('livewire.transactions.index', [
             'transactions' => $query->paginate(15),
@@ -77,7 +83,8 @@ class Index extends Component
             'summary' => [
                 'masuk' => $totalMasuk,
                 'keluar' => $totalKeluar,
-                'saldo_periode' => $totalMasuk - $totalKeluar
+                'saldo_periode' => $totalMasuk - $totalKeluar,
+                'pembangunan' => $kasBangun->where('jenis', 'masuk')->sum('nominal') - $kasBangun->where('jenis', 'keluar')->sum('nominal')
             ]
         ]);
     }

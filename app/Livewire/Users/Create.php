@@ -3,52 +3,68 @@
 namespace App\Livewire\Users;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use App\Models\Member;
+use Spatie\Permission\Models\Role;
 use Livewire\Component;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class Create extends Component
 {
-    public $name = '';
-    public $email = '';
-    public $role = 'operator'; // Default role
-    public $password = '';
+    public $name, $email, $password, $password_confirmation;
+    public $role; // Slug role yang dipilih
+    
+    // Opsional: Link ke Data Jemaat
+    public $searchMember = '', $selectedMemberId, $selectedMemberName;
+    public $foundMembers = [];
 
-    protected $messages = [
-        'name.required' => 'Nama lengkap wajib diisi.',
-        'name.min' => 'Nama harus memiliki minimal 3 karakter.',
-        'email.required' => 'Alamat email wajib diisi.',
-        'email.email' => 'Format email tidak valid.',
-        'email.unique' => 'Email ini sudah terdaftar.',
-        'role.required' => 'Wajib memilih peran pengguna.',
-        'password.required' => 'Password wajib diisi untuk pengguna baru.',
-        'password.min' => 'Password minimal 6 karakter.',
-    ];
-    public function save()
+    protected function rules()
     {
-        // 1. Validasi
-        $this->validate([
+        return [
             'name' => 'required|min:3',
             'email' => 'required|email|unique:users,email',
-            'role' => 'required|in:admin,pendeta,majelis,bendahara,sekretaris,operator',
-            'password' => 'required|min:6',
-        ]);
+            'password' => ['required', 'confirmed', Password::defaults()],
+            'role' => 'required|exists:roles,name',
+        ];
+    }
 
-        // 2. Simpan ke Database
-        User::create([
+    public function updatedSearchMember($value)
+    {
+        $this->foundMembers = strlen($value) > 2 
+            ? Member::where('nama', 'like', "%{$value}%")->limit(5)->get() 
+            : [];
+    }
+
+    public function selectMember($id, $name)
+    {
+        $this->selectedMemberId = $id;
+        $this->selectedMemberName = $name;
+        $this->name = $name; // Auto-fill nama user
+        $this->searchMember = ''; $this->foundMembers = [];
+    }
+
+    public function save()
+    {
+        $this->validate();
+
+        $user = User::create([
             'name' => $this->name,
             'email' => $this->email,
-            'role' => $this->role,
             'password' => Hash::make($this->password),
+            'member_id' => $this->selectedMemberId, // Link ke Data Jemaat
         ]);
 
-        // 3. Pesan sukses & Redirect
-        $this->dispatch('notify', message: 'Personil baru berhasil didaftarkan!', type: 'success');
+        // Assign Role Spatie
+        $user->assignRole($this->role);
 
+        $this->dispatch('notify', message: 'User baru berhasil dibuat!', type: 'success');
         return redirect()->route('users.index');
     }
 
     public function render()
     {
-        return view('livewire.users.create');
+        return view('livewire.users.create', [
+            'roles' => Role::all()
+        ]);
     }
 }
