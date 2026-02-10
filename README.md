@@ -132,3 +132,16 @@ Perangkat lunak ini **PROPRIETARY** dan dilindungi oleh **UU Hak Cipta**.
 - Distribusi ulang secara publik **tanpa lisensi resmi**.
 - Menghapus hak cipta atau klaim kepemilikan pada kode sumber.
 - Menggunakan kode ini untuk membangun produk **komersial lain**.
+
+## 📞 Hubungi Developer
+
+Sebelum menggunakan atau melakukan modifikasi pada SIG-GKS, harap **menghubungi tim developer** untuk mendapatkan izin dan panduan resmi.
+
+**Kontak Developer:**
+
+- **Email:** devteam@gks.id  
+- **Telepon / WhatsApp:** +62 812-3456-7890  
+- **Website / Portal:** [https://gks.id](https://gks.id)  
+
+> ⚠️ Pastikan untuk mendapatkan izin resmi sebelum mendistribusikan, menjual, atau menggunakan kode ini di luar GKS Jemaat Reda Pada.
+
