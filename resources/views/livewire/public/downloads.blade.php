@@ -1,6 +1,6 @@
 <div class="min-h-screen bg-slate-50 pb-32">
     <!-- HERO -->
-    <section class="relative pt-40 pb-20 px-6 lg:px-10 bg-slate-900 text-white overflow-hidden">
+    <section class="relative pt-20 pb-20 px-6 lg:px-10 bg-slate-900 text-white overflow-hidden">
         <div class="max-w-7xl mx-auto text-center relative z-10">
             <h1 class="text-5xl md:text-7xl font-serif italic mb-6 tracking-tighter animate-in fade-in slide-in-from-bottom-8 duration-700">
                 Pustaka <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white">Digital</span>
@@ -11,7 +11,7 @@
     </section>
 
     <!-- FILTER -->
-    <div class="sticky top-24 z-30 px-6 -mt-8">
+    <div class="sticky top-18 z-30 px-6 -mt-8">
         <div class="max-w-4xl mx-auto bg-white/80 backdrop-blur-xl border border-white/40 p-2 rounded-full shadow-2xl flex justify-center gap-2 overflow-x-auto no-scrollbar">
             @foreach(['Semua' => '', 'Tata Ibadah' => 'Tata Ibadah', 'Warta' => 'Warta Jemaat', 'Laporan' => 'Laporan Keuangan'] as $label => $val)
             <button wire:click="$set('filterKategori', '{{ $val }}')" 

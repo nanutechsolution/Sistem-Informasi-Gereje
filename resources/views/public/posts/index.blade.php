@@ -2,7 +2,7 @@
     <x-slot:title>Arsip Warta | GKS Jemaat Reda Pada</x-slot>
 
     <!-- HEADER / HERO -->
-    <section class="relative pt-40 pb-20 px-6 lg:px-10 overflow-hidden bg-slate-50">
+    <section class="relative pb-20 px-6 lg:px-10 overflow-hidden bg-slate-50">
         <div class="max-w-7xl mx-auto text-center relative z-10">
             <div class="inline-flex items-center gap-3 px-5 py-2 bg-blue-50/50 backdrop-blur-sm rounded-full border border-blue-100 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>

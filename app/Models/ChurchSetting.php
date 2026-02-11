@@ -8,24 +8,24 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 class ChurchSetting extends Model
 {
     use HasUuids;
-    
     protected $guarded = [];
-
-    protected $casts = [
-        'misi' => 'array', // Otomatis convert JSON ke Array PHP
-    ];
 
     public function uniqueIds() { return ['uuid']; }
 
-    // Helper untuk ambil setting (Singleton pattern sederhana)
+    /**
+     * Singleton: Ambil setting gereja saat ini (berdasarkan tenant/id pertama)
+     */
     public static function current()
     {
+        // Untuk multi-tenant, tambahkan logic filter berdasarkan domain/id di sini
         return self::first() ?? new self([
-            'nama_gereja' => 'Gereja Kristen Sumba',
-            'nama_jemaat' => 'Jemaat Reda Pada',
-            'warna_utama' => '#1e3a8a',
-            'warna_aksen' => '#d97706',
-            'misi' => []
+            'nama_gereja' => 'GKS Jemaat Reda Pada',
+            'color_primary' => '#1e3a8a',
+            'color_accent' => '#d97706',
+            'color_background' => '#f8fafc',
+            'color_sidebar' => '#0f172a',
+            'appearance_mode' => 'light',
+            'ui_rounded' => '1.5rem'
         ]);
     }
 }

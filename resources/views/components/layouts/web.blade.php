@@ -1,236 +1,268 @@
 @php
-    $setting = \App\Models\ChurchSetting::first() ?? new \App\Models\ChurchSetting([
-        'nama_gereja' => 'Gereja Kristen Sumba',
-        'nama_jemaat' => 'Jemaat Reda Pada',
-        'warna_utama' => '#1e3a8a',
-        'warna_aksen' => '#d97706',
-        'alamat' => 'Jl. Lolo Ole, Sumba Barat Daya',
-        'email' => 'sekretariat@gksredapada.org'
-    ]);
+// Konfigurasi Church Setting
+$setting = \App\Models\ChurchSetting::first() ?? new \App\Models\ChurchSetting([
+    'nama_gereja' => 'Gereja Kristen Sumba',
+    'nama_jemaat' => 'Jemaat Reda Pada',
+    'warna_utama' => '#1e3a8a',
+    'warna_aksen' => '#d97706',
+    'alamat' => 'Jl. Lolo Ole, Sumba Barat Daya',
+    'email' => 'sekretariat@gksredapada.org',
+    'telepon' => '08123456789'
+]);
 @endphp
+
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
+<html lang="id" class="scroll-smooth">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? $setting->nama_jemaat }} | {{ $setting->nama_gereja }}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Scripts & Fonts -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
-    
-    <!-- Dynamic Config -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { 
-                        primary: '{{ $setting->warna_utama }}', 
-                        accent: '{{ $setting->warna_aksen }}',
-                        surface: '#FDFDFD',
-                        dark: '#0f172a'
-                    },
-                    fontFamily: { 
-                        sans: ['Plus Jakarta Sans', 'sans-serif'], 
-                        serif: ['Playfair Display', 'serif'] 
-                    },
-                    borderRadius: { '4xl': '2rem', '5xl': '3.5rem' }
-                }
-            }
-        }
-    </script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Vite Assets (CSS & JS) -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <!-- Livewire Styles -->
+    @livewireStyles
+
+    <!-- 
+        CATATAN PENTING: 
+        Di Livewire 3, Alpine.js sudah dibundel di dalam Livewire.
+        JANGAN menambahkan script CDN Alpine secara manual karena akan menyebabkan konflik "Multiple Instances"
+        dan error "window.Livewire.find is undefined".
+    -->
 
     <style>
-        .glass-nav { background: rgba(253, 253, 253, 0.9); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        :root {
+            --primary: {{ $setting->warna_utama }};
+            --accent: {{ $setting->warna_aksen }};
+        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
         [x-cloak] { display: none !important; }
-        .dropdown-enter { animation: slideDown 0.2s ease-out forwards; }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .nav-link-mobile {
+            @apply flex items-center justify-between text-2xl font-extrabold tracking-tight text-slate-900 py-4 border-b border-slate-50 transition-all hover:text-primary;
+        }
     </style>
 </head>
-<body class="bg-surface text-slate-900 font-sans antialiased selection:bg-primary selection:text-white flex flex-col min-h-screen" x-data="{ mobileMenuOpen: false }">
 
-    <!-- 1. NAVIGATION BAR -->
-    <nav class="fixed top-0 w-full z-[100] glass-nav transition-all duration-500">
+<body class="bg-slate-50 text-slate-900 selection:bg-primary selection:text-white" 
+      x-data="{ 
+        mobileMenu: false, 
+        isTop: true,
+        scrolled() { this.isTop = window.pageYOffset < 50 } 
+      }" 
+      @scroll.window="scrolled()"
+      @keydown.escape="mobileMenu = false">
+
+    <!-- HEADER NAVIGATION -->
+    <nav class="fixed top-0 w-full z-[100] transition-all duration-500"
+         :class="isTop ? 'py-6 bg-transparent' : 'py-3 glass-effect shadow-sm border-b border-slate-200/50'">
         <div class="max-w-7xl mx-auto px-6 lg:px-10">
-            <div class="flex justify-between h-20 items-center">
+            <div class="flex justify-between items-center">
                 
-                <!-- Logo -->
-                <a href="{{ url('/') }}" class="flex items-center gap-3 group z-50">
-                    @if($setting->logo_path)
-                        <img src="{{ asset('storage/'.$setting->logo_path) }}" class="h-10 w-auto group-hover:scale-105 transition-transform object-contain">
-                    @else
-                        <div class="h-10 w-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg group-hover:rotate-12 transition-transform">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m8-10h2m-2 4h2m-4-8h2m-2-4h2m-4 8h2m-2 4h2m-2-4h2m-2-4h2m-2-4h2m-2-4h2m-2 4h2m-2 4h2"></path></svg>
-                        </div>
-                    @endif
-                    <div class="leading-none hidden sm:block">
-                        <span class="block text-lg font-extrabold tracking-tight text-primary uppercase italic">{{ $setting->nama_gereja }}</span>
-                        <span class="block text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 mt-0.5">{{ $setting->nama_jemaat }}</span>
+                <!-- Logo Brand -->
+                <a href="{{ url('/') }}" class="flex items-center gap-3 group">
+                    <div class="h-11 w-11 bg-primary rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary/20 group-hover:rotate-3 transition-transform">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 21l-8-18h16l-8 18z"/>
+                        </svg>
+                    </div>
+                    <div class="leading-tight">
+                        <h1 class="text-lg font-extrabold tracking-tight text-slate-900">{{ $setting->nama_gereja }}</h1>
+                        <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/80">{{ $setting->nama_jemaat }}</p>
                     </div>
                 </a>
-                
+
                 <!-- Desktop Menu -->
                 <div class="hidden lg:flex items-center gap-8">
-                    <a href="{{ url('/') }}" class="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-primary transition-colors">Beranda</a>
-
-                    <!-- Dropdown: Tentang -->
-                    <div class="relative group" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-                        <button class="flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-primary py-6">
-                            Tentang <svg class="w-3 h-3 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </button>
-                        <div x-show="open" x-cloak class="absolute top-16 left-0 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 dropdown-enter">
-                            <a href="{{ route('public.profile') }}" class="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl">Profil Gereja</a>
-                            <a href="{{ url('/#galeri') }}" class="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl">Galeri Kegiatan</a>
-                            <a href="{{ route('public.contact.index') }}" class="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl">Hubungi Kami</a>
+                    <div class="flex items-center gap-6 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                        <a href="{{ url('/') }}" class="hover:text-primary transition-colors {{ request()->is('/') ? 'text-primary' : '' }}">Beranda</a>
+                        <a href="{{ route('public.schedules.index') }}" class="hover:text-primary transition-colors {{ request()->routeIs('public.schedules.*') ? 'text-primary' : '' }}">Jadwal</a>
+                        <a href="{{ route('public.warta.index') }}" class="hover:text-primary transition-colors {{ request()->routeIs('public.warta.*') ? 'text-primary' : '' }}">Warta</a>
+                        
+                        <div class="relative group" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                            <button class="flex items-center gap-1 hover:text-primary transition-colors uppercase font-bold tracking-widest">
+                                Layanan <svg class="w-3 h-3 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            <div x-show="open" x-cloak x-transition.opacity class="absolute top-full -left-4 w-56 pt-4">
+                                <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 p-3 flex flex-col gap-1">
+                                    <a href="{{ route('public.prayer') }}" class="px-4 py-2 hover:bg-slate-50 rounded-xl transition-colors text-sm text-slate-600 font-medium">Permohonan Doa</a>
+                                    <a href="{{ route('public.sermons') }}" class="px-4 py-2 hover:bg-slate-50 rounded-xl transition-colors text-sm text-slate-600 font-medium">Video Khotbah</a>
+                                    <a href="{{ route('public.downloads') }}" class="px-4 py-2 hover:bg-slate-50 rounded-xl transition-colors text-sm text-slate-600 font-medium">Pustaka Dokumen</a>
+                                </div>
+                            </div>
                         </div>
+
+                        <a href="{{ route('public.profile') }}" class="hover:text-primary transition-colors {{ request()->routeIs('public.profile') ? 'text-primary' : '' }}">Profil</a>
+                        <a href="{{ route('public.contact.index') }}" class="hover:text-primary transition-colors">Kontak</a>
                     </div>
 
-                    <!-- Dropdown: Informasi -->
-                    <div class="relative group" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-                        <button class="flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-primary py-6">
-                            Informasi <svg class="w-3 h-3 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </button>
-                        <div x-show="open" x-cloak class="absolute top-16 left-0 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 dropdown-enter">
-                            <a href="{{ route('public.warta.index') }}" class="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl">Warta Jemaat</a>
-                            <a href="{{ route('public.schedules.index') }}" class="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl">Jadwal Ibadah</a>
-                            <a href="{{ url('/#keuangan') }}" class="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl">Keuangan</a>
-                        </div>
-                    </div>
+                    <div class="h-6 w-[1px] bg-slate-200 mx-2"></div>
 
-                    <!-- Dropdown: Layanan -->
-                    <div class="relative group" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-                        <button class="flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-primary py-6">
-                            Layanan <svg class="w-3 h-3 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </button>
-                        <div x-show="open" x-cloak class="absolute top-16 right-0 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 dropdown-enter">
-                            <a href="{{ route('public.prayer') }}" class="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl">Permohonan Doa</a>
-                            <a href="{{ route('public.downloads') }}" class="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl">Download Dokumen</a>
-                            <a href="{{ route('public.sermons') }}" class="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl">Video Khotbah</a>
-                        </div>
-                    </div>
-
-                    <!-- Portal -->
                     @auth
-                        <a href="{{ route('dashboard') }}" class="ml-4 px-6 py-2.5 bg-slate-900 text-white rounded-full font-bold text-xs uppercase tracking-widest shadow-lg hover:bg-primary transition-all">Dashboard</a>
+                        <a href="{{ route('dashboard') }}" class="bg-slate-900 text-white px-6 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-widest hover:bg-primary transition-all shadow-lg shadow-slate-900/10">Dashboard</a>
                     @else
-                        <a href="{{ route('login') }}" class="ml-4 px-6 py-2.5 bg-primary text-white rounded-full font-bold text-xs uppercase tracking-widest shadow-lg hover:shadow-primary/40 hover:-translate-y-0.5 transition-all">Login</a>
+                        <a href="{{ route('login') }}" class="bg-primary text-white px-6 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-widest hover:shadow-xl hover:shadow-primary/30 transition-all">Portal Login</a>
                     @endauth
                 </div>
 
-                <!-- Mobile Toggle -->
-                <button @click="mobileMenuOpen = !mobileMenuOpen" class="lg:hidden p-2 text-primary focus:outline-none">
-                    <svg x-show="!mobileMenuOpen" class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                    <svg x-show="mobileMenuOpen" x-cloak class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                <!-- Mobile Trigger -->
+                <button @click="mobileMenu = true" class="lg:hidden p-2.5 bg-white rounded-xl text-primary shadow-sm border border-slate-100">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                 </button>
             </div>
         </div>
 
         <!-- Mobile Menu Overlay -->
-        <div x-show="mobileMenuOpen" x-cloak x-transition.opacity class="lg:hidden fixed inset-0 z-40 bg-white pt-24 px-6 overflow-y-auto">
-            <div class="flex flex-col space-y-6 text-center">
-                <a href="{{ url('/') }}" class="text-xl font-bold text-slate-800">Beranda</a>
-                <div class="space-y-3">
-                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Tentang</p>
-                    <a href="{{ route('public.profile') }}" class="block text-slate-600 py-1">Profil Gereja</a>
-                    <a href="{{ url('/#galeri') }}" class="block text-slate-600 py-1">Galeri</a>
-                    <a href="{{ route('public.contact.index') }}" class="block text-slate-600 py-1">Kontak</a>
+        <div x-show="mobileMenu" 
+             x-cloak
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-x-full"
+             x-transition:enter-end="opacity-100 translate-x-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-x-0"
+             x-transition:leave-end="opacity-0 translate-x-full"
+             class="fixed inset-0 z-[200] bg-white lg:hidden flex flex-col h-screen overflow-hidden">
+            
+            <!-- Mobile Header -->
+            <div class="p-6 flex justify-between items-center border-b border-slate-50">
+                <div class="flex items-center gap-3">
+                    <div class="h-9 w-9 bg-primary rounded-xl flex items-center justify-center text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 21l-8-18h16l-8 18z"/></svg>
+                    </div>
+                    <span class="font-bold text-xs uppercase tracking-[0.2em] text-slate-400">Navigasi Utama</span>
                 </div>
-                <div class="space-y-3">
-                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Informasi</p>
-                    <a href="{{ route('public.warta.index') }}" class="block text-slate-600 py-1">Warta Jemaat</a>
-                    <a href="{{ route('public.schedules.index') }}" class="block text-slate-600 py-1">Jadwal Ibadah</a>
-                    <a href="{{ url('/#keuangan') }}" class="block text-slate-600 py-1">Keuangan</a>
+                <button @click="mobileMenu = false" class="p-3 bg-slate-50 rounded-full text-slate-400 hover:bg-slate-100 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Mobile Links Content -->
+            <div class="flex-grow overflow-y-auto p-8 space-y-2">
+                <a href="{{ url('/') }}" @click="mobileMenu = false" class="nav-link-mobile">
+                    <span>Beranda</span>
+                    <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a href="{{ route('public.schedules.index') }}" @click="mobileMenu = false" class="nav-link-mobile">
+                    <span>Jadwal Ibadah</span>
+                    <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a href="{{ route('public.warta.index') }}" @click="mobileMenu = false" class="nav-link-mobile">
+                    <span>Warta Jemaat</span>
+                    <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </a>
+                
+                <!-- Mobile Accordion Layanan -->
+                <div x-data="{ open: false }" class="border-b border-slate-50">
+                    <button @click="open = !open" class="flex items-center justify-between w-full text-2xl font-extrabold tracking-tight text-slate-900 py-4 transition-all" :class="open ? 'text-primary' : ''">
+                        <span>Layanan Jemaat</span>
+                        <svg class="w-5 h-5 transition-transform duration-300" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div x-show="open" x-cloak x-transition class="flex flex-col gap-4 pb-6 pl-4 border-l-2 border-primary/10 mt-2">
+                        <a href="{{ route('public.prayer') }}" @click="mobileMenu = false" class="text-lg font-bold text-slate-500 hover:text-primary transition-colors">Permohonan Doa</a>
+                        <a href="{{ route('public.sermons') }}" @click="mobileMenu = false" class="text-lg font-bold text-slate-500 hover:text-primary transition-colors">Video Khotbah</a>
+                        <a href="{{ route('public.downloads') }}" @click="mobileMenu = false" class="text-lg font-bold text-slate-500 hover:text-primary transition-colors">Pustaka Dokumen</a>
+                    </div>
                 </div>
-                <div class="pt-8 pb-12">
-                    @auth
-                        <a href="{{ route('dashboard') }}" class="block w-full py-4 bg-slate-900 text-white rounded-2xl font-bold uppercase tracking-widest text-xs">Dashboard</a>
-                    @else
-                        <a href="{{ route('login') }}" class="block w-full py-4 bg-primary text-white rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl">Login Pengurus</a>
-                    @endauth
-                </div>
+
+                <a href="{{ route('public.profile') }}" @click="mobileMenu = false" class="nav-link-mobile">
+                    <span>Profil Jemaat</span>
+                    <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a href="{{ route('public.contact.index') }}" @click="mobileMenu = false" class="nav-link-mobile">
+                    <span>Kontak Kami</span>
+                    <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+
+            <!-- Mobile Footer CTA -->
+            <div class="p-8 border-t border-slate-50 bg-slate-50/50">
+                @auth
+                    <a href="{{ route('dashboard') }}" class="w-full bg-slate-900 text-white py-5 rounded-2xl flex items-center justify-center font-bold gap-3 shadow-lg">
+                        Buka Dashboard Admin <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 7l5 5-5 5M6 12h12"/></svg>
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="w-full bg-primary text-white py-5 rounded-2xl flex items-center justify-center font-bold gap-3 shadow-lg shadow-primary/20">
+                        Masuk ke Portal Jemaat <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 7l5 5-5 5M6 12h12"/></svg>
+                    </a>
+                @endauth
             </div>
         </div>
     </nav>
 
-    <!-- 2. CONTENT SLOT -->
-    <main class="flex-grow pt-20">
+    <!-- CONTENT AREA -->
+    <main class="flex-grow pt-28 pb-20 min-h-[60vh]">
         {{ $slot }}
     </main>
 
-    @php
-        $facebookUrl = $setting->facebook ? (str_starts_with($setting->facebook, 'http') ? $setting->facebook : 'https://facebook.com/' . ltrim($setting->facebook, '@')) : null;
-        $instagramUrl = $setting->instagram ? (str_starts_with($setting->instagram, 'http') ? $setting->instagram : 'https://instagram.com/' . ltrim($setting->instagram, '@')) : null;
-        $youtubeUrl = $setting->youtube ? (str_starts_with($setting->youtube, 'http') ? $setting->youtube : 'https://youtube.com/' . $setting->youtube) : null;
-    @endphp
-
-    <!-- 3. FOOTER -->
-    <footer class="bg-white pt-24 pb-12 px-6 lg:px-10 border-t border-slate-100 relative overflow-hidden">
-        <div class="max-w-7xl mx-auto relative z-10">
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-16 mb-20">
-                
-                <!-- Info Gereja -->
-                <div class="md:col-span-5">
-                    <h2 class="text-4xl font-black italic uppercase tracking-tighter text-slate-900 mb-6 leading-[0.85]">
-                        {{ $setting->nama_gereja }}<br><span class="text-primary">{{ $setting->nama_jemaat }}</span>
-                    </h2>
-                    <p class="text-slate-400 text-sm font-medium leading-loose italic border-l-4 border-primary pl-6 uppercase tracking-widest max-w-md">
-                        {{ $setting->deskripsi_singkat ?? 'Melayani Tuhan dengan integritas dan kasih melalui teknologi.' }}
-                    </p>
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 pt-20 pb-10 px-6 mt-10">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+                <!-- Col 1: Branding -->
+                <div class="md:col-span-1">
+                    <h2 class="text-2xl font-black italic text-slate-900 mb-4">{{ $setting->nama_gereja }}</h2>
+                    <p class="text-sm text-slate-500 leading-relaxed">{{ $setting->deskripsi_singkat ?? 'Membangun iman dan komunitas melalui pelayanan kasih di tanah Sumba.' }}</p>
                 </div>
                 
-                <!-- Kontak -->
-                <div class="md:col-span-4">
-                    <h4 class="text-[11px] font-black uppercase tracking-[0.6em] text-slate-300 mb-8 italic">Hubungi Kami</h4>
-                    <p class="text-sm font-black text-slate-800 leading-relaxed mb-6 italic">{{ $setting->alamat }}</p>
-                    <ul class="space-y-3 text-xs font-bold text-slate-500">
-                        <li class="flex items-center gap-3"><span class="text-primary">EMAIL</span> {{ $setting->email }}</li>
-                        @if($setting->telepon) <li class="flex items-center gap-3"><span class="text-primary">PHONE</span> {{ $setting->telepon }}</li> @endif
+                <!-- Col 2: Info -->
+                <div>
+                    <h4 class="text-[10px] font-bold uppercase tracking-[0.3em] text-primary mb-6">Sekretariat</h4>
+                    <p class="text-sm text-slate-600 leading-loose">{{ $setting->alamat }}</p>
+                </div>
+
+                <!-- Col 3: Kontak -->
+                <div>
+                    <h4 class="text-[10px] font-bold uppercase tracking-[0.3em] text-primary mb-6">Pusat Bantuan</h4>
+                    <ul class="text-sm text-slate-600 space-y-3 font-medium">
+                        <li><a href="mailto:{{ $setting->email }}" class="hover:text-primary transition-colors">{{ $setting->email }}</a></li>
+                        <li><a href="tel:{{ $setting->telepon }}" class="hover:text-primary transition-colors">{{ $setting->telepon }}</a></li>
+                        <li><a href="{{ route('public.contact.index') }}" class="hover:text-primary transition-colors underline decoration-primary/20 decoration-2 underline-offset-4">Kirim Pesan</a></li>
                     </ul>
                 </div>
 
-                <!-- Social -->
-                <div class="md:col-span-3 md:text-right">
-                    <h4 class="text-[11px] font-black uppercase tracking-[0.6em] text-slate-300 mb-8 italic">Social Media</h4>
-                    <div class="flex md:justify-end gap-4">
-                        @if($facebookUrl) <a href="{{ $facebookUrl }}" target="_blank" class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center font-black text-slate-400 hover:bg-primary hover:text-white transition-all cursor-pointer shadow-sm">FB</a> @endif
-                        @if($instagramUrl) <a href="{{ $instagramUrl }}" target="_blank" class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center font-black text-slate-400 hover:bg-primary hover:text-white transition-all cursor-pointer shadow-sm">IG</a> @endif
-                        @if($youtubeUrl) <a href="{{ $youtubeUrl }}" target="_blank" class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center font-black text-slate-400 hover:bg-primary hover:text-white transition-all cursor-pointer shadow-sm">YT</a> @endif
+                <!-- Col 4: Social -->
+                <div class="md:text-right">
+                    <h4 class="text-[10px] font-bold uppercase tracking-[0.3em] text-primary mb-6">Media Sosial</h4>
+                    <div class="flex md:justify-end gap-3">
+                        @foreach(['facebook', 'instagram', 'youtube'] as $sm)
+                            @if(!empty($setting->$sm))
+                            <a href="{{ str_starts_with($setting->$sm, 'http') ? $setting->$sm : '#' }}" target="_blank" class="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-primary hover:text-white transition-all shadow-sm border border-slate-100">
+                                <i class="fab fa-{{ $sm }}"></i>
+                            </a>
+                            @endif
+                        @endforeach
                     </div>
                 </div>
             </div>
-            
-            <!-- Bottom Bar dengan Kredit Khusus -->
-            <div class="pt-10 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-8">
-                
-                <!-- Copyright -->
-                <div class="text-center md:text-left">
-                    <p class="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] italic">© {{ date('Y') }} {{ $setting->nama_jemaat }}</p>
-                    <p class="text-[9px] text-slate-400 uppercase tracking-[0.2em] italic mt-1">All Rights Reserved</p>
-                </div>
 
-                <!-- Developer Credit & Persembahan -->
-                <div class="text-center md:text-right space-y-2">
-                    <div class="flex items-center justify-center md:justify-end gap-3">
-                        <div class="h-1.5 w-1.5 bg-primary rounded-full animate-ping"></div>
-                        <span class="text-[10px] font-black text-primary uppercase tracking-[0.3em] italic">System Online</span>
-                    </div>
-                    
-                    <p class="text-[9px] text-slate-400 uppercase tracking-[0.2em] italic leading-relaxed max-w-xs md:max-w-sm">
-                        Website & Sistem Informasi ini dikembangkan sebagai bentuk persembahan pelayanan digital untuk kemuliaan Tuhan.
-                    </p>
-
-                    <p class="text-[9px] text-slate-300 uppercase tracking-[0.3em] italic">
-                        Developed with dedication by <span class="text-primary font-black">Ranus Ate</span>
-                    </p>
+            <!-- Bottom Line -->
+            <div class="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">&copy; {{ date('Y') }} {{ $setting->nama_jemaat }}. All Rights Reserved.</p>
+                <div class="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> System Online</span>
+                    <span>•</span>
+                    <span>Dev by <span class="text-primary underline font-black decoration-2 underline-offset-2">Ranus Ate</span></span>
                 </div>
             </div>
         </div>
-
-        <!-- Watermark -->
-        <div class="absolute -bottom-24 -left-24 text-slate-50 font-serif italic text-[20rem] leading-none pointer-events-none -z-10 select-none">†</div>
     </footer>
 
+    <!-- Livewire Scripts (Otomatis menyertakan Alpine.js internal) -->
+    @livewireScripts
 </body>
 </html>

@@ -1,6 +1,6 @@
 <div>
     <!-- HERO SECTION -->
-    <section class="relative pt-40 pb-24 px-6 lg:px-10 bg-slate-900 text-white overflow-hidden">
+    <section class="relative pb-24 px-6 lg:px-10 bg-slate-900 text-white overflow-hidden">
         <div class="max-w-7xl mx-auto text-center relative z-10">
             <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -20,7 +20,7 @@
     </section>
 
     <!-- FILTER BAR (LIVEWIRE POWERED) -->
-    <div class="sticky top-20 z-40 px-4 md:px-6 -mt-12">
+    <div class="sticky z-40 px-4 md:px-6 -mt-12">
         <div class="max-w-7xl mx-auto">
             <div class="bg-white/90 backdrop-blur-xl border border-white/40 p-4 rounded-[2.5rem] shadow-2xl shadow-slate-200/50 flex flex-col lg:flex-row gap-4 items-center ring-1 ring-slate-900/5 relative overflow-hidden">
                 

@@ -30,7 +30,6 @@ use App\Livewire\Letters;
 use App\Livewire\Public\Contact;
 use App\Livewire\Public\NewsManager;
 use App\Livewire\Public\Schedules as PublicSchedules;
-use App\Livewire\Schedules\ScheduleManager;
 use App\Livewire\Settings\Accounts;
 
 // --- 1. HALAMAN LOGIN (Publik) ---
@@ -77,6 +76,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings/roles', \App\Livewire\Settings\RoleManager::class)->name('settings.roles');
         Route::get('/settings/assets', \App\Livewire\Settings\AssetManager::class)->middleware(['auth'])->name('settings.assets');
         Route::get('/settings/profile', \App\Livewire\Settings\ChurchProfile::class)->name('settings.profile');
+        Route::get('/settings/theme', \App\Livewire\Settings\ThemeManager::class)->name('settings.theme');
 
         Route::get('/settings/{type}', Settings\MasterData::class)->name('settings.master');
     });

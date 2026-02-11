@@ -2,7 +2,7 @@
     <x-slot:title>Profil & Sejarah | GKS Jemaat Reda Pada</x-slot>
 
     <!-- 1. HERO SECTION -->
-    <section class="relative pt-48 pb-32 px-6 lg:px-10 overflow-hidden bg-slate-900 text-white">
+    <section class="relative pt-20 pb-32 px-6 lg:px-10 overflow-hidden bg-slate-900 text-white">
         <div class="max-w-7xl mx-auto relative z-10 text-center">
             <div class="inline-flex items-center gap-3 px-5 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
@@ -82,51 +82,55 @@
         </div>
     </section>
 
-    <!-- 4. STRUKTUR PELAYAN -->
-    <section class="py-32 px-6 lg:px-10 bg-white">
-        <div class="max-w-7xl mx-auto">
-            <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-20">
-                <div>
-                    <h2 class="text-xs font-black text-primary uppercase tracking-[0.4em] mb-4">Kepemimpinan</h2>
-                    <h3 class="text-5xl font-serif italic text-slate-900">Majelis & Pelayan</h3>
-                </div>
-                <p class="text-slate-400 text-xs font-bold uppercase tracking-widest text-right max-w-xs">Mereka yang dipercayakan untuk menggembalakan dan melayani jemaat.</p>
-            </div>
-
-            <!-- Pendeta Utama -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-20">
-                @forelse($pastors as $pastor)
-                <div class="flex items-center gap-8 p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 hover:shadow-2xl hover:border-primary/20 transition-all duration-500 group">
-                    <div class="w-24 h-24 rounded-3xl bg-slate-200 flex items-center justify-center text-4xl font-serif italic text-slate-400 overflow-hidden relative shadow-inner group-hover:scale-105 transition-transform">
-                        <!-- Placeholder Foto (bisa diganti img src jika ada fitur upload foto personil) -->
-                        <span>{{ substr($pastor->member->nama, 0, 1) }}</span>
+  <section class="py-32 px-6 lg:px-10 bg-white">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col md:flex-row justify-between items-end gap-10 mb-20 border-b border-slate-100 pb-12">
+                    <div class="max-w-2xl">
+                        <span class="text-[10px] font-black text-primary uppercase tracking-[0.5em] block mb-4">Struktur Organisasi</span>
+                        <h3 class="text-5xl md:text-6xl font-serif italic text-slate-900 tracking-tight leading-none">Majelis & Pelayan Jemaat</h3>
                     </div>
-                    <div>
-                        <span class="text-[9px] font-black text-accent uppercase tracking-widest bg-white px-3 py-1 rounded-full shadow-sm">{{ $pastor->position->nama }}</span>
-                        <h4 class="text-2xl font-black text-slate-900 mt-3 mb-1 group-hover:text-primary transition-colors">{{ $pastor->member->nama }}</h4>
-                        <p class="text-xs text-slate-500 font-medium">Periode: {{ $pastor->tanggal_mulai ? $pastor->tanggal_mulai->format('Y') : '-' }} - Sekarang</p>
-                    </div>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em] text-right max-w-xs leading-loose italic">
+                        "Setiap orang haruslah dipandang sebagai pelayan Kristus yang dipercayakan rahasia Allah."
+                    </p>
                 </div>
-                @empty
-                <div class="col-span-2 text-center py-10 text-slate-300 font-bold italic">Data Pendeta belum diinput.</div>
-                @endforelse
-            </div>
 
-            <!-- Majelis Lainnya -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                @foreach($officers as $off)
-                <div class="p-6 rounded-3xl border border-slate-100 hover:border-slate-300 hover:bg-slate-50 transition-all text-center group">
-                    <div class="w-16 h-16 mx-auto rounded-2xl bg-slate-100 flex items-center justify-center text-xl font-serif italic text-slate-400 mb-4 shadow-sm group-hover:bg-white group-hover:shadow-md transition-all">
-                        {{ substr($off->member->nama, 0, 1) }}
+                <!-- Main Pastors Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-24">
+                    @forelse($pastors as $pastor)
+                    <div class="group flex flex-col sm:flex-row items-center gap-8 p-10 rounded-[3.5rem] bg-slate-50 border border-transparent hover:bg-white hover:border-slate-100 hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-700">
+                        <div class="w-32 h-32 md:w-44 md:h-44 rounded-[2.5rem] bg-slate-200 overflow-hidden relative shadow-inner group-hover:scale-105 transition-transform duration-700">
+                            <!-- Image Fallback to Initial -->
+                            <div class="absolute inset-0 flex items-center justify-center text-5xl font-serif italic text-slate-400 bg-slate-200">
+                                {{ substr($pastor->member->nama, 0, 1) }}
+                            </div>
+                        </div>
+                        <div class="text-center sm:text-left flex-1">
+                            <span class="inline-block px-4 py-1.5 bg-accent/10 text-accent text-[9px] font-black uppercase tracking-widest rounded-full mb-4">{{ $pastor->position->nama }}</span>
+                            <h4 class="text-2xl md:text-3xl font-black text-slate-900 leading-tight mb-2 group-hover:text-primary transition-colors">{{ $pastor->member->nama }}</h4>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Periode Pelayanan: {{ $pastor->tanggal_mulai ? $pastor->tanggal_mulai->format('Y') : '-' }} — Kini</p>
+                        </div>
                     </div>
-                    <h5 class="text-sm font-black text-slate-800 uppercase tracking-tight mb-1 truncate">{{ $off->member->nama }}</h5>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ $off->position->nama }}</p>
+                    @empty
+                        <div class="col-span-full py-20 text-center bg-slate-50 rounded-[3rem] border border-dashed border-slate-200">
+                            <p class="italic text-slate-400 font-medium">Data hamba Tuhan belum diperbarui.</p>
+                        </div>
+                    @endforelse
                 </div>
-                @endforeach
-            </div>
-        </div>
-    </section>
 
+                <!-- Secondary Officers Grid (Mobile Scrollable) -->
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    @foreach($officers as $off)
+                    <div class="p-8 rounded-[2.5rem] border border-slate-100 bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-500 text-center group">
+                        <div class="w-20 h-20 mx-auto rounded-3xl bg-slate-50 flex items-center justify-center text-2xl font-serif italic text-slate-300 mb-6 shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                            {{ substr($off->member->nama, 0, 1) }}
+                        </div>
+                        <h5 class="text-xs font-black text-slate-800 uppercase tracking-tight mb-2 truncate px-2">{{ $off->member->nama }}</h5>
+                        <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">{{ $off->position->nama }}</p>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
     <!-- 5. CALL TO ACTION -->
     <section class="py-32 px-6 lg:px-10 bg-primary relative overflow-hidden">
         <div class="max-w-4xl mx-auto text-center relative z-10">

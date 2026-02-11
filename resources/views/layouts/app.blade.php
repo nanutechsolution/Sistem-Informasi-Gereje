@@ -1,14 +1,11 @@
 @php
-// Ambil konfigurasi gereja dari database, gunakan default jika belum ada
-$setting = \App\Models\ChurchSetting::first() ?? new \App\Models\ChurchSetting([
-'nama_gereja' => 'Gereja Kristen Sumba',
-'nama_jemaat' => 'Jemaat Reda Pada',
-'warna_utama' => '#1e3a8a', // Biru Default
-'warna_aksen' => '#d97706', // Emas Default
-'alamat' => 'Jl. Lolo Ole, Sumba Barat Daya',
-'email' => 'sekretariat@gksredapada.org'
-]);
+    /**
+     * Mengambil konfigurasi tema dari database.
+     * Menggunakan model ChurchSetting yang sudah mendukung multi-tenant.
+     */
+    $theme = \App\Models\ChurchSetting::current();
 @endphp
+<!DOCTYPE
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
 
@@ -25,9 +22,12 @@ $setting = \App\Models\ChurchSetting::first() ?? new \App\Models\ChurchSetting([
 
     
      <style>
-        :root {
-        --primary: {{ $setting->warna_utama ?? '#1e3a8a' }};
-        --accent: {{ $setting->warna_aksen ?? '#d97706' }};
+         :root {
+            --primary: {{ $theme->color_primary ?? '#1e3a8a' }};
+            --accent: {{ $theme->color_accent ?? '#d97706' }};
+            --surface: {{ $theme->color_background ?? '#f8fafc' }};
+            --sidebar: {{ $theme->color_sidebar ?? '#0f172a' }};
+            --radius-ui: {{ $theme->ui_rounded ?? '1.5rem' }};
         }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -233,7 +233,7 @@ $setting = \App\Models\ChurchSetting::first() ?? new \App\Models\ChurchSetting([
                                 <a href="{{ route('settings.due-types') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Master Iuran</a>
                                 @endcan
                                 <a href="{{ route('settings.assets') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Manajemen Aset</a>
-
+                                <a href="{{ route('settings.theme') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Pengaturan Tema</a>
                             </div>
                         </div>
                         @endif

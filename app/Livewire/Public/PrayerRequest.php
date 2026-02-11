@@ -8,19 +8,14 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Illuminate\Support\Str;
 
-#[Layout('components.layouts.web')]
-#[Title('Permohonan Doa | GKS Jemaat Reda Pada')]
 class PrayerRequest extends Component
 {
     public $nama_pemohon;
     public $kontak;
     public $kategori = 'Pergumulan';
     public $pokok_doa;
-    
-    // Opsi Privasi
-    public $is_private = false; // Default boleh publik
+    public $is_private = false;
     public $butuh_konseling = false;
-
     public $successSent = false;
 
     protected $rules = [
@@ -33,7 +28,6 @@ class PrayerRequest extends Component
         $this->validate();
 
         PrayerModel::create([
-            'uuid' => (string) Str::uuid(),
             'nama_pemohon' => $this->nama_pemohon ?: 'Hamba Tuhan',
             'kontak' => $this->kontak,
             'kategori' => $this->kategori,
@@ -47,6 +41,8 @@ class PrayerRequest extends Component
         $this->successSent = true;
     }
 
+    #[Layout('layouts.web')]
+    #[Title('Permohonan Doa | GKS Jemaat Reda Pada')]
     public function render()
     {
         return view('livewire.public.prayer-request');
