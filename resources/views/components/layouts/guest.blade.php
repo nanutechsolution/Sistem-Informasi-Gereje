@@ -16,7 +16,6 @@
     </style>
 </head>
 <body class="antialiased text-gray-900">
-    <!-- Slot ini akan diisi oleh konten login.blade.php -->
     {{ $slot }}
 </body>
 </html>

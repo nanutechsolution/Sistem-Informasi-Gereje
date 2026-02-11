@@ -11,5 +11,8 @@ class Gallery extends Model
 
     protected $guarded = [];
 
-    public function uniqueIds(): array { return ['uuid']; }
+    public function uniqueIds(): array
+    {
+        return ['uuid'];
+    }
 }

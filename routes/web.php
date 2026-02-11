@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Auth;
 
 // Controllers
 use App\Http\Controllers\PrintTransactionController;
+use App\Http\Controllers\Public\PostController;
+use App\Http\Controllers\Public\ProfileController;
+use App\Http\Controllers\Public\ScheduleController;
 use App\Http\Controllers\SacramentPrintController;
 // Livewire Components
 use App\Livewire\Auth\Login;
@@ -24,17 +27,27 @@ use App\Livewire\Schedules;
 use App\Livewire\Auctions;
 use App\Livewire\Clerical\SacramentManager;
 use App\Livewire\Letters;
+use App\Livewire\Public\Contact;
 use App\Livewire\Public\NewsManager;
+use App\Livewire\Public\Schedules as PublicSchedules;
+use App\Livewire\Schedules\ScheduleManager;
 use App\Livewire\Settings\Accounts;
 
 // --- 1. HALAMAN LOGIN (Publik) ---
 Route::get('/', [LandingController::class, 'index'])->name('landing');
-
+// Halaman Arsip Warta (Semua Berita)
+Route::get('/warta', [PostController::class, 'index'])->name('public.warta.index');
+// Halaman Detail Warta (Single Post)
+Route::get('/warta/{slug}', [PostController::class, 'show'])->name('public.warta.show');
+Route::get('/profil', [ProfileController::class, 'index'])->name('public.profile');
+Route::get('/jadwal', PublicSchedules::class)->name('public.schedules.index');
+Route::get('/contact', Contact::class)->name('public.contact.index');
+Route::get('/doa', \App\Livewire\Public\PrayerRequest::class)->name('public.prayer');
+Route::get('/downloads', \App\Livewire\Public\Downloads::class)->name('public.downloads');
+Route::get('/khotbah', \App\Livewire\Public\Sermons::class)->name('public.sermons');
 Route::get('/login', Login::class)->name('login');
-
 // --- 2. AREA LOGIN (Wajib Auth) ---
 Route::middleware('auth')->group(function () {
-
     // AKSES UMUM (Semua User Login Bisa Masuk)
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
     Route::get('/my-schedules', Schedules\MySchedules::class)->name('schedules.my'); // Jadwal Pribadi
@@ -63,6 +76,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings/accounts/dompet', Accounts::class)->name('settings.accounts.dompet');
         Route::get('/settings/roles', \App\Livewire\Settings\RoleManager::class)->name('settings.roles');
         Route::get('/settings/assets', \App\Livewire\Settings\AssetManager::class)->middleware(['auth'])->name('settings.assets');
+        Route::get('/settings/profile', \App\Livewire\Settings\ChurchProfile::class)->name('settings.profile');
+
         Route::get('/settings/{type}', Settings\MasterData::class)->name('settings.master');
     });
 
@@ -96,7 +111,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/schedules/groups', Schedules\GroupManager::class)->name('schedules.groups');
         Route::get('/schedules/pks/print', [App\Http\Controllers\PrintScheduleController::class, 'pks'])->name('schedules.pks.print');
         Route::get('/news/manage', NewsManager::class)->name('news.manage');
-        Route::get('/settings/profile', \App\Livewire\Settings\ChurchProfile::class)->name('settings.profile');
+        Route::get('/pastoral/prayers', \App\Livewire\Pastoral\PrayerInbox::class)->name('pastoral.prayers');
+        Route::get('/clerical/documents', \App\Livewire\Clerical\DocumentManager::class)->name('clerical.documents');
+        Route::get('/news/sermons', \App\Livewire\Public\SermonManager::class)->name('sermons.manage');
     });
 
     // C. KEUANGAN (Bendahara & Admin) -> Transaksi, Lelang, Gaji
@@ -127,6 +144,7 @@ Route::middleware('auth')->group(function () {
         // Verifikasi PKS (Hanya Bendahara yang boleh terima uang)
         Route::get('/schedules/pks/verify', Schedules\PksVerification::class)->name('schedules.pks.verify');
     });
+
 
     // E. INPUT LAPANGAN (Majelis Wilayah / Operator) -> Input PKS
     Route::middleware(['permission:input_pks'])->group(function () {

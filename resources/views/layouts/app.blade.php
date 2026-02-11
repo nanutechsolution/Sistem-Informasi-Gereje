@@ -1,3 +1,14 @@
+@php
+// Ambil konfigurasi gereja dari database, gunakan default jika belum ada
+$setting = \App\Models\ChurchSetting::first() ?? new \App\Models\ChurchSetting([
+'nama_gereja' => 'Gereja Kristen Sumba',
+'nama_jemaat' => 'Jemaat Reda Pada',
+'warna_utama' => '#1e3a8a', // Biru Default
+'warna_aksen' => '#d97706', // Emas Default
+'alamat' => 'Jl. Lolo Ole, Sumba Barat Daya',
+'email' => 'sekretariat@gksredapada.org'
+]);
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
 
@@ -12,7 +23,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <style>
+    
+     <style>
+        :root {
+        --primary: {{ $setting->warna_utama ?? '#1e3a8a' }};
+        --accent: {{ $setting->warna_aksen ?? '#d97706' }};
+        }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
@@ -118,6 +134,8 @@
                                 <a href="{{ route('officers.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 text-primary">Pejabat & Pelayan</a>
                                 <a href="{{ route('pastoral.visits') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 text-primary">Kunjungan</a>
                                 <a href="{{ route('news.manage') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Manajemen Warta</a>
+                                <a href="{{ route('clerical.documents') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Managemen Dokumen</a>
+                                <a href="{{ route('sermons.manage') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Managemen Video Khotbah</a>
                             </div>
                         </div>
                         @endcan
@@ -139,6 +157,7 @@
                                 @can('input_pks')
                                 <a href="{{ route('schedules.pks') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Jadwal PKS</a>
                                 @endcan
+                                <a href="{{ route('pastoral.prayers') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Permintaan Doa</a>
 
                                 <!-- Tugas Saya (Semua Pelayan) -->
                                 <a href="{{ route('schedules.my') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 flex items-center justify-between">
@@ -197,22 +216,19 @@
                             </button>
 
                             <div x-show="adminOpen" x-cloak class="absolute left-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl py-2 text-slate-700 ring-1 ring-black/5 animate-fade-in-down">
-
                                 @role('admin')
                                 <a href="{{ route('budgets.manage') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Pengaturan RAPB</a>
                                 <a href="{{ route('settings.accounts.dompet') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Manajemen Dompet</a>
                                 <a href="{{ route('settings.budget-posts') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Pos Anggaran</a>
                                 <a href="{{ route('finance.opening-balances') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Saldo Awal Tahun</a>
-
                                 <div class="h-px bg-slate-100 my-1"></div>
-
                                 <a href="{{ route('users.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Manajemen User</a>
                                 <a href="{{ route('settings.roles') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Manajemen Hak Akses</a>
                                 <a href="{{ route('settings.master', 'wilayah') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Data Wilayah</a>
                                 <a href="{{ route('settings.activity-types') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Jenis Kegiatan</a>
                                 <a href="{{ route('settings.positions') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Master Jabatan</a>
+                                <a href="{{ route('settings.profile') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Pengaturan Profil</a>
                                 @endrole
-
                                 @can('manage_finance')
                                 <a href="{{ route('settings.due-types') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Master Iuran</a>
                                 @endcan
