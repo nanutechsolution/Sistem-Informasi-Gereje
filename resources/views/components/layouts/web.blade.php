@@ -1,22 +1,12 @@
 @php
-// Konfigurasi Church Setting
-$setting = \App\Models\ChurchSetting::first() ?? new \App\Models\ChurchSetting([
-    'nama_gereja' => 'Gereja Kristen Sumba',
-    'nama_jemaat' => 'Jemaat Reda Pada',
-    'warna_utama' => '#1e3a8a',
-    'warna_aksen' => '#d97706',
-    'alamat' => 'Jl. Lolo Ole, Sumba Barat Daya',
-    'email' => 'sekretariat@gksredapada.org',
-    'telepon' => '08123456789'
-]);
+    $theme = \App\Models\ChurchSetting::current();
 @endphp
-
 <!DOCTYPE html>
 <html lang="id" class="scroll-smooth">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? $setting->nama_jemaat }} | {{ $setting->nama_gereja }}</title>
+    <title>{{ $title ?? $theme->nama_jemaat }} | {{ $theme->nama_gereja }}</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,34 +18,34 @@ $setting = \App\Models\ChurchSetting::first() ?? new \App\Models\ChurchSetting([
 
     <!-- Vite Assets (CSS & JS) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    <!-- Livewire Styles -->
-    @livewireStyles
-
-    <!-- 
-        CATATAN PENTING: 
-        Di Livewire 3, Alpine.js sudah dibundel di dalam Livewire.
-        JANGAN menambahkan script CDN Alpine secara manual karena akan menyebabkan konflik "Multiple Instances"
-        dan error "window.Livewire.find is undefined".
-    -->
-
+  
     <style>
-        :root {
-            --primary: {{ $setting->warna_utama }};
-            --accent: {{ $setting->warna_aksen }};
+         :root {
+            --primary: {{ $theme->color_primary ?? '#1e3a8a' }};
+            --accent: {{ $theme->color_accent ?? '#d97706' }};
+            --surface: {{ $theme->color_background ?? '#f8fafc' }};
+            --sidebar: {{ $theme->color_sidebar ?? '#0f172a' }};
+            --radius-ui: {{ $theme->ui_rounded ?? '1.5rem' }};
         }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        [x-cloak] { display: none !important; }
-        
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+        body { 
+            background-color: var(--surface); 
+            color: {{ ($theme->appearance_mode ?? 'light') === 'dark' ? '#f1f5f9' : '#0f172a' }}; 
         }
 
-        .nav-link-mobile {
-            @apply flex items-center justify-between text-2xl font-extrabold tracking-tight text-slate-900 py-4 border-b border-slate-50 transition-all hover:text-primary;
+        .glass-nav { 
+            background: {{ ($theme->appearance_mode ?? 'light') === 'dark' ? 'rgba(15, 23, 42, 0.85)' : 'rgba(253, 253, 253, 0.85)' }};
+            backdrop-filter: blur(20px); 
+            border-bottom: 1px solid rgba(0,0,0,0.05); 
         }
+
+        .dropdown-enter { animation: slideDown 0.2s ease-out forwards; }
+        @keyframes slideDown { 
+            from { opacity: 0; transform: translateY(-10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        /* Prevent scroll when mobile menu is open */
+        .no-scroll { overflow: hidden; }
     </style>
 </head>
 
@@ -82,8 +72,8 @@ $setting = \App\Models\ChurchSetting::first() ?? new \App\Models\ChurchSetting([
                         </svg>
                     </div>
                     <div class="leading-tight">
-                        <h1 class="text-lg font-extrabold tracking-tight text-slate-900">{{ $setting->nama_gereja }}</h1>
-                        <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/80">{{ $setting->nama_jemaat }}</p>
+                        <h1 class="text-lg font-extrabold tracking-tight text-slate-900">{{ $theme->nama_gereja }}</h1>
+                        <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/80">{{ $theme->nama_jemaat }}</p>
                     </div>
                 </a>
 
@@ -215,22 +205,22 @@ $setting = \App\Models\ChurchSetting::first() ?? new \App\Models\ChurchSetting([
             <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
                 <!-- Col 1: Branding -->
                 <div class="md:col-span-1">
-                    <h2 class="text-2xl font-black italic text-slate-900 mb-4">{{ $setting->nama_gereja }}</h2>
-                    <p class="text-sm text-slate-500 leading-relaxed">{{ $setting->deskripsi_singkat ?? 'Membangun iman dan komunitas melalui pelayanan kasih di tanah Sumba.' }}</p>
+                    <h2 class="text-2xl font-black italic text-slate-900 mb-4">{{ $theme->nama_gereja }}</h2>
+                    <p class="text-sm text-slate-500 leading-relaxed">{{ $theme->deskripsi_singkat ?? 'Membangun iman dan komunitas melalui pelayanan kasih di tanah Sumba.' }}</p>
                 </div>
                 
                 <!-- Col 2: Info -->
                 <div>
                     <h4 class="text-[10px] font-bold uppercase tracking-[0.3em] text-primary mb-6">Sekretariat</h4>
-                    <p class="text-sm text-slate-600 leading-loose">{{ $setting->alamat }}</p>
+                    <p class="text-sm text-slate-600 leading-loose">{{ $theme->alamat }}</p>
                 </div>
 
                 <!-- Col 3: Kontak -->
                 <div>
                     <h4 class="text-[10px] font-bold uppercase tracking-[0.3em] text-primary mb-6">Pusat Bantuan</h4>
                     <ul class="text-sm text-slate-600 space-y-3 font-medium">
-                        <li><a href="mailto:{{ $setting->email }}" class="hover:text-primary transition-colors">{{ $setting->email }}</a></li>
-                        <li><a href="tel:{{ $setting->telepon }}" class="hover:text-primary transition-colors">{{ $setting->telepon }}</a></li>
+                        <li><a href="mailto:{{ $theme->email }}" class="hover:text-primary transition-colors">{{ $theme->email }}</a></li>
+                        <li><a href="tel:{{ $theme->telepon }}" class="hover:text-primary transition-colors">{{ $theme->telepon }}</a></li>
                         <li><a href="{{ route('public.contact.index') }}" class="hover:text-primary transition-colors underline decoration-primary/20 decoration-2 underline-offset-4">Kirim Pesan</a></li>
                     </ul>
                 </div>
@@ -240,8 +230,8 @@ $setting = \App\Models\ChurchSetting::first() ?? new \App\Models\ChurchSetting([
                     <h4 class="text-[10px] font-bold uppercase tracking-[0.3em] text-primary mb-6">Media Sosial</h4>
                     <div class="flex md:justify-end gap-3">
                         @foreach(['facebook', 'instagram', 'youtube'] as $sm)
-                            @if(!empty($setting->$sm))
-                            <a href="{{ str_starts_with($setting->$sm, 'http') ? $setting->$sm : '#' }}" target="_blank" class="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-primary hover:text-white transition-all shadow-sm border border-slate-100">
+                            @if(!empty($theme->$sm))
+                            <a href="{{ str_starts_with($theme->$sm, 'http') ? $theme->$sm : '#' }}" target="_blank" class="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-primary hover:text-white transition-all shadow-sm border border-slate-100">
                                 <i class="fab fa-{{ $sm }}"></i>
                             </a>
                             @endif
@@ -252,7 +242,7 @@ $setting = \App\Models\ChurchSetting::first() ?? new \App\Models\ChurchSetting([
 
             <!-- Bottom Line -->
             <div class="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">&copy; {{ date('Y') }} {{ $setting->nama_jemaat }}. All Rights Reserved.</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">&copy; {{ date('Y') }} {{ $theme->nama_jemaat }}. All Rights Reserved.</p>
                 <div class="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                     <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> System Online</span>
                     <span>•</span>

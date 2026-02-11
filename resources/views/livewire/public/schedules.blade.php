@@ -1,6 +1,6 @@
 <div>
     <!-- HERO SECTION -->
-    <section class="relative pt-40 pb-24 px-6 lg:px-10 bg-slate-900 text-white overflow-hidden">
+    <section class="relative pt-20 pb-24 px-6 lg:px-10 bg-slate-900 text-white overflow-hidden">
         <div class="max-w-7xl mx-auto text-center relative z-10">
             <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>

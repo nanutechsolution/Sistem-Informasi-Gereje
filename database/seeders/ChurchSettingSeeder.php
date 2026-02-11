@@ -27,21 +27,24 @@ class ChurchSettingSeeder extends Seeder
             'nama_jemaat' => 'JEMAAT REDA PADA',
 
             'deskripsi_singkat' =>
-                'Melayani dengan integritas melalui digitalisasi sistem informasi jemaat yang transparan, akuntabel dan profesional.',
+            'Melayani dengan integritas melalui digitalisasi sistem informasi jemaat yang transparan, akuntabel dan profesional.',
 
             'alamat' =>
-                'Jl. Lolo Ole, Kec. Kota Tambolaka, Sumba Barat Daya, NTT',
+            'Jl. Lolo Ole, Kec. Kota Tambolaka, Sumba Barat Daya, NTT',
 
             'email' => 'jemaat@gksredapada.or.id',
             'telepon' => '+62 812-3456-7890',
-
-            'warna_utama' => '#1e3a8a',
-            'warna_aksen' => '#d97706',
+            'color_primary'     => '#1e3a8a',
+            'color_accent'      => '#d97706',
+            'color_background'  => '#f8fafc',
+            'color_sidebar'     => '#0f172a',
+            'appearance_mode'   => 'light',
+            'ui_rounded'        => 'xl',
 
             'logo_path' => null,
 
             'visi' =>
-                'Menjadi Gereja yang Mandiri, Misioner dan Terbuka dalam pelayanan berbasis Firman Tuhan dan teknologi.',
+            'Menjadi Gereja yang Mandiri, Misioner dan Terbuka dalam pelayanan berbasis Firman Tuhan dan teknologi.',
 
             'misi' => json_encode([
                 'Meningkatkan kualitas iman jemaat melalui ibadah dan pemuridan.',
@@ -51,7 +54,7 @@ class ChurchSettingSeeder extends Seeder
             ]),
 
             'sejarah_singkat' =>
-                'Gereja Kristen Sumba Jemaat Reda Pada berdiri sebagai bagian dari pelayanan GKS di wilayah Sumba Barat Daya. Seiring perkembangan zaman, gereja terus berbenah dalam pelayanan rohani maupun administrasi berbasis teknologi informasi.',
+            'Gereja Kristen Sumba Jemaat Reda Pada berdiri sebagai bagian dari pelayanan GKS di wilayah Sumba Barat Daya. Seiring perkembangan zaman, gereja terus berbenah dalam pelayanan rohani maupun administrasi berbasis teknologi informasi.',
 
             'facebook' => 'https://facebook.com/gksredapada',
             'instagram' => 'https://instagram.com/gksredapada',

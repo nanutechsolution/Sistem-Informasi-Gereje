@@ -22,8 +22,15 @@ class ChurchProfile extends Component
     public $email;
     public $telepon;
 
-    public $warna_utama = '#1e3a8a';
-    public $warna_aksen = '#d97706';
+    // Kolom Warna Baru
+    public $color_primary = '#1e3a8a';
+    public $color_accent = '#d97706';
+    public $color_background = '#f8fafc';
+    public $color_sidebar = '#0f172a';
+    
+    // Pengaturan UI Baru
+    public $appearance_mode = 'light';
+    public $ui_rounded = 'xl';
 
     public $facebook;
     public $instagram;
@@ -49,13 +56,20 @@ class ChurchProfile extends Component
             $this->alamat = $setting->alamat;
             $this->email = $setting->email;
             $this->telepon = $setting->telepon;
-            $this->warna_utama = $setting->warna_utama;
-            $this->warna_aksen = $setting->warna_aksen;
+            
+            // Mapping Kolom Warna & UI Baru
+            $this->color_primary = $setting->color_primary;
+            $this->color_accent = $setting->color_accent;
+            $this->color_background = $setting->color_background;
+            $this->color_sidebar = $setting->color_sidebar;
+            $this->appearance_mode = $setting->appearance_mode;
+            $this->ui_rounded = $setting->ui_rounded;
+
             $this->facebook = $setting->facebook;
             $this->instagram = $setting->instagram;
             $this->youtube = $setting->youtube;
             $this->visi = $setting->visi;
-            // Pastikan misi selalu array
+            
             $this->misi = is_array($setting->misi)
                 ? $setting->misi
                 : json_decode($setting->misi ?? '[]', true);
@@ -73,8 +87,12 @@ class ChurchProfile extends Component
             'nama_gereja' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'alamat' => 'required|string|max:255',
-            'warna_utama' => 'required|string|max:7',
-            'warna_aksen' => 'required|string|max:7',
+            'color_primary' => 'required|string|max:7',
+            'color_accent' => 'required|string|max:7',
+            'color_background' => 'required|string|max:7',
+            'color_sidebar' => 'required|string|max:7',
+            'appearance_mode' => 'required|in:light,dark',
+            'ui_rounded' => 'required|string',
             'logo' => 'nullable|image|max:1024',
             'misi.*' => 'nullable|string|max:500',
             'sejarah_singkat' => 'nullable|string',
@@ -104,8 +122,12 @@ class ChurchProfile extends Component
             'alamat' => $this->alamat,
             'email' => $this->email,
             'telepon' => $this->telepon,
-            'warna_utama' => $this->warna_utama,
-            'warna_aksen' => $this->warna_aksen,
+            'color_primary' => $this->color_primary,
+            'color_accent' => $this->color_accent,
+            'color_background' => $this->color_background,
+            'color_sidebar' => $this->color_sidebar,
+            'appearance_mode' => $this->appearance_mode,
+            'ui_rounded' => $this->ui_rounded,
             'facebook' => $this->facebook,
             'instagram' => $this->instagram,
             'youtube' => $this->youtube,
@@ -117,7 +139,6 @@ class ChurchProfile extends Component
             if ($this->existingLogo && Storage::disk('public')->exists($this->existingLogo)) {
                 Storage::disk('public')->delete($this->existingLogo);
             }
-
             $data['logo_path'] = $this->logo->store('branding', 'public');
         }
 

@@ -9,13 +9,56 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class PrayerRequest extends Model
 {
     use HasUuids, SoftDeletes;
-    protected $guarded = [];
 
-    public function uniqueIds() { return ['uuid']; }
+    /**
+     * Keamanan: Mencegah Mass Assignment Attack.
+     * Hanya field di bawah ini yang boleh diisi secara massal.
+     * Field seperti 'id' atau 'uuid' diproteksi sistem.
+     */
+    protected $fillable = [
+        'nama_pemohon',
+        'kontak',
+        'kategori',
+        'pokok_doa',
+        'is_private',
+        'butuh_konseling',
+        'status',
+        'ip_address',
+        'user_agent'
+    ];
 
-    // Helper untuk menyamarkan nama jika private
+    /**
+     * Kolom yang harus disembunyikan saat dikonversi ke Array/JSON.
+     * Melindungi privasi IP dan kontak jika data diakses via API.
+     */
+    protected $hidden = [
+        'ip_address',
+        'user_agent',
+        'kontak',
+    ];
+
+    public function uniqueIds()
+    {
+        return ['uuid'];
+    }
+
+    /**
+     * Sanitasi saat output untuk mencegah XSS (Cross-Site Scripting).
+     */
+    public function getPokokDoaAttribute($value)
+    {
+        return e($value);
+    }
+
+    /**
+     * Masking Nama: Jika private, sembunyikan identitas asli.
+     */
     public function getDisplayNameAttribute()
     {
-        return $this->is_private ? 'Hamba Tuhan' : ($this->nama_pemohon ?? 'Jemaat');
+        if ($this->is_private) {
+            return 'Hamba Tuhan';
+        }
+        
+        return e($this->nama_pemohon ?? 'Jemaat');
     }
 }
