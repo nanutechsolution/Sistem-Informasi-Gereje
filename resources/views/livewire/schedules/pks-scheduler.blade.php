@@ -1,6 +1,5 @@
 <div class="py-6 sm:py-12 bg-slate-50 min-h-screen" x-data="{ showModal: @entangle('isModalOpen').live, showBatch: @entangle('isBatchModalOpen').live, showAudit: @entangle('isAuditModalOpen').live }">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
         <!-- HEADER -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
             <div>
@@ -9,7 +8,6 @@
                     Manajemen Keadilan Pelayanan & Jadwal Ibadah Rumah Tangga
                 </p>
             </div>
-
             <div class="flex flex-wrap gap-3 w-full md:w-auto">
                 <a href="{{ route('schedules.pks.print', ['startDate' => $filterStartDate, 'endDate' => $filterEndDate, 'wilayah' => $filterWilayah]) }}"
                     target="_blank"
@@ -19,17 +17,18 @@
                     </svg>
                     CETAK JADWAL
                 </a>
-
                 <button wire:click="$set('isAuditModalOpen', true)" class="flex-1 md:flex-none px-6 py-4 bg-white border border-slate-200 text-slate-900 rounded-[24px] font-black text-xs shadow-sm hover:bg-slate-50 transition-all uppercase tracking-widest flex items-center justify-center gap-2">
                     <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                     CEK ANTRIAN
                 </button>
-                <button wire:click="$set('isBatchModalOpen', true)" class="flex-1 md:flex-none px-6 py-4 bg-emerald-600 text-white rounded-[24px] font-black text-xs shadow-xl shadow-emerald-500/20 hover:scale-105 transition-all uppercase tracking-widest">
+                <button wire:click="$set('isBatchModalOpen', true)"
+                    class="flex-1 md:flex-none px-6 py-4 bg-emerald-600 text-white rounded-[24px] font-black text-xs shadow-xl shadow-emerald-500/20 hover:scale-105 transition-all uppercase tracking-widest">
                     GENERATE WILAYAH
                 </button>
-                <button wire:click="create" class="flex-1 md:flex-none px-6 py-4 bg-slate-900 text-white rounded-[24px] font-black text-xs shadow-xl hover:scale-105 transition-all uppercase tracking-widest">
+                <button wire:click="create"
+                    class="flex-1 md:flex-none px-6 py-4 bg-slate-900 text-white rounded-[24px] font-black text-xs shadow-xl shadow-slate-500/20 hover:scale-105 transition-all uppercase tracking-widest">
                     INPUT MANUAL
                 </button>
             </div>

@@ -1,10 +1,12 @@
 <div class="py-6 sm:py-12 bg-gray-50 min-h-screen">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         <!-- Header -->
         <div class="mb-8 border-b border-gray-200 pb-6">
             <a href="{{ route('families.edit', $family) }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-primary transition-colors mb-2">
-                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
                 Kembali ke KK {{ Str::limit($family->kepala_keluarga, 15) }}
             </a>
             <h1 class="text-2xl sm:text-3xl font-extrabold text-primary tracking-tight">Tambah Anggota Jemaat</h1>
@@ -13,7 +15,7 @@
 
         <form wire:submit="save">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
+
                 <!-- KOLOM KIRI: Biodata -->
                 <div class="lg:col-span-2 space-y-6">
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
@@ -47,16 +49,19 @@
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Tempat Lahir</label>
                                 <input wire:model="tempat_lahir" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:ring-primary/20 focus:border-primary">
+                                @error('tempat_lahir') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+
                             </div>
 
                             <!-- Tanggal Lahir -->
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Lahir</label>
                                 <input wire:model="tanggal_lahir" type="date" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:ring-primary/20 focus:border-primary">
-                            </div>
+                                @error('tanggal_lahir') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
 
-                             <!-- No HP -->
-                             <div>
+                            </div>
+                            <!-- No HP -->
+                            <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Nomor HP</label>
                                 <input wire:model="no_hp" type="number" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:ring-primary/20 focus:border-primary">
                             </div>
@@ -68,7 +73,7 @@
                 <div class="space-y-6">
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                         <h3 class="text-lg font-bold text-gray-900 mb-6">Data Gerejawi & Sipil</h3>
-                        
+
                         <div class="space-y-5">
                             <!-- Hubungan Keluarga (Master) -->
                             <div>
@@ -76,7 +81,7 @@
                                 <select wire:model="hubungan_keluarga_id" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:ring-primary/20 focus:border-primary">
                                     <option value="">-- Pilih --</option>
                                     @foreach($refHubungans as $rh)
-                                        <option value="{{ $rh->id }}">{{ $rh->nama }}</option>
+                                    <option value="{{ $rh->id }}">{{ $rh->nama }}</option>
                                     @endforeach
                                 </select>
                                 @error('hubungan_keluarga_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
@@ -88,28 +93,10 @@
                                 <select wire:model="pekerjaan_id" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:ring-primary/20 focus:border-primary">
                                     <option value="">-- Pilih --</option>
                                     @foreach($refPekerjaans as $rp)
-                                        <option value="{{ $rp->id }}">{{ $rp->nama }}</option>
+                                    <option value="{{ $rp->id }}">{{ $rp->nama }}</option>
                                     @endforeach
                                 </select>
                                 @error('pekerjaan_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                            </div>
-
-                            <!-- Status Baptis -->
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Status Baptis</label>
-                                <select wire:model="status_baptis" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3"><option value="Belum">Belum</option><option value="Sudah">Sudah</option></select>
-                            </div>
-
-                            <!-- Status Sidi -->
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Status Sidi</label>
-                                <select wire:model="status_sidi" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3"><option value="Belum">Belum</option><option value="Sudah">Sudah</option></select>
-                            </div>
-
-                             <!-- Status Nikah -->
-                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Status Pernikahan</label>
-                                <select wire:model="status_nikah" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3"><option value="Belum">Belum Menikah</option><option value="Sudah">Sudah Menikah</option><option value="Janda/Duda">Janda / Duda</option></select>
                             </div>
                         </div>
                     </div>

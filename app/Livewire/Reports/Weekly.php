@@ -7,7 +7,7 @@ use App\Models\FiscalYear;
 use App\Models\OpeningBalance;
 use App\Models\RefAccount;
 use App\Models\ActivitySchedule;
-use App\Models\Member; // Import Member
+use App\Models\Member; 
 use Livewire\Component;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -19,20 +19,21 @@ class Weekly extends Component
 
     public function mount()
     {
-        // Default: Senin s/d Minggu pekan ini
-        $this->startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
-        $this->endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
+        $start = Carbon::now()->startOfWeek(Carbon::SUNDAY);
+        $end   = Carbon::now()->endOfWeek(Carbon::SUNDAY);
+        $this->startDate = $start->format('Y-m-d');
+        $this->endDate = $end->format('Y-m-d');
     }
 
     public function render()
     {
         $activeYear = FiscalYear::active();
-        
+
         $kasUmum = RefAccount::where('nama', 'like', '%Umum%')
-                    ->orWhere('jenis', 'kas_tunai')
-                    ->orderBy('id', 'asc') 
-                    ->first();
-        
+            ->orWhere('jenis', 'kas_tunai')
+            ->orderBy('id', 'asc')
+            ->first();
+
         $kasBangun = RefAccount::where('nama', 'like', '%Pembangunan%')->first();
 
         // 1. SALDO AWAL
@@ -49,13 +50,21 @@ class Weekly extends Component
         $totalASM = Transaction::whereHas('budgetPost', fn($q) => $q->where('kode', '1.18'))
             ->whereBetween('tanggal', [$this->startDate, $this->endDate])->sum('nominal');
 
+        $startMingguLalu = Carbon::now()->subWeek()->startOfWeek(); // Senin minggu lalu
+        $endMingguLalu   = Carbon::now()->subWeek()->endOfWeek();   // Minggu minggu lalu
+
         $totalMingguLalu = Transaction::where('jenis', 'masuk')
             ->where('ref_account_id', $kasUmum->id ?? 0)
-            ->whereBetween('tanggal', [
-                Carbon::parse($this->startDate)->subDays(7), 
-                Carbon::parse($this->endDate)->subDays(7)
-            ])
+            ->whereBetween('tanggal', [$startMingguLalu->startOfDay(), $endMingguLalu->endOfDay()])
+            // ->get();
             ->sum('nominal');
+        // $totalMingguLalu = Transaction::where('jenis', 'masuk')
+        //     ->where('ref_account_id', $kasUmum->id ?? 0)
+        //     ->whereBetween('tanggal', [
+        //         Carbon::parse($this->startDate)->subDays(7),
+        //         Carbon::parse($this->endDate)->subDays(7)
+        //     ])
+        //     ->sum('nominal');
 
         // 3. JADWAL PELAYANAN (Pekan Depan / Periode Ini)
         $schedules = ActivitySchedule::with(['type', 'family.refWilayah', 'servants.member'])
@@ -79,20 +88,20 @@ class Weekly extends Component
         return view('livewire.reports.weekly', [
             'saldoAwalUmum' => $saldoAwalUmum,
             'saldoAwalBangun' => $saldoAwalBangun,
-            
+
             'detailPKS' => $detailPKS,
             'detailLelang' => $detailLelang,
             'totalASM' => $totalASM,
             'totalMingguLalu' => $totalMingguLalu,
-            
+
             'schedules' => $schedules,
             'birthdays' => $birthdays, // Data Ulang Tahun
-            
+
             'pemasukanUmum' => $pemasukanUmum,
             'pengeluaranUmum' => $pengeluaranUmum,
             'totalMasukUmum' => $pemasukanUmum->sum('total'),
             'totalKeluarUmum' => $pengeluaranUmum->sum('total'),
-            
+
             'pemasukanBangun' => $pemasukanBangun,
             'pengeluaranBangun' => $pengeluaranBangun,
             'totalMasukBangun' => $pemasukanBangun->sum('total'),
@@ -125,8 +134,7 @@ class Weekly extends Component
             ->where('ref_account_id', $account->id)
             ->where('jenis', $jenis)
             ->whereBetween('tanggal', [$this->startDate, $this->endDate])
-            ->select('ref_budget_post_id', DB::raw('sum(nominal) as total'))
-            ->groupBy('ref_budget_post_id')
-            ->get();
+            ->get()
+            ->groupBy('ref_budget_post_id'); // kumpulkan per budgetPost
     }
 }

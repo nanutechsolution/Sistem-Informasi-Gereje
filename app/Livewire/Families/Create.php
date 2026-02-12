@@ -19,8 +19,9 @@ class Create extends Component
     protected $messages = [
         'nomor_kk.required' => 'Nomor KK wajib diisi.',
         'nomor_kk.unique' => 'Nomor KK ini sudah terdaftar.',
+        'nomor_kk.digits' => 'Nomor KK wajib 16 digit.',
         'kepala_keluarga.required' => 'Nama Kepala Keluarga wajib diisi.',
-        'wilayah_id.required' => 'Wilayah pelayanan wajib dipilih.', // Update pesan
+        'wilayah_id.required' => 'Wilayah pelayanan wajib dipilih.',
         'alamat.required' => 'Alamat rumah wajib diisi.',
     ];
 
@@ -28,9 +29,9 @@ class Create extends Component
     {
         // 1. Validasi
         $this->validate([
-            'nomor_kk' => 'required|numeric|unique:families,nomor_kk',
+            'nomor_kk' => 'required|numeric|digits:16|unique:families,nomor_kk',
             'kepala_keluarga' => 'required|min:3',
-            'wilayah_id' => 'required|exists:ref_wilayahs,id', // Validasi ke tabel master
+            'wilayah_id' => 'required|exists:ref_wilayahs,id',
             'alamat' => 'required|min:5',
             'status' => 'required|in:aktif,pindah,keluar,disiplin',
             'keterangan' => 'nullable|string',
@@ -40,7 +41,7 @@ class Create extends Component
         Family::create([
             'nomor_kk' => $this->nomor_kk,
             'kepala_keluarga' => $this->kepala_keluarga,
-            'wilayah_id' => $this->wilayah_id, // Simpan ID
+            'wilayah_id' => $this->wilayah_id,
             'alamat' => $this->alamat,
             'status' => $this->status,
             'keterangan' => $this->keterangan,
@@ -54,7 +55,7 @@ class Create extends Component
     public function render()
     {
         return view('livewire.families.create', [
-            'refWilayahs' => RefWilayah::orderBy('nama')->get() // Kirim data ke view
+            'refWilayahs' => RefWilayah::orderBy('nama')->get() 
         ]);
     }
 }

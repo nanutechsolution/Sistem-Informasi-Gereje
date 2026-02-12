@@ -49,7 +49,7 @@ class LetterManager extends Component
 
         $date = Carbon::parse($this->tanggal_cetak);
         $year = $date->year;
-        
+
         // 1. Cari surat terakhir di tahun yang sama
         $lastLetter = Letter::whereYear('tanggal_cetak', $year)
             ->orderBy('id', 'desc')
@@ -66,7 +66,7 @@ class LetterManager extends Component
         }
 
         // 3. Format Romawi Bulan
-        $romans = [1=>'I', 2=>'II', 3=>'III', 4=>'IV', 5=>'V', 6=>'VI', 7=>'VII', 8=>'VIII', 9=>'IX', 10=>'X', 11=>'XI', 12=>'XII'];
+        $romans = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'];
         $monthRoman = $romans[$date->month];
 
         // 4. Susun Nomor
@@ -75,12 +75,15 @@ class LetterManager extends Component
     }
 
     // Trigger update nomor jika tanggal berubah
-    public function updatedTanggalCetak() { $this->generateNumber(); }
+    public function updatedTanggalCetak()
+    {
+        $this->generateNumber();
+    }
 
     public function updatedSearchMember($value)
     {
-        $this->foundMembers = strlen($value) > 2 
-            ? Member::where('nama', 'like', "%{$value}%")->limit(5)->get() 
+        $this->foundMembers = strlen($value) > 2
+            ? Member::where('nama', 'like', "%{$value}%")->limit(5)->get()
             : [];
     }
 
@@ -88,7 +91,8 @@ class LetterManager extends Component
     {
         $this->member_id = $id;
         $this->selectedMemberName = $name;
-        $this->searchMember = ''; $this->foundMembers = [];
+        $this->searchMember = '';
+        $this->foundMembers = [];
     }
 
     public function create()
@@ -98,6 +102,14 @@ class LetterManager extends Component
         $this->tanggal_cetak = date('Y-m-d');
         $this->generateNumber(); // Auto generate saat buka modal
         $this->isModalOpen = true;
+    }
+    function closeModal()
+    {
+        $this->reset(['member_id', 'selectedMemberName', 'keperluan', 'letterId']);
+        $this->jenis = 'keterangan';
+        $this->tanggal_cetak = date('Y-m-d');
+        $this->generateNumber(); // Auto generate saat buka modal
+        $this->isModalOpen = false;
     }
 
     // Fungsi Edit (Baru)

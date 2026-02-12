@@ -195,7 +195,7 @@
                                         <div class="relative flex-1">
                                             <input x-model="search" type="text" class="w-full bg-gray-100 border-none rounded-xl p-3 text-sm font-medium focus:ring-0" placeholder="Ketik kode atau nama pos..." autofocus>
                                         </div>
-                                        <button @click="open = false" class="p-2 bg-gray-100 rounded-xl text-gray-500 hover:bg-gray-200">
+                                        <button type="button" @click="open = false" class="p-2 bg-gray-100 rounded-xl text-gray-500 hover:bg-gray-200">
                                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                             </svg>

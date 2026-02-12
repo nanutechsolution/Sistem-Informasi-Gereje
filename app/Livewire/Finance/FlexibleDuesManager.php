@@ -65,7 +65,6 @@ class FlexibleDuesManager extends Component
         $targets = $dueType->target_level === 'member'
             ? Member::where('is_active', true)->get()
             : Family::where('status', 'aktif')->get();
-
         $count = 0;
         foreach ($targets as $target) {
             $exists = DuesRegistry::where('ref_due_type_id', $this->due_type_id)
@@ -105,7 +104,6 @@ class FlexibleDuesManager extends Component
         $this->resetPage();
     }
 
-    // --- LOGIKA PENCARIAN SUBJEK ---
     public function updatedSearchAssignee($value)
     {
         if (strlen($value) < 3) {
@@ -113,18 +111,22 @@ class FlexibleDuesManager extends Component
             return;
         }
 
-        $members = Member::where('nama', 'like', "%{$value}%")
+        // Hanya cari Member yang AKTIF
+        $members = Member::where('status_keanggotaan', 'aktif') // Filter aktif
+            ->where('nama', 'like', "%{$value}%")
             ->limit(5)->get()->map(fn($m) => [
                 'id' => $m->id,
-                'type' => Member::class, // Full Class Path
+                'type' => Member::class,
                 'nama' => $m->nama,
                 'label' => "👤 Jiwa: {$m->nama}"
             ]);
 
-        $families = Family::where('kepala_keluarga', 'like', "%{$value}%")
+        // Hanya cari Family yang AKTIF
+        $families = Family::where('status', 'aktif') // Filter aktif
+            ->where('kepala_keluarga', 'like', "%{$value}%")
             ->limit(5)->get()->map(fn($f) => [
                 'id' => $f->id,
-                'type' => Family::class, // Full Class Path
+                'type' => Family::class,
                 'nama' => $f->kepala_keluarga,
                 'label' => "🏠 KK: {$f->kepala_keluarga}"
             ]);
@@ -253,6 +255,13 @@ class FlexibleDuesManager extends Component
     {
         $query = DuesRegistry::with(['dueType', 'assignee', 'fiscalYear'])
             ->where('fiscal_year_id', $this->filterYear)
+            ->whereHasMorph('assignee', [Member::class, Family::class], function ($mq, $type) {
+                if ($type === Member::class) {
+                    $mq->where('status_keanggotaan', 'aktif');
+                } else {
+                    $mq->where('status', 'aktif'); // Asumsi kolom status di tabel families
+                }
+            })
             ->when($this->typeFilter, fn($q) => $q->where('ref_due_type_id', $this->typeFilter))
             ->where(function ($q) {
                 if ($this->search) {
@@ -274,4 +283,34 @@ class FlexibleDuesManager extends Component
             'years' => FiscalYear::orderBy('tahun', 'desc')->get(),
         ]);
     }
+    // public function render()
+    // {
+    //     $query = DuesRegistry::with(['dueType', 'assignee', 'fiscalYear'])
+    //         ->where('fiscal_year_id', $this->filterYear)
+    //         ->when($this->typeFilter, fn($q) => $q->where('ref_due_type_id', $this->typeFilter))
+    //         ->where(function ($q) {
+    //             if ($this->search) {
+    //                 $q->whereHasMorph('assignee', [Member::class, Family::class], function ($mq, $type) {
+    //                     if ($type === Member::class) {
+    //                         $mq->where('is_active', true);
+    //                     } else {
+    //                         $mq->where('status', 'aktif');
+    //                     }
+    //                     if ($type === Member::class) {
+    //                         $mq->where('nama', 'like', "%{$this->search}%");
+    //                     } else {
+    //                         $mq->where('kepala_keluarga', 'like', "%{$this->search}%");
+    //                     }
+    //                 });
+    //             }
+    //         });
+
+    //     return view('livewire.finance.flexible-dues-manager', [
+    //         'dues' => $query->latest()->paginate(15),
+    //         'dueTypes' => RefDueType::where('is_active', true)->get(),
+    //         'accounts' => RefAccount::where('is_active', true)->get(),
+    //         'budgetPosts' => RefBudgetPost::where('jenis', 'pemasukan')->orderBy('kode')->get(),
+    //         'years' => FiscalYear::orderBy('tahun', 'desc')->get(),
+    //     ]);
+    // }
 }

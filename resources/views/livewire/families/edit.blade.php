@@ -183,12 +183,21 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex gap-2">
-                                    <span class="text-[10px] px-2 py-0.5 rounded border {{ $member->status_baptis == 'Sudah' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-400 border-gray-200' }}">Baptis</span>
-                                    <span class="text-[10px] px-2 py-0.5 rounded border {{ $member->status_sidi == 'Sudah' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-400 border-gray-200' }}">Sidi</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded border {{ $member->hasEvent('BAPTIS') ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-400 border-gray-200' }}">Baptis</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded border {{ $member->hasEvent('SIDI')  ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-400 border-gray-200' }}">Sidi</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded border {{ ($member->hasEvent('NIKAH') || $member->hasEvent('PENEGUHAN'))  ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-400 border-gray-200' }}">N</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded border {{ $member->hasEvent('PINDAH')  ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-400 border-gray-200' }}">Pindah</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex justify-end gap-3">
+                                    <a href="{{ route('members.show', $member) }}" class="text-gray-400 hover:text-primary font-bold text-xs transition-colors flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                        Detail
+                                    </a>
                                     <a href="{{ route('members.edit', $member) }}" class="text-gray-400 hover:text-primary font-bold text-xs transition-colors flex items-center gap-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -239,17 +248,17 @@
                     <div class="flex gap-2 mb-4 border-t border-b border-gray-50 py-3">
                         <div class="flex-1 text-center border-r border-gray-50">
                             <span class="block text-[10px] text-gray-400 uppercase font-bold">Baptis</span>
-                            <span class="text-xs font-bold {{ $member->status_baptis == 'Sudah' ? 'text-green-600' : 'text-gray-400' }}">{{ $member->status_baptis }}</span>
+                            <span class="text-xs font-bold {{ $member->hasEvent('BAPTIS')? 'text-green-600' : 'text-gray-400' }}">{{ $member->status_baptis }}</span>
                         </div>
                         <div class="flex-1 text-center">
                             <span class="block text-[10px] text-gray-400 uppercase font-bold">Sidi</span>
-                            <span class="text-xs font-bold {{ $member->status_sidi == 'Sudah' ? 'text-green-600' : 'text-gray-400' }}">{{ $member->status_sidi }}</span>
+                            <span class="text-xs font-bold {{ $member->hasEvent('SIDI') ? 'text-green-600' : 'text-gray-400' }}">{{ $member->status_sidi }}</span>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-3">
+                        <a href="{{ route('members.show', $member) }}" class="flex-1 py-2 text-center text-sm font-bold text-primary-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-100">Detail</a>
                         <a href="{{ route('members.edit', $member) }}" class="flex-1 py-2 text-center text-sm font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-100">Edit</a>
-
                         @if(in_array(auth()->user()->role, ['admin', 'pendeta']))
                         <button
                             wire:click="deleteMember({{ $member->id }})"

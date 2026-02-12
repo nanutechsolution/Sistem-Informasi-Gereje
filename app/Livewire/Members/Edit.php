@@ -53,9 +53,6 @@ class Edit extends Component
             'jenis_kelamin' => 'required|in:L,P',
             'hubungan_keluarga_id' => 'required|exists:ref_hubungan_keluargas,id',
             'pekerjaan_id' => 'nullable|exists:ref_pekerjaans,id',
-            'status_baptis' => 'required',
-            'status_sidi' => 'required',
-            'status_nikah' => 'required',
         ]);
 
         $this->member->update([
@@ -67,9 +64,6 @@ class Edit extends Component
             'no_hp' => $this->no_hp,
             'hubungan_keluarga_id' => $this->hubungan_keluarga_id,
             'pekerjaan_id' => $this->pekerjaan_id,
-            'status_baptis' => $this->status_baptis,
-            'status_sidi' => $this->status_sidi,
-            'status_nikah' => $this->status_nikah,
         ]);
 
         $this->dispatch('notify', message: 'Data anggota berhasil diperbarui!', type: 'success');

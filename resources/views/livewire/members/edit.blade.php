@@ -93,24 +93,6 @@
                                 </select>
                                 @error('pekerjaan_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
-
-                            <!-- Status Baptis -->
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Status Baptis</label>
-                                <select wire:model="status_baptis" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3"><option value="Belum">Belum</option><option value="Sudah">Sudah</option></select>
-                            </div>
-
-                            <!-- Status Sidi -->
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Status Sidi</label>
-                                <select wire:model="status_sidi" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3"><option value="Belum">Belum</option><option value="Sudah">Sudah</option></select>
-                            </div>
-
-                             <!-- Status Nikah -->
-                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Status Pernikahan</label>
-                                <select wire:model="status_nikah" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3"><option value="Belum">Belum Menikah</option><option value="Sudah">Sudah Menikah</option><option value="Janda/Duda">Janda / Duda</option></select>
-                            </div>
                         </div>
                     </div>
 

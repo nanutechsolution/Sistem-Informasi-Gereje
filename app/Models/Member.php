@@ -14,6 +14,7 @@ class Member extends Model
 
     protected $casts = [
         'tanggal_lahir' => 'date',
+        'tanggal_meninggal' => 'date',
     ];
 
     public function uniqueIds()
@@ -53,7 +54,12 @@ class Member extends Model
         return $this->hasOne(MemberEvent::class)->latestOfMany('tanggal');
     }
 
-
+    public function hasEvent($kode)
+    {
+        return $this->events()->whereHas('eventType', function ($q) use ($kode) {
+            $q->where('kode', $kode);
+        })->exists();
+    }
 
     /**
      * Relasi ke riwayat sakramen jemaat.
@@ -61,5 +67,32 @@ class Member extends Model
     public function sacraments(): HasMany
     {
         return $this->hasMany(SacramentRecord::class);
+    }
+
+
+    public function scopeActive($query)
+    {
+        return $query->where('status_keanggotaan', 'aktif');
+    }
+
+
+    public function isActive(): bool
+    {
+        return $this->status_keanggotaan === 'aktif';
+    }
+
+    public function isDeceased(): bool
+    {
+        return $this->status_keanggotaan === 'meninggal';
+    }
+
+
+    public function markAsDeceased($tanggal)
+    {
+        $this->update([
+            'status_keanggotaan' => 'meninggal',
+            'tanggal_meninggal' => $tanggal,
+            'is_active' => 0,
+        ]);
     }
 }

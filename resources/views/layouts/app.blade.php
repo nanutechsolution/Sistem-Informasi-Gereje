@@ -36,7 +36,6 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
         .dropdown-scrollbar::-webkit-scrollbar { width: 4px; }
         .dropdown-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .dropdown-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
@@ -135,6 +134,7 @@
                                 <div class="px-4 py-1 text-[10px] font-black text-slate-400 uppercase tracking-widest">Pastoral</div>
                                 <a href="{{ route('pastoral.visits') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 {{ request()->is('pastoral/visits*') ? 'text-primary bg-primary/5' : '' }}">Kunjungan Pastoral</a>
                                 <a href="{{ route('pastoral.prayers') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 {{ request()->is('pastoral/prayers*') ? 'text-primary bg-primary/5' : '' }}">Permintaan Doa</a>
+                                <a href="{{ route('diakonia') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 text-emerald-700">Diakonia</a>
 
                                 <div class="h-px bg-slate-100 my-2 mx-4"></div>
                                 <div class="px-4 py-1 text-[10px] font-black text-amber-600 uppercase tracking-widest italic">Kategorial (PKS)</div>
@@ -160,8 +160,6 @@
                                 <a href="{{ route('auctions.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 {{ request()->is('auctions*') ? 'text-emerald-700 bg-emerald-50' : '' }}">Lelang</a>
                                 <a href="{{ route('auctions.receivables') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50">Piutang Lelang</a>
                                 <a href="{{ route('finance.flexible-dues') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 text-blue-600 {{ request()->is('finance/flexible-dues*') ? 'bg-blue-50' : '' }}">Tanggungan Jemaat</a>
-                                <a href="{{ route('finance.diakonia') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 text-emerald-700">Diakonia</a>
-                                
                                 <div class="h-px bg-slate-100 my-2 mx-4"></div>
                                 <div class="px-4 py-1 text-[10px] font-black text-slate-400 uppercase tracking-widest">Perencanaan</div>
                                 <a href="{{ route('budgets.manage') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 {{ request()->is('budgets*') ? 'bg-slate-50' : '' }}">RAPB Jemaat</a>
@@ -186,7 +184,6 @@
                                 <a href="{{ route('reports.weekly') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 {{ request()->routeIs('reports.weekly') ? 'bg-indigo-50 text-indigo-700' : '' }}">Warta Mingguan</a>
                                 <a href="{{ route('reports.monthly') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 {{ request()->routeIs('reports.monthly') ? 'bg-indigo-50 text-indigo-700' : '' }}">Laporan Bulanan</a>
                                 <a href="{{ route('reports.census') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 text-indigo-700 {{ request()->routeIs('reports.census') ? 'bg-indigo-100' : '' }}">Laporan Sensus</a>
-                                
                                 <div class="h-px bg-slate-100 my-2 mx-4"></div>
                                 <div class="px-4 py-1 text-[10px] font-black text-indigo-600 uppercase tracking-widest">Laporan Keuangan</div>
                                 <a href="{{ route('reports.budget-realization') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 italic font-bold text-rose-600 {{ request()->routeIs('reports.budget-realization') ? 'bg-rose-50' : '' }}">Realisasi RAPB</a>
@@ -211,7 +208,6 @@
                                 <div class="px-4 py-1 text-[10px] font-black text-slate-500 uppercase tracking-widest">Konfigurasi</div>
                                 <a href="{{ route('settings.assets') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-white/5 hover:text-white">Aset Gereja</a>
                                 <a href="{{ route('settings.profile') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-white/5 hover:text-white">Profil Jemaat</a>
-                                <a href="{{ route('settings.theme') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-white/5 hover:text-white text-primary">Tema & Tampilan</a>
                                 
                                 <div class="h-px bg-white/10 my-2 mx-4"></div>
                                 <div class="px-4 py-1 text-[10px] font-black text-slate-500 uppercase tracking-widest">Master Data Referensi</div>

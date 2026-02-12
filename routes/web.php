@@ -76,7 +76,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings/roles', \App\Livewire\Settings\RoleManager::class)->name('settings.roles');
         Route::get('/settings/assets', \App\Livewire\Settings\AssetManager::class)->middleware(['auth'])->name('settings.assets');
         Route::get('/settings/profile', \App\Livewire\Settings\ChurchProfile::class)->name('settings.profile');
-        Route::get('/settings/theme', \App\Livewire\Settings\ThemeManager::class)->name('settings.theme');
 
         Route::get('/settings/{type}', Settings\MasterData::class)->name('settings.master');
     });
@@ -131,7 +130,7 @@ Route::middleware('auth')->group(function () {
         // Lelang
         Route::get('/auctions', Auctions\EventIndex::class)->name('auctions.index');
         Route::get('/auctions/receivables', \App\Livewire\Auctions\Receivables::class)->name('auctions.receivables');
-        Route::get('/finance/diakonia', \App\Livewire\Finance\DiakoniaManager::class)->name('finance.diakonia');
+        Route::get('/finance/diakonia', \App\Livewire\Finance\DiakoniaManager::class)->name('diakonia');
         Route::get('/auctions/{event}', Auctions\ItemManager::class)->name('auctions.items');
         Route::get('/finance/flexible-dues', \App\Livewire\Finance\FlexibleDuesManager::class)->name('finance.flexible-dues');
     });

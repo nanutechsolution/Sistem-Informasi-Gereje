@@ -22,7 +22,7 @@ class ScheduleManager extends Component
     // Form Properties
     public $ref_activity_type_id, $ref_wilayah_id, $family_id;
     public $tanggal, $jam_mulai, $tema, $lokasi_manual, $keterangan;
-    
+
     // Search Helper
     public $searchFamily = '', $foundFamilies = [], $selectedFamilyLabel = '';
 
@@ -65,6 +65,12 @@ class ScheduleManager extends Component
         $this->isModalOpen = true;
     }
 
+    function closeModal()
+    {
+        $this->reset(['editId', 'ref_activity_type_id', 'ref_wilayah_id', 'family_id', 'tema', 'lokasi_manual', 'keterangan']);
+        $this->tanggal = date('Y-m-d');
+        $this->isModalOpen = false;
+    }
     public function save()
     {
         $this->validate();
@@ -81,8 +87,8 @@ class ScheduleManager extends Component
             'keterangan' => $this->keterangan,
         ]);
 
-        $this->dispatch('notify', message: 'Agenda berhasil disimpan.', type: 'success');
         $this->isModalOpen = false;
+        $this->dispatch('notify', message: 'Agenda berhasil disimpan.', type: 'success');
     }
 
     public function delete($id)
@@ -103,7 +109,7 @@ class ScheduleManager extends Component
         $this->tema = $schedule->tema;
         $this->lokasi_manual = $schedule->lokasi_manual;
         $this->keterangan = $schedule->keterangan;
-        
+
         if ($schedule->family) {
             $this->selectedFamilyLabel = "Kel. " . $schedule->family->kepala_keluarga;
         }
@@ -118,12 +124,12 @@ class ScheduleManager extends Component
             ->whereHas('type', function ($q) {
                 $q->where('nama', 'not like', '%PKS%'); // Exclude PKS
             })
-            ->when($this->filterType, function($q) {
+            ->when($this->filterType, function ($q) {
                 $q->where('ref_activity_type_id', $this->filterType);
             })
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->where('tema', 'like', "%{$this->search}%")
-                  ->orWhere('lokasi_manual', 'like', "%{$this->search}%");
+                    ->orWhere('lokasi_manual', 'like', "%{$this->search}%");
             })
             ->latest('tanggal')
             ->paginate(9);

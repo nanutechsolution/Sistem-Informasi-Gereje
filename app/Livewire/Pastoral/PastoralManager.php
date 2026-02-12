@@ -15,33 +15,38 @@ class PastoralManager extends Component
     use WithPagination;
 
     public $search = '', $isModalOpen = false;
-    
+
     // Form Properties
     public $member_id, $church_officer_id, $tanggal_kunjungan, $kategori = 'rutin';
     public $pokok_doa, $catatan_kunjungan, $perlu_tindak_lanjut = false;
 
+
     // Search Helpers
     public $searchMember = '', $selectedMemberName = '';
     public $foundMembers = [];
+
+    public $searchOfficer = '', $selectedOfficerName = '';
+    public $foundOfficers = [];
 
     protected $rules = [
         'member_id' => 'required',
         'church_officer_id' => 'required',
         'tanggal_kunjungan' => 'required|date',
         'kategori' => 'required',
-        'pokok_doa' => 'nullable|min:10',
+        'pokok_doa' => 'required|min:10',
     ];
 
     protected $messages = [
         'member_id.required' => 'Pilih jemaat yang dikunjungi.',
         'church_officer_id.required' => 'Pilih siapa yang mengunjungi.',
+        'pokok_doa.required' => 'Isi pokok doa minimal 10 karakter.',
         'pokok_doa.min' => 'Isi pokok doa minimal 10 karakter.',
     ];
 
     public function mount()
     {
         $this->tanggal_kunjungan = date('Y-m-d');
-        
+
         // Auto-detect visitor jika user login adalah pengurus
         $officer = ChurchOfficer::where('member_id', Auth::user()->member_id)->first();
         $this->church_officer_id = $officer?->id;
@@ -49,21 +54,35 @@ class PastoralManager extends Component
 
     public function updatedSearchMember($value)
     {
-        $this->foundMembers = strlen($value) > 2 
-            ? Member::where('nama', 'like', "%{$value}%")->limit(5)->get() 
+        $this->foundMembers = strlen($value) > 2
+            ? Member::where('nama', 'like', "%{$value}%")->limit(5)->get()
+            : [];
+    }
+    public function updatedSearchOfficer($value)
+    {
+        $this->foundOfficers = strlen($value) > 2
+            ? ChurchOfficer::where('nama', 'like', "%{$value}%")->limit(5)->get()
             : [];
     }
 
+    public function selectOfficer($id, $name)
+    {
+        $this->church_officer_id = $id;
+        $this->selectedOfficerName = $name;
+        $this->searchOfficer = '';
+        $this->foundOfficers = [];
+    }
     public function selectMember($id, $name)
     {
         $this->member_id = $id;
         $this->selectedMemberName = $name;
-        $this->searchMember = ''; $this->foundMembers = [];
+        $this->searchMember = '';
+        $this->foundMembers = [];
     }
 
     public function create()
     {
-        $this->reset(['member_id', 'selectedMemberName', 'pokok_doa', 'catatan_kunjungan', 'perlu_tindak_lanjut']);
+        $this->reset(['member_id', 'selectedMemberName', 'pokok_doa', 'catatan_kunjungan', 'selectedOfficerName', 'perlu_tindak_lanjut']);
         $this->tanggal_kunjungan = date('Y-m-d');
         $this->isModalOpen = true;
     }

@@ -1,4 +1,4 @@
-<div class="py-6 sm:py-12 bg-slate-50 min-h-screen" x-data="{ openModal: @entangle('isModalOpen').live }">
+<div class="py-6 sm:py-12 bg-slate-50 min-h-screen" x-data="{ showForm: @entangle('isModalOpen').live }">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <!-- HEADER -->
@@ -13,7 +13,7 @@
                     Ke Jadwal PKS &rarr;
                 </a>
 
-                <button wire:click="create" class="inline-flex items-center justify-center px-8 py-4 bg-primary text-white rounded-[24px] font-black text-xs shadow-xl shadow-blue-500/30 hover:scale-105 transition-all cursor-pointer z-10">
+                <button wire:click="$set('isModalOpen', true)" class="inline-flex items-center justify-center px-8 py-4 bg-primary text-white rounded-[24px] font-black text-xs shadow-xl shadow-blue-500/30 hover:scale-105 transition-all cursor-pointer z-10">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
                     </svg>
@@ -106,10 +106,9 @@
 
         <div class="mt-12">{{ $schedules->links() }}</div>
     </div>
-
     <!-- MODAL FORM -->
-    <div x-show="showModal" x-cloak class="fixed inset-0 z-[100] overflow-y-auto">
-        <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-md" @click="showModal = false"></div>
+    <div x-show="showForm" x-cloak class="fixed inset-0 z-[100] overflow-y-auto">
+        <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-md" @click="showForm = false"></div>
         <div class="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4 text-center">
             <div class="relative w-full max-w-2xl bg-white rounded-t-[40px] sm:rounded-[40px] p-10 text-left shadow-2xl transition-all overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-2 bg-primary"></div>
@@ -159,7 +158,7 @@
                     </div>
 
                     <div class="pt-6 flex gap-4">
-                        <button type="button" @click="showModal = false" class="flex-1 py-5 bg-slate-100 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-400 hover:bg-slate-200 transition-all">Batal</button>
+                        <button type="button" @click="showForm = false" class="flex-1 py-5 bg-slate-100 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-400 hover:bg-slate-200 transition-all">Batal</button>
                         <button type="submit" class="flex-[2] py-5 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-blue-500/30 hover:bg-blue-800 transition transform active:scale-95">Simpan Jadwal</button>
                     </div>
                 </form>

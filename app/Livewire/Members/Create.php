@@ -16,10 +16,12 @@ class Create extends Component
     public $nama, $nik, $tempat_lahir, $tanggal_lahir, $jenis_kelamin = 'L', $no_hp;
     public $hubungan_keluarga_id; // Ganti string jadi ID
     public $pekerjaan_id; // Baru
-    public $status_baptis = 'Belum', $status_sidi = 'Belum', $status_nikah = 'Belum';
 
     protected $messages = [
         'nama.required' => 'Nama lengkap wajib diisi.',
+        'nik.required' => 'NIK Wajib lengkap wajib diisi.',
+        'tempat_lahir.required' => 'Tempat lahir wajib diisi.',
+        'tanggal_lahir.required' => 'Tanggal lahir wajib diisi.',
         'nik.digits' => 'NIK wajib 16 digit.',
         'nik.unique' => 'NIK ini sudah terdaftar.',
         'hubungan_keluarga_id.required' => 'Hubungan keluarga wajib dipilih.',
@@ -35,15 +37,12 @@ class Create extends Component
     {
         $this->validate([
             'nama' => 'required|min:3',
-            'nik' => 'nullable|numeric|digits:16|unique:members,nik',
-            'tempat_lahir' => 'nullable|string',
-            'tanggal_lahir' => 'nullable|date',
+            'nik' => 'required|numeric|digits:16|unique:members,nik',
+            'tempat_lahir' => 'required|string',
+            'tanggal_lahir' => 'required|date',
             'jenis_kelamin' => 'required|in:L,P',
             'hubungan_keluarga_id' => 'required|exists:ref_hubungan_keluargas,id',
-            'pekerjaan_id' => 'nullable|exists:ref_pekerjaans,id',
-            'status_baptis' => 'required',
-            'status_sidi' => 'required',
-            'status_nikah' => 'required',
+            'pekerjaan_id' => 'required|exists:ref_pekerjaans,id',
         ]);
 
         $this->family->members()->create([
@@ -55,9 +54,7 @@ class Create extends Component
             'no_hp' => $this->no_hp,
             'hubungan_keluarga_id' => $this->hubungan_keluarga_id,
             'pekerjaan_id' => $this->pekerjaan_id,
-            'status_baptis' => $this->status_baptis,
-            'status_sidi' => $this->status_sidi,
-            'status_nikah' => $this->status_nikah,
+            'no_hp' => $this->no_hp,
         ]);
 
         $this->dispatch('notify', message: 'Anggota keluarga berhasil ditambahkan!', type: 'success');

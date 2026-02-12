@@ -229,7 +229,7 @@ class PksScheduler extends Component
                         'family_id' => $f->id,
                         'tanggal' => $currDate->format('Y-m-d'), 
                         'jam_mulai' => $this->batch_time,
-                        'tema' => 'Ibadah Rumah Tangga', 
+                        'tema' => '-', 
                         'status' => 'rencana'
                     ]);
 

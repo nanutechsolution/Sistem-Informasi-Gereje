@@ -12,8 +12,8 @@ use Livewire\Component;
 class Show extends Component
 {
     public Member $member;
-    public $activeTab = 'peristiwa'; // Default tab
-    
+    public $activeTab = 'peristiwa';
+
     // Properti Form Event
     public $event_type_id, $tanggal, $lokasi, $pendeta, $nomor_surat, $keterangan;
     public $isAddingEvent = false;
@@ -22,8 +22,8 @@ class Show extends Component
     {
         // Eager load data profil dan relasi tanggungan
         $this->member = $member->load([
-            'family.refWilayah', 
-            'refHubunganKeluarga', 
+            'family.refWilayah',
+            'refHubunganKeluarga',
             'refPekerjaan',
             'events.eventType'
         ]);
@@ -44,7 +44,8 @@ class Show extends Component
             'tanggal' => 'required|date',
         ]);
 
-        $this->member->events()->create([
+        $eventType = \App\Models\RefEventType::find($this->event_type_id);
+        $event = $this->member->events()->create([
             'event_type_id' => $this->event_type_id,
             'tanggal' => $this->tanggal,
             'lokasi' => $this->lokasi,
@@ -53,10 +54,30 @@ class Show extends Component
             'keterangan' => $this->keterangan,
         ]);
 
+        // 🔥 LOGIC OTOMATIS STATUS MEMBER
+        if ($eventType->kode === 'MENINGGAL') {
+            $this->member->update([
+                'status_keanggotaan' => 'meninggal',
+                'tanggal_meninggal' => $this->tanggal,
+                'is_active' => 0,
+            ]);
+        }
+
+
+        if ($eventType->kode === 'MUTASI_KELUAR') {
+            $this->member->update([
+                'status_keanggotaan' => 'pindah',
+                'is_active' => 0,
+            ]);
+        }
+
         $this->dispatch('notify', message: 'Riwayat peristiwa disimpan.', type: 'success');
-        $this->reset(['event_type_id', 'isAddingEvent']);
+
+        $this->reset(['event_type_id', 'tanggal', 'lokasi', 'pendeta', 'nomor_surat', 'keterangan', 'isAddingEvent']);
+
         $this->member->refresh();
     }
+
 
     public function render()
     {

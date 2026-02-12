@@ -23,7 +23,7 @@ class FullDeploymentSeeder extends Seeder
 
         // 2. BUAT 60 KARTU KELUARGA (KK) & ANGGOTA JEMAAT
         $this->command->info('Sedang membuat 60 KK dan Jemaat...');
-        $allMembers = $this->createFamiliesAndMembers(10);
+        $allMembers = $this->createFamiliesAndMembers(20);
 
         // 3. ANGKAT PEJABAT (20 Orang) DARI JEMAAT YANG ADA
         // 1 Pendeta, 1 Vicaris, 18 Majelis/Staf
@@ -94,9 +94,6 @@ class FullDeploymentSeeder extends Seeder
                 'pekerjaan_id' => $pekerjaans->random()->id,
                 'tempat_lahir' => fake('id_ID')->city(),
                 'tanggal_lahir' => fake()->dateTimeBetween('-60 years', '-30 years'),
-                'status_baptis' => 'Sudah',
-                'status_sidi' => 'Sudah',
-                'status_nikah' => 'Sudah',
             ]);
             $createdMembers->push($bapak);
 
@@ -111,9 +108,6 @@ class FullDeploymentSeeder extends Seeder
                 'pekerjaan_id' => $pekerjaans->random()->id,
                 'tempat_lahir' => fake('id_ID')->city(),
                 'tanggal_lahir' => fake()->dateTimeBetween('-55 years', '-25 years'),
-                'status_baptis' => 'Sudah',
-                'status_sidi' => 'Sudah',
-                'status_nikah' => 'Sudah',
             ]);
 
             // Buat Anak (0-3 anak)
@@ -129,9 +123,6 @@ class FullDeploymentSeeder extends Seeder
                     'pekerjaan_id' => $pekerjaans->where('nama', 'Pelajar')->first()->id ?? null,
                     'tempat_lahir' => fake('id_ID')->city(),
                     'tanggal_lahir' => fake()->dateTimeBetween('-20 years', '-1 year'),
-                    'status_baptis' => 'Sudah',
-                    'status_sidi' => 'Belum',
-                    'status_nikah' => 'Belum',
                 ]);
             }
         }

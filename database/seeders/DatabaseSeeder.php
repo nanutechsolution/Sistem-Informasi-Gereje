@@ -23,14 +23,6 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
             'password' => Hash::make('password'), // Password default: password
         ]);
-        // 4. Buat Akun Operator (Untuk input data harian)
-        User::create([
-            'name' => 'Operator Multimedia',
-            'email' => 'operator@gks.id',
-            'role' => 'operator',
-            'password' => Hash::make('password'),
-        ]);
-
         $this->call([
             EventTypeSeeder::class,
             RefWilayahSeeder::class,
@@ -44,6 +36,8 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             FullDeploymentSeeder::class,
             ServiceGroupSeeder::class,
+            ChurchSettingSeeder::class,
+            SacramentTypeSeeder::class,
         ]);
     }
 }

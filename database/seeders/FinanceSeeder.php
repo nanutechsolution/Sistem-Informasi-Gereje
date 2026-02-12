@@ -88,18 +88,18 @@ class FinanceSeeder extends Seeder
 
         // I. Pemeliharaan Pengerja (2.1)
         $cat1 = $this->createCategory('2.1', 'Pemeliharaan Pengerja', $parentBelanja);
-        $this->createPostAndBudget($fiscalYear, $cat1, '2.1.1', 'Pdt. Alponia Malo, S.Th', 'pengeluaran', 58326000);
+        $this->createPostAndBudget($fiscalYear, $cat1, '2.1.1', 'Pendeta', 'pengeluaran', 58326000);
         $this->createPostAndBudget($fiscalYear, $cat1, '2.1.2', 'Vic.', 'pengeluaran', 18000000);
-        $this->createPostAndBudget($fiscalYear, $cat1, '2.1.3', 'KA. Anderias Bili Koba', 'pengeluaran', 14400000);
+        $this->createPostAndBudget($fiscalYear, $cat1, '2.1.3', 'KA', 'pengeluaran', 14400000);
 
         // II. Iuran Dana Pensiun (2.2)
         $cat2 = $this->createCategory('2.2', 'Iuran Dana Pensiun', $parentBelanja);
-        $this->createPostAndBudget($fiscalYear, $cat2, '2.2.1', 'Pdt. Alponia Malo, S.Th', 'pengeluaran', 5856000);
+        $this->createPostAndBudget($fiscalYear, $cat2, '2.2.1', 'Pendeta', 'pengeluaran', 5856000);
         $this->createPostAndBudget($fiscalYear, $cat2, '2.2.2', 'Vic.', 'pengeluaran', 1980000);
 
         // III. Biaya Perumahan (2.3)
         $cat3 = $this->createCategory('2.3', 'Biaya Perumahan', $parentBelanja);
-        $this->createPostAndBudget($fiscalYear, $cat3, '2.3.1', 'Pdt. Alponia Malo, S.Th', 'pengeluaran', 3000000);
+        $this->createPostAndBudget($fiscalYear, $cat3, '2.3.1', 'Pendeta', 'pengeluaran', 3000000);
 
         // IV. Insentif Karyawan (2.4)
         $cat4 = $this->createCategory('2.4', 'Insentif Karyawan', $parentBelanja);
