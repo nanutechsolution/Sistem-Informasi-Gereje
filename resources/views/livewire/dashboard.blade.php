@@ -1,6 +1,6 @@
 <div class="py-6 sm:py-12 bg-slate-50 min-h-screen">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         <!-- 1. WELCOME HERO (PERSONALIZED) -->
         <div class="mb-10 bg-slate-900 rounded-[40px] p-8 sm:p-12 text-white shadow-2xl relative overflow-hidden flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
             <div class="relative z-10">
@@ -11,30 +11,42 @@
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ auth()->user()->role }}</p>
                 </div>
                 <h1 class="text-3xl sm:text-5xl font-black italic tracking-tighter leading-tight">Halo, {{ auth()->user()->name }}!</h1>
-                <p class="text-slate-400 mt-2 font-medium text-sm sm:text-base max-w-lg">Selamat datang di Sistem Informasi Gereja Kristen Sumba (SIG-GKS) Jemaat Reda Pada.</p>
+                @php
+                /**
+                * Mengambil konfigurasi tema dari database.
+                */
+                $theme = \App\Models\ChurchSetting::current();
+                @endphp
+                <p class="text-slate-400 mt-2 font-medium text-sm sm:text-base max-w-lg">Selamat datang di Sistem Informasi Gereja Kristen Sumba (SIG-GKS) {{$theme->nama_jemaat}}.</p>
             </div>
 
             <!-- Quick Actions Based on Role -->
             <div class="relative z-10 flex flex-wrap gap-3">
                 @can('manage_finance')
-                    <a href="{{ route('transactions.create', ['jenis' => 'masuk']) }}" class="px-6 py-3 bg-emerald-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-lg flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg> Input Kas
-                    </a>
+                <a href="{{ route('transactions.create', ['jenis' => 'masuk']) }}" class="px-6 py-3 bg-emerald-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-lg flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg> Input Kas
+                </a>
                 @endcan
-                
+
                 @can('input_pks')
-                    <a href="{{ route('schedules.pks') }}" class="px-6 py-3 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all shadow-lg flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> Jadwal PKS
-                    </a>
+                <a href="{{ route('schedules.pks') }}" class="px-6 py-3 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all shadow-lg flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg> Jadwal PKS
+                </a>
                 @endcan
 
                 @can('manage_database')
-                    <a href="{{ route('members.index') }}" class="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z"/></svg> Data Jemaat
-                    </a>
+                <a href="{{ route('members.index') }}" class="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg> Data Jemaat
+                </a>
                 @endcan
             </div>
-            
+
             <!-- Dekorasi -->
             <div class="absolute right-0 top-0 w-96 h-96 bg-primary/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
         </div>
@@ -45,7 +57,9 @@
             <div class="bg-white rounded-[30px] p-6 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
                 <div class="flex items-center gap-6 relative z-10">
                     <div class="bg-amber-100 text-amber-600 p-4 rounded-2xl hidden sm:block">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                     </div>
                     <div>
                         <p class="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Agenda Pelayanan Anda Berikutnya</p>
@@ -62,27 +76,29 @@
                     <span class="inline-block px-4 py-1 rounded-lg bg-slate-900 text-white text-xs font-black uppercase tracking-widest mb-2 shadow-lg">
                         Tugas: {{ $myRole }}
                     </span>
-                    
+
                     @if(str_contains(strtolower($myNextSchedule->type->nama), 'pks'))
-                        <br>
-                        <a href="{{ route('schedules.my') }}" class="inline-block mt-2 text-[10px] font-bold text-amber-600 hover:underline uppercase tracking-wide">
-                            Input Kolekte &rarr;
-                        </a>
+                    <br>
+                    <a href="{{ route('schedules.my') }}" class="inline-block mt-2 text-[10px] font-bold text-amber-600 hover:underline uppercase tracking-wide">
+                        Input Kolekte &rarr;
+                    </a>
                     @endif
                 </div>
                 <!-- Dekorasi -->
                 <div class="absolute -right-6 -bottom-10 text-amber-50 opacity-50 rotate-12 pointer-events-none">
-                    <svg class="w-40 h-40" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path></svg>
+                    <svg class="w-40 h-40" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                    </svg>
                 </div>
             </div>
         </div>
         @endif
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
+
             <!-- KOLOM KIRI: DASHBOARD KEUANGAN & DATA -->
             <div class="lg:col-span-2 space-y-8">
-                
+
                 <!-- WIDGET BENDAHARA (KEUANGAN) -->
                 @if(isset($financial))
                 <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm">
@@ -91,9 +107,9 @@
                             <span class="w-1.5 h-6 bg-emerald-500 rounded-full"></span> Posisi Keuangan
                         </h3>
                         @if($pendingPksCount > 0)
-                            <a href="{{ route('schedules.pks.verify') }}" class="px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-[10px] font-black uppercase tracking-wide animate-pulse">
-                                {{ $pendingPksCount }} Setoran PKS Pending
-                            </a>
+                        <a href="{{ route('schedules.pks.verify') }}" class="px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-[10px] font-black uppercase tracking-wide animate-pulse">
+                            {{ $pendingPksCount }} Setoran PKS Pending
+                        </a>
                         @endif
                     </div>
 
@@ -104,7 +120,9 @@
                                 <span class="text-[10px] font-black uppercase tracking-widest {{ $acc->nama == 'Kas Pembangunan' ? 'text-amber-600' : 'text-slate-400' }}">
                                     {{ $acc->nama }}
                                 </span>
-                                <svg class="w-4 h-4 {{ $acc->nama == 'Kas Pembangunan' ? 'text-amber-400' : 'text-slate-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <svg class="w-4 h-4 {{ $acc->nama == 'Kas Pembangunan' ? 'text-amber-400' : 'text-slate-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
                             </div>
                             <p class="text-2xl font-black text-slate-900">Rp {{ number_format($acc->saldo_akhir, 0, ',', '.') }}</p>
                         </div>
@@ -177,7 +195,7 @@
                     <h2 class="text-sm font-black text-slate-900 mb-6 italic flex items-center gap-2 uppercase tracking-widest">
                         <span class="text-xl">🎂</span> Sukacita Sepekan
                     </h2>
-                    
+
                     <div class="space-y-3">
                         @forelse($birthdays as $bday)
                         <div class="flex items-center gap-3 p-3 hover:bg-yellow-50/50 rounded-2xl transition-colors border border-transparent hover:border-yellow-100">
@@ -187,11 +205,11 @@
                             <div class="min-w-0">
                                 <p class="text-xs font-bold text-slate-900 truncate">{{ $bday->nama }}</p>
                                 <p class="text-[9px] text-slate-400 uppercase font-bold tracking-wider">
-                                    {{ $bday->tanggal_lahir->age + 1 }} Tahun • 
+                                    {{ $bday->tanggal_lahir->age + 1 }} Tahun •
                                     @if($bday->family && $bday->family->refWilayah)
-                                        {{ $bday->family->refWilayah->nama }}
+                                    {{ $bday->family->refWilayah->nama }}
                                     @else
-                                        -
+                                    -
                                     @endif
                                 </p>
                             </div>

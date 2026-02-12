@@ -76,11 +76,12 @@
                 <div class="flex items-center gap-8">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group">
                         <div class="h-10 w-10 bg-accent rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m8-10h2m-2 4h2m-4-8h2m-2-4h2"></path></svg>
+                            <img src="{{$theme->logo_path}}" alt="">
+                            <!-- <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m8-10h2m-2 4h2m-4-8h2m-2-4h2"></path></svg> -->
                         </div>
                         <div class="leading-none">
                             <span class="block text-lg font-extrabold tracking-tight">SIG-GKS</span>
-                            <span class="block text-[9px] font-bold uppercase tracking-widest text-blue-300">Jemaat Reda Pada</span>
+                            <span class="block text-[9px] font-bold uppercase tracking-widest text-blue-300">{{$theme->nama_jemaat}}</span>
                         </div>
                     </a>
 
@@ -390,7 +391,7 @@
     <!-- 4. FOOTER -->
     <footer class="hidden sm:block bg-white border-t border-slate-200 py-8 mt-auto">
         <div class="max-w-7xl mx-auto px-4 flex justify-between items-center text-slate-400">
-            <p class="text-xs font-bold uppercase tracking-widest italic">&copy; {{ date('Y') }} GKS Jemaat Reda Pada - SIG</p>
+            <p class="text-xs font-bold uppercase tracking-widest italic">&copy; {{ date('Y') }} GKS {{$theme->nama_jemaat}} - SIG</p>
             <div class="flex items-center gap-4">
                 <span class="text-[9px] font-black bg-slate-50 px-2 py-1 rounded text-slate-400 border border-slate-100 tracking-tighter uppercase">Versi Aplikasi 2.9.5</span>
             </div>
