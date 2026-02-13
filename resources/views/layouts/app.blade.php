@@ -116,7 +116,7 @@
                         <!-- Pilar 2: Pelayanan -->
                         <div class="relative" x-data="{ drop: false }" @click.away="drop = false">
                             <button @click="drop = !drop" 
-                                :class="{'bg-white/10 text-white shadow-inner': drop || {{ request()->is('schedules*', 'news*', 'pastoral*') ? 'true' : 'false' }} }"
+                                :class="{'bg-white/10 text-white shadow-inner': drop || {{ request()->is('schedules*', 'news*', 'pastoral*', 'diakonia') ? 'true' : 'false' }} }"
                                 class="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-bold text-blue-100 hover:bg-white/5 transition">
                                 Pelayanan <svg class="w-4 h-4 transition-transform" :class="drop ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                             </button>

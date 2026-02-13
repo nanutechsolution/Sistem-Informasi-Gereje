@@ -130,7 +130,7 @@ Route::middleware('auth')->group(function () {
         // Lelang
         Route::get('/auctions', Auctions\EventIndex::class)->name('auctions.index');
         Route::get('/auctions/receivables', \App\Livewire\Auctions\Receivables::class)->name('auctions.receivables');
-        Route::get('/finance/diakonia', \App\Livewire\Finance\DiakoniaManager::class)->name('diakonia');
+        Route::get('/diakonia', \App\Livewire\Finance\DiakoniaManager::class)->name('diakonia');
         Route::get('/auctions/{event}', Auctions\ItemManager::class)->name('auctions.items');
         Route::get('/finance/flexible-dues', \App\Livewire\Finance\FlexibleDuesManager::class)->name('finance.flexible-dues');
     });

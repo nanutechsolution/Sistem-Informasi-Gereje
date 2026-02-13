@@ -38,6 +38,10 @@ class DatabaseSeeder extends Seeder
             ServiceGroupSeeder::class,
             ChurchSettingSeeder::class,
             SacramentTypeSeeder::class,
+            RefDiakoniaTypeSeeder::class,
+            RefUnitSeeder::class,
+            // DiakoniaRequestSeeder::class,
+            // DiakoniaRequestItemSeeder::class
         ]);
     }
 }

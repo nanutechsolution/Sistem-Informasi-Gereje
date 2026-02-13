@@ -2,25 +2,32 @@
 
 namespace Database\Seeders;
 
-use App\Models\RefDiakoniaType;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
+use App\Models\RefDiakoniaType;
 
 class RefDiakoniaTypeSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $types = [
-            ['nama' => 'Baptis Anak', 'kode' => 'BPT-A'],
-            ['nama' => 'Baptis Dewasa', 'kode' => 'BPT-D'],
-            ['nama' => 'Sidi (Pengakuan Iman)', 'kode' => 'SDI'],
-            ['nama' => 'Pernikahan Kudus', 'kode' => 'NKH'],
+            'Sakit',
+            'Duka',
+            'Pendidikan',
+            'Bencana',
+            'Sembako',
+            'Modal Usaha',
+            'Santunan Lansia',
+            'Yatim Piatu',
+            'Lain-lain'
         ];
 
         foreach ($types as $type) {
-            RefDiakoniaType::updateOrCreate(['nama' => $type['nama']]);
+            RefDiakoniaType::create([
+                'uuid' => Str::uuid(),
+                'nama' => $type,
+                'is_active' => true,
+            ]);
         }
     }
 }
