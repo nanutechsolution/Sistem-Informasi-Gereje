@@ -1,167 +1,292 @@
-<div class="py-6 sm:py-12 bg-slate-50 min-h-screen" x-data="{ showForm: @entangle('isModalOpen').live }">
+<div class="py-6 sm:py-12 bg-slate-50 min-h-screen text-slate-900">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <!-- HEADER -->
-        <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-10">
+        <!-- Header & Pencarian Utama -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
-                <h1 class="text-3xl font-black text-slate-900 tracking-tighter leading-none italic uppercase">Administrasi Sakramen</h1>
-                <p class="text-slate-500 mt-2 font-medium italic border-l-4 border-amber-500 pl-4 uppercase text-[10px] tracking-widest leading-relaxed">Arsip Baptis, Sidi, & Pernikahan</p>
+                <h1 class="text-3xl font-black text-slate-900 uppercase tracking-tight leading-none">Arsip Sakramen</h1>
+                <p class="text-slate-500 mt-2 font-medium">Kelola data Baptis, Sidi, dan Pernikahan Jemaat.</p>
             </div>
-            <button wire:click="$set('isModalOpen', true)" class="px-8 py-4 bg-slate-900 text-white rounded-[24px] font-black text-xs shadow-2xl hover:scale-105 transition-all active:scale-95 uppercase tracking-widest">
-                + ARSIPKAN DATA BARU
-            </button>
+
+            <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <div class="relative flex-1 sm:w-64">
+                    <input wire:model.live.debounce.300ms="search" type="text" placeholder="Cari Nama / No. Surat..." class="w-full pl-10 pr-4 py-3 bg-white border-none rounded-2xl shadow-sm font-bold text-sm focus:ring-2 focus:ring-primary/20 transition-all">
+                    <svg class="w-5 h-5 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <button wire:click="$set('isModalOpen', true)" class="px-6 py-3 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-primary transition-all shadow-lg shadow-slate-200 flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Input Arsip
+                </button>
+            </div>
         </div>
 
-        <!-- TABEL ARSIP -->
-        <div class="bg-white rounded-[40px] shadow-sm border border-slate-200 overflow-hidden">
-            <div class="p-6 border-b border-slate-50 bg-slate-50/30">
-                <input wire:model.live.debounce.300ms="search" type="text" class="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-4 font-bold text-sm shadow-inner focus:ring-2 focus:ring-amber-200" placeholder="Cari nama atau nomor surat...">
+        <!-- Daftar Arsip -->
+        <div class="grid grid-cols-1 gap-4 md:hidden">
+            <!-- Mobile View (Cards) -->
+            @forelse($records as $record)
+            <div class="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100 relative overflow-hidden group">
+                <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary"></div>
+                <div class="flex justify-between items-start mb-3">
+                    <span class="px-2 py-1 bg-slate-100 rounded-lg text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                        {{ $record->type->nama }}
+                    </span>
+                    <span class="text-[10px] font-bold text-slate-400 font-mono">{{ $record->nomor_surat }}</span>
+                </div>
+                <h3 class="font-black text-slate-800 text-base leading-tight">{{ $record->member->churchPeople->full_name }}</h3>
+                <div class="mt-4 flex items-center justify-between">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        {{ \Carbon\Carbon::parse($record->tanggal_pelaksanaan)->format('d M Y') }}
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="p-2 text-slate-400 hover:text-primary transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
-                        <tr>
-                            <th class="px-8 py-5">Subjek / Pasangan</th>
-                            <th class="px-6 py-5">Kategori</th>
-                            <th class="px-6 py-5 text-right">Tanggal</th>
-                            <th class="px-8 py-5 text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-50">
-                        @forelse($records as $rec)
-                        <tr class="hover:bg-amber-50/20 transition-colors">
-                            <td class="px-8 py-6">
-                                <p class="font-black text-slate-900 uppercase italic leading-none">{{ $rec->member->nama }}</p>
-                                @if($rec->type->kode === 'NKH')
-                                <p class="text-[9px] font-bold text-primary mt-1 uppercase italic">Dengan: {{ $rec->partner->nama ?? $rec->partner_external_name }}</p>
-                                @else
-                                <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase">No Reg: {{ $rec->nomor_surat }}</p>
-                                @endif
-                            </td>
-                            <td class="px-6 py-6">
-                                <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-xl font-black text-[10px] uppercase tracking-widest">{{ $rec->type->nama }}</span>
-                            </td>
-                            <td class="px-6 py-6 text-right font-bold text-slate-600">
-                                {{ $rec->tanggal_pelaksanaan->format('d/m/Y') }}
-                            </td>
-                            <td class="px-8 py-6 text-right">
-                                <a href="{{ route('clerical.sacraments.print', $rec) }}" target="_blank" class="p-2 bg-white border border-slate-200 text-slate-400 hover:text-emerald-600 rounded-xl transition-all shadow-sm">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                    </svg>
+            @empty
+            <div class="bg-white py-12 text-center rounded-[32px] text-slate-400 border border-dashed border-slate-200">
+                <p class="font-bold">Tidak ada data arsip.</p>
+            </div>
+            @endforelse
+        </div>
+
+        <!-- Desktop View (Table) -->
+        <div class="hidden md:block bg-white rounded-[32px] shadow-xl border border-slate-100 overflow-hidden transition-all">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 border-b border-slate-100">
+                        <th class="py-5 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Jemaat & Nomor Akta</th>
+                        <th class="py-5 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Jenis</th>
+                        <th class="py-5 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Waktu & Tempat</th>
+                        <th class="py-5 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Pelayan</th>
+                        <th class="py-5 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    @foreach($records as $record)
+                    <tr class="group hover:bg-slate-50/50 transition-colors">
+                        <td class="py-4 px-6">
+                            <span class="block font-black text-slate-800">{{ $record->member->churchPeople->full_name }}</span>
+                            <span class="text-[10px] text-slate-400 font-mono tracking-wider">{{ $record->nomor_surat }}</span>
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            <span class="inline-block px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                                {{ $record->type->nama }}
+                            </span>
+                        </td>
+                        <td class="py-4 px-6">
+                            <span class="block text-xs font-bold text-slate-600">{{ \Carbon\Carbon::parse($record->tanggal_pelaksanaan)->format('d M Y') }}</span>
+                            <span class="text-[10px] text-slate-400 uppercase font-black">{{ $record->tempat_pelaksanaan }}</span>
+                        </td>
+                        <td class="py-4 px-6">
+                            <span class="text-xs font-bold text-slate-600 italic">Pdt. {{ $record->pelayan_firman }}</span>
+                        </td>
+                        <td class="py-4 px-6 text-right">
+                            <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a href="{{ route('clerical.sacraments.print', $record) }}" class="p-2 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-primary shadow-sm" title="Cetak Akta">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                </svg>
                                 </a>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="4" class="py-24 text-center text-slate-300 font-black uppercase text-xs italic">Belum ada arsip sakramen.</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            <div class="px-6 py-4 bg-slate-50/30 border-t border-slate-100">
+                {{ $records->links() }}
             </div>
         </div>
-        <div class="mt-8">{{ $records->links() }}</div>
     </div>
 
-    <!-- MODAL INPUT DENGAN LOGIKA NIKAH -->
-    <div x-show="showForm" x-cloak class="fixed inset-0 z-[100] overflow-y-auto">
-        <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-md" @click="showForm = false"></div>
-        <div class="flex min-h-full items-center justify-center p-4">
-            <div class="relative w-full max-w-2xl bg-white rounded-[40px] p-10 shadow-2xl text-left animate-in zoom-in-95">
-                <div class="absolute top-0 left-0 w-full h-2 bg-amber-500"></div>
-                <h3 class="text-3xl font-black text-slate-900 mb-8 italic uppercase tracking-tighter text-center">Registrasi Sakramen</h3>
+    <!-- MODAL INPUT ARSIP -->
+    @if($isModalOpen)
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+        <div class="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
+            <div class="absolute top-0 left-0 w-full h-2 bg-primary"></div>
 
-                <form wire:submit="save" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Modal Header -->
+            <div class="p-6 sm:p-10 border-b border-slate-50 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight leading-none">Input Arsip Sakramen</h2>
+                    <p class="text-slate-500 mt-2 text-xs font-medium uppercase tracking-widest">Lengkapi formulir di bawah ini</p>
+                </div>
+                <button wire:click="$set('isModalOpen', false)" class="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 rounded-full hover:bg-rose-50 hover:text-rose-500 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
 
-                        <!-- 1. PILIH KATEGORI TERLEBIH DAHULU -->
-                        <div class="md:col-span-2">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Jenis Pelayanan Sakramen</label>
-                            <select wire:model.live="ref_sacrament_type_id" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-black text-slate-700 cursor-pointer">
-                                <option value="">-- Pilih Jenis Sakramen --</option>
-                                @foreach($types as $t) <option value="{{ $t->id }}">{{ $t->nama }}</option> @endforeach
-                            </select>
+            <!-- Modal Content (Scrollable) -->
+            <div class="flex-1 overflow-y-auto p-6 sm:p-10 space-y-8 custom-scrollbar">
+
+                <!-- Pilih Jemaat Utama -->
+                <div class="relative">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Subjek Jemaat</label>
+                    @if($selectedMemberName)
+                    <div class="flex justify-between items-center bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                        <span class="font-black text-blue-900 text-sm">{{ $selectedMemberName }}</span>
+                        <button type="button" wire:click="$set('selectedMemberName', '')" class="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:underline">Ganti</button>
+                    </div>
+                    @else
+                    <div class="relative">
+                        <input wire:model.live.debounce.300ms="searchMember" type="text" placeholder="Ketik Nama atau NIK..." class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-300">
+                        <div class="absolute right-4 top-4" wire:loading wire:target="searchMember">
+                            <svg class="animate-spin h-5 w-5 text-slate-300" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
                         </div>
+                    </div>
+                    @if(!empty($foundMembers))
+                    <div class="absolute z-20 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden divide-y divide-slate-50">
+                        @foreach($foundMembers as $m)
+                        <button wire:click="selectMember({{ $m->id }}, '{{ $m->churchPeople->full_name }}')" class="w-full text-left p-4 hover:bg-slate-50 transition-colors group">
+                            <span class="block font-black text-slate-700 group-hover:text-primary">{{ $m->churchPeople->full_name }}</span>
+                            <span class="text-[10px] text-slate-400 font-mono">{{ $m->churchPeople->nik ?? 'TANPA NIK' }}</span>
+                        </button>
+                        @endforeach
+                    </div>
+                    @endif
+                    @endif
+                    @error('member_id') <span class="text-rose-500 text-[10px] font-bold mt-1 block ml-1">{{ $message }}</span> @enderror
+                </div>
 
-                        <!-- 2. PILIH MEMPELAI 1 / JEMAAT UTAMA -->
-                        <div class="relative md:col-span-1" x-data="{ open: false }">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
-                                {{ $is_marriage ? 'Mempelai 1 (Jemaat)' : 'Nama Jemaat' }}
-                            </label>
-                            @if($selectedMemberName)
-                            <div class="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex justify-between items-center">
-                                <span class="font-bold text-amber-900">{{ $selectedMemberName }}</span>
-                                <button type="button" wire:click="$set('selectedMemberName', null)" class="text-[9px] font-black text-rose-500 underline uppercase">Ganti</button>
+                <!-- Jenis & Nomor Akta -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Jenis Sakramen</label>
+                        <select wire:model.live="ref_sacrament_type_id" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer">
+                            <option value="">Pilih Jenis...</option>
+                            @foreach($types as $type)
+                            <option value="{{ $type->id }}">{{ $type->nama }}</option>
+                            @endforeach
+                        </select>
+                        @error('ref_sacrament_type_id') <span class="text-rose-500 text-[10px] font-bold mt-1 block ml-1">{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nomor Akta / Surat</label>
+                        <input wire:model="nomor_surat" type="text" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary/20">
+                        @error('nomor_surat') <span class="text-rose-500 text-[10px] font-bold mt-1 block ml-1">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
+                <!-- Bagian Khusus Pernikahan (Muncul jika NKH dipilih) -->
+                @if($is_marriage)
+                <div class="p-6 bg-emerald-50 rounded-[32px] border border-emerald-100 animate-in slide-in-from-top-4 duration-500">
+                    <h4 class="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] mb-4 text-center">Data Pasangan</h4>
+
+                    <div class="space-y-4">
+                        <div class="relative">
+                            <label class="block text-[9px] font-black text-emerald-800/40 uppercase tracking-widest mb-2 ml-1">Cari Pasangan (Jemaat)</label>
+                            @if($selectedPartnerName)
+                            <div class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm">
+                                <span class="font-black text-emerald-900 text-sm">{{ $selectedPartnerName }}</span>
+                                <button type="button" wire:click="$set('selectedPartnerName', '')" class="text-[9px] font-black text-rose-400 uppercase tracking-widest hover:underline">Lepas</button>
                             </div>
                             @else
-                            <input wire:model.live.debounce.300ms="searchMember" @focus="open = true" x-on:click.away="open = false" type="text" class="w-full bg-slate-100 border-none rounded-2xl p-4 font-bold" placeholder="Cari nama...">
-                            @if(count($foundMembers) > 0)
-                            <div x-show="open" class="absolute z-50 w-full mt-2 bg-white rounded-2xl shadow-xl border overflow-hidden">
-                                @foreach($foundMembers as $m)
-                                <button type="button" wire:click="selectMember({{ $m['id'] }}, '{{ $m['nama'] }}')" class="w-full text-left p-3 hover:bg-amber-50 font-bold text-sm border-b">{{ $m['nama'] }}</button>
+                            <input wire:model.live.debounce="searchPartner" type="text" placeholder="Nama pasangan jemaat..." class="w-full bg-white border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-emerald-400/20 placeholder:text-slate-300">
+                            @if(!empty($foundPartners))
+                            <div class="absolute z-30 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-emerald-50 overflow-hidden divide-y divide-slate-50">
+                                @foreach($foundPartners as $p)
+                                <button wire:click="selectPartner({{ $p->id }}, '{{ $p->churchPeople->full_name }}')" class="w-full text-left p-4 hover:bg-emerald-50 transition-colors group">
+                                    <span class="block font-black text-emerald-900 group-hover:text-emerald-600">{{ $p->churchPeople->full_name }}</span>
+                                    <span class="text-[9px] text-emerald-400 font-mono">{{ $p->churchPeople->nik ?? 'TANPA NIK' }}</span>
+                                </button>
                                 @endforeach
                             </div>
                             @endif
                             @endif
                         </div>
 
-                        <!-- 3. PILIH MEMPELAI 2 (KHUSUS NIKAH) -->
-                        @if($is_marriage)
-                        <div class="relative md:col-span-1" x-data="{ open: false, isExternal: false }">
-                            <label class="block text-[10px] font-black text-primary uppercase tracking-widest mb-2 ml-1">Mempelai 2 (Pasangan)</label>
-
-                            @if($selectedPartnerName)
-                            <div class="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex justify-between items-center">
-                                <span class="font-bold text-blue-900">{{ $selectedPartnerName }}</span>
-                                <button type="button" wire:click="$set('selectedPartnerName', null)" class="text-[9px] font-black text-rose-500 underline uppercase">Ganti</button>
+                        <div class="relative">
+                            <div class="flex items-center gap-4 mb-2 ml-1">
+                                <div class="h-[1px] flex-1 bg-emerald-100"></div>
+                                <span class="text-[9px] font-black text-emerald-300 uppercase tracking-[0.3em]">Atau</span>
+                                <div class="h-[1px] flex-1 bg-emerald-100"></div>
                             </div>
-                            @elseif($partner_external_name)
-                            <div class="p-4 bg-slate-100 border rounded-2xl flex justify-between items-center">
-                                <span class="font-bold text-slate-700">{{ $partner_external_name }} (Luar Jemaat)</span>
-                                <button type="button" wire:click="$set('partner_external_name', null)" class="text-[9px] font-black text-rose-500 underline uppercase">Ganti</button>
-                            </div>
-                            @else
-                            <div x-show="!isExternal">
-                                <input wire:model.live.debounce.300ms="searchPartner" @focus="open = true" x-on:click.away="open = false" type="text" class="w-full bg-slate-100 border-none rounded-2xl p-4 font-bold" placeholder="Cari jemaat pasangan...">
-                                <button type="button" @click="isExternal = true" class="mt-2 text-[9px] font-black text-blue-500 uppercase italic underline">Pasangan dari Luar Jemaat?</button>
-                                @if(count($foundPartners) > 0)
-                                <div x-show="open" class="absolute z-50 w-full mt-2 bg-white rounded-2xl shadow-xl border overflow-hidden">
-                                    @foreach($foundPartners as $p)
-                                    <button type="button" wire:click="selectPartner({{ $p['id'] }}, '{{ $p['nama'] }}')" class="w-full text-left p-3 hover:bg-blue-50 font-bold text-sm border-b">{{ $p['nama'] }}</button>
-                                    @endforeach
-                                </div>
-                                @endif
-                            </div>
-                            <div x-show="isExternal" class="animate-in fade-in">
-                                <input wire:model="partner_external_name" type="text" class="w-full bg-blue-50 border-none rounded-2xl p-4 font-bold" placeholder="Input Nama Lengkap Manual...">
-                                <button type="button" @click="isExternal = false" class="mt-2 text-[9px] font-black text-slate-400 uppercase underline">Cari di Database Jemaat?</button>
-                            </div>
-                            @endif
-                        </div>
-                        @endif
-
-                        <!-- 4. DATA PELAKSANAAN -->
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nomor Register</label>
-                            <input wire:model="nomor_surat" type="text" class="w-full bg-slate-100 border-none rounded-2xl p-4 font-black text-slate-500 text-xs" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tanggal Layanan</label>
-                            <input wire:model="tanggal_pelaksanaan" type="date" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Pendeta Pelayan</label>
-                            <input wire:model="pelayan_firman" type="text" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold shadow-inner" placeholder="Pdt. ...">
+                            <label class="block text-[9px] font-black text-emerald-800/40 uppercase tracking-widest mb-2 ml-1">Pasangan Luar Jemaat</label>
+                            <input wire:model="partner_external_name" type="text" placeholder="Ketik nama lengkap pasangan luar..." class="w-full bg-white border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-emerald-400/20 placeholder:text-slate-300">
                         </div>
                     </div>
+                </div>
+                @endif
 
-                    <div class="pt-6 flex gap-4">
-                        <button type="button" @click="showForm = false" class="flex-1 py-6 bg-slate-100 rounded-3xl font-black text-[10px] uppercase text-slate-400 tracking-widest">Batal</button>
-                        <button type="submit" class="flex-[2] py-6 bg-slate-900 text-white rounded-3xl font-black text-[10px] uppercase shadow-2xl hover:bg-amber-600 transition tracking-widest">ARSIPKAN DATA</button>
+                <!-- Lokasi, Waktu, Pelayan -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tanggal Pelaksanaan</label>
+                        <input wire:model="tanggal_pelaksanaan" type="date" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary/20">
                     </div>
-                </form>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tempat Pelaksanaan</label>
+                        <input wire:model="tempat_pelaksanaan" type="text" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary/20">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Pelayan Firman (Pendeta)</label>
+                    <input wire:model="pelayan_firman" type="text" placeholder="Nama lengkap Pendeta..." class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary/20">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Catatan Tambahan (Opsional)</label>
+                    <textarea wire:model="catatan" rows="3" class="w-full bg-slate-50 border-none rounded-[24px] p-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 resize-none"></textarea>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-6 sm:p-10 border-t border-slate-50 bg-slate-50/50">
+                <button wire:click="save" wire:loading.attr="disabled" class="w-full py-5 bg-slate-900 text-white rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-slate-800 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3">
+                    <span wire:loading.remove wire:target="save">Simpan Arsip Sakramen</span>
+                    <span wire:loading wire:target="save" class="flex items-center gap-2">
+                        <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Memproses...
+                    </span>
+                </button>
             </div>
         </div>
     </div>
+    @endif
+
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #cbd5e1;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+
 </div>

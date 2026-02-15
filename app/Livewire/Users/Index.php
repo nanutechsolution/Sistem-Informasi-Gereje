@@ -15,26 +15,33 @@ class Index extends Component
     public $search = '';
     public $filterRole = '';
 
+    // Fix: Reset halaman ke 1 saat mengetik search atau ganti filter
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFilterRole()
+    {
+        $this->resetPage();
+    }
+
     public function delete($id)
     {
-        // Cegah hapus diri sendiri
         if ($id == Auth::id()) {
             $this->dispatch('notify', message: 'Anda tidak bisa menghapus akun sendiri!', type: 'error');
             return;
         }
 
         $user = User::findOrFail($id);
-        
-        // Hapus personil terkait (jika ada) - Opsional, tergantung kebijakan
-        // $user->member()->update(['user_id' => null]);
-        
         $user->delete();
+        
         $this->dispatch('notify', message: 'User berhasil dihapus.', type: 'success');
     }
 
     public function render()
     {
-        $query = User::with('roles')
+        $query = User::with(['roles', 'churchPerson'])
             ->where(function($q) {
                 $q->where('name', 'like', '%' . $this->search . '%')
                   ->orWhere('email', 'like', '%' . $this->search . '%');
@@ -46,7 +53,7 @@ class Index extends Component
 
         return view('livewire.users.index', [
             'users' => $query->latest()->paginate(10),
-            'roles' => Role::all() // Untuk filter dropdown
+            'roles' => Role::all()
         ]);
     }
 }

@@ -86,7 +86,7 @@ class PksVerification extends Component
                 'ref_account_id' => $this->ref_account_id,
                 'ref_budget_post_id' => $this->ref_budget_post_id,
                 'nominal' => $cleanNominal,
-                'keterangan' => "Setoran PKS: " . ($schedule->family->kepala_keluarga ?? $schedule->tema),
+                'keterangan' => "Persembahan PKS: " . ($schedule->family->kepala_keluarga ?? $schedule->tema),
                 'user_id' => Auth::id(),
             ]);
 

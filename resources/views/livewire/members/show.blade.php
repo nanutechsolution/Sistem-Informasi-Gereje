@@ -1,235 +1,231 @@
-<div class="py-6 sm:py-12 bg-slate-50 min-h-screen" x-data="{ showModal: @entangle('isAddingEvent') }">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="py-6 sm:py-12 bg-slate-50 min-h-screen text-slate-900">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6">
         
-        <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div class="flex-1">
-                <a href="{{ route('members.index') }}" class="inline-flex items-center text-[10px] font-black text-slate-400 hover:text-primary transition-colors mb-4 uppercase tracking-widest group">
-                    <svg class="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/></svg>
-                    Daftar Jemaat
-                </a>
-                <div class="flex items-center gap-6">
-                    <div class="relative">
-                        <div class="h-20 w-20 rounded-[32px] bg-primary text-white flex items-center justify-center text-3xl font-black shadow-xl shadow-blue-500/20">
-                            {{ substr($member->nama, 0, 1) }}
-                        </div>
-                        <div class="absolute -bottom-1 -right-1 h-8 w-8 rounded-full border-4 border-slate-50 flex items-center justify-center {{ $member->jenis_kelamin == 'L' ? 'bg-blue-500' : 'bg-pink-500' }} text-white shadow-sm">
-                            <span class="text-[10px] font-black">{{ $member->jenis_kelamin }}</span>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-3">
-                            <h1 class="text-3xl font-black text-slate-900 tracking-tight leading-none uppercase italic">{{ $member->nama }}</h1>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter 
-                                {{ $member->status_keanggotaan == 'aktif' ? 'bg-emerald-100 text-emerald-600' : ($member->status_keanggotaan == 'meninggal' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600') }}">
-                                {{ $member->status_keanggotaan }}
-                            </span>
-                        </div>
-                        <div class="mt-3 flex flex-wrap gap-2">
-                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-700 italic">
-                                {{ $member->refHubunganKeluarga->nama ?? 'Anggota' }}
-                            </span>
-                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-500">
-                                {{ $member->family->refWilayah->nama ?? 'Tanpa Wilayah' }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="flex gap-3">
-                <a href="{{ route('members.edit', $member) }}" class="px-6 py-3 bg-white border border-slate-200 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all text-slate-600">Edit Profil</a>
-                <button @click="showModal = true" class="px-6 py-3 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-primary transition-all">Catat Peristiwa</button>
+        <!-- Top Navigation -->
+        <div class="mb-8 flex items-center justify-between">
+            <a href="{{ route('members.index') }}" class="inline-flex items-center text-xs font-black text-slate-400 uppercase tracking-widest hover:text-primary transition-colors group">
+                <svg class="w-4 h-4 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                Kembali ke Daftar
+            </a>
+            <div class="flex gap-2">
+                @if($member->is_active)
+                    <span class="px-3 py-1 bg-emerald-100 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-200">Aktif</span>
+                @else
+                    <span class="px-3 py-1 bg-rose-100 text-rose-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-rose-200">{{ strtoupper($member->status_keanggotaan) }}</span>
+                @endif
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <!-- Profile Header -->
+        <div class="bg-white rounded-[40px] shadow-xl shadow-slate-200/50 border border-slate-100 p-6 sm:p-10 mb-8 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px]"></div>
             
-            <div class="lg:col-span-1 space-y-6">
-                <div class="bg-white rounded-[40px] p-8 border border-slate-200 shadow-sm">
-                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Informasi Detail</h3>
-                    <div class="space-y-6">
-                        <div>
-                            <p class="text-[9px] font-black text-slate-300 uppercase">NIK / Identitas</p>
-                            <p class="font-bold text-slate-800 font-mono tracking-tight">{{ $member->nik ?? '-' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[9px] font-black text-slate-300 uppercase">Pekerjaan</p>
-                            <p class="font-bold text-slate-800">{{ $member->refPekerjaan->nama ?? '-' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[9px] font-black text-slate-300 uppercase">Tempat, Tanggal Lahir</p>
-                            <p class="font-bold text-slate-800">{{ $member->tempat_lahir ?? '-' }}, {{ $member->tanggal_lahir ? date('d M Y', strtotime($member->tanggal_lahir)) : '-' }}</p>
-                            @if($member->tanggal_lahir)
-                                <span class="inline-block mt-1 px-2 py-0.5 bg-blue-50 text-primary text-[10px] font-black rounded-lg">
-                                    Usia: {{ \Carbon\Carbon::parse($member->tanggal_lahir)->age }} Tahun
-                                </span>
-                            @endif
-                        </div>
-                        <div>
-                            <p class="text-[9px] font-black text-slate-300 uppercase">Kontak</p>
-                            <p class="font-bold text-slate-800">{{ $member->no_hp ?? '-' }}</p>
-                        </div>
-                    </div>
+            <div class="flex flex-col md:flex-row items-center md:items-start gap-8 relative z-10">
+                <!-- Avatar -->
+                <div class="w-32 h-32 rounded-[40px] bg-slate-900 flex items-center justify-center text-white text-4xl font-black shadow-lg shadow-slate-200">
+                    {{ substr($member->churchPeople->full_name, 0, 1) }}
                 </div>
-
-                <div class="bg-slate-900 rounded-[40px] p-8 text-white shadow-xl relative overflow-hidden">
-                    <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-6 relative z-10">Status Sistem</h3>
-                    <div class="space-y-4 relative z-10">
-                        <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl">
-                            <span class="text-[10px] font-black text-slate-400 uppercase">Akses Aplikasi</span>
-                            <span class="h-2 w-2 rounded-full {{ $member->is_active ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]' : 'bg-rose-400' }}"></span>
-                        </div>
-                        @if($member->status_keanggotaan == 'meninggal')
-                        <div class="bg-rose-500/10 border border-rose-500/20 p-4 rounded-2xl">
-                            <p class="text-[9px] font-black text-rose-400 uppercase">Tanggal Meninggal</p>
-                            <p class="font-bold text-rose-200">{{ date('d M Y', strtotime($member->tanggal_meninggal)) }}</p>
-                        </div>
-                        @endif
-                    </div>
-                    <svg class="absolute -right-10 -bottom-10 w-48 h-48 text-white/5 pointer-events-none" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.516L20.297 19H3.703L12 5.516z"/></svg>
-                </div>
-            </div>
-
-            <div class="lg:col-span-2">
-                <div class="flex gap-2 mb-6 bg-white p-1.5 rounded-[24px] border border-slate-200 shadow-sm w-fit">
-                    <button wire:click="setTab('peristiwa')" class="px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all {{ $activeTab == 'peristiwa' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600' }}">
-                        Riwayat Peristiwa
-                    </button>
-                    <button wire:click="setTab('tanggungan')" class="px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all {{ $activeTab == 'tanggungan' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600' }}">
-                        Riwayat Tanggungan
-                    </button>
-                </div>
-
-                <div x-show="$wire.activeTab == 'peristiwa'" class="animate-in fade-in slide-in-from-bottom-2 duration-500">
-                    <div class="bg-white rounded-[40px] p-8 border border-slate-200 shadow-sm min-h-[400px]">
-                        <h3 class="text-xl font-black text-slate-900 italic uppercase mb-10">Garis Waktu Jemaat</h3>
-                        
-                        <div class="relative pl-8">
-                            <div class="absolute left-0 top-0 bottom-0 w-0.5 bg-slate-100"></div>
-                            
-                            @forelse($member->events as $event)
-                            <div class="mb-10 relative">
-                                <div class="absolute -left-10 top-0 w-4 h-4 rounded-full border-4 border-white bg-primary shadow-sm"></div>
-                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                                    {{ \Carbon\Carbon::parse($event->tanggal)->isoFormat('D MMMM Y') }}
-                                </p>
-                                <h4 class="text-lg font-black text-slate-800 leading-tight uppercase">{{ $event->eventType->nama }}</h4>
-                                <div class="text-sm font-bold text-slate-500 mt-1 italic space-y-1">
-                                    <p>{{ $event->lokasi ? '📍 '.$event->lokasi : '' }}</p>
-                                    <p>{{ $event->pendeta ? '👤 Pdt. '.$event->pendeta : '' }}</p>
-                                </div>
-                                @if($event->nomor_surat)
-                                    <span class="mt-2 inline-block px-2 py-1 bg-slate-50 border border-slate-100 rounded text-[9px] font-mono text-slate-400 uppercase tracking-tighter">No. Reg: {{ $event->nomor_surat }}</span>
-                                @endif
-                                @if($event->keterangan)
-                                    <p class="mt-2 text-xs text-slate-400 italic">"{{ $event->keterangan }}"</p>
-                                @endif
-                            </div>
-                            @empty
-                            <div class="py-20 text-center">
-                                <p class="text-slate-300 font-black uppercase text-xs italic tracking-widest leading-relaxed">
-                                    Belum ada catatan peristiwa rohani.<br>Klik "Catat Peristiwa" untuk menambah data.
-                                </p>
-                            </div>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-
-                <div x-show="$wire.activeTab == 'tanggungan'" class="animate-in fade-in slide-in-from-bottom-2 duration-500" x-cloak>
-                    <div class="space-y-6">
-                        <div class="bg-white rounded-[40px] p-8 border border-slate-200 shadow-sm">
-                            <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-2">
-                                <span class="w-1.5 h-6 bg-blue-500 rounded-full"></span> Tanggungan Pribadi
-                            </h3>
-                            @forelse($personalDues as $pd)
-                            <div class="p-5 rounded-3xl bg-slate-50 border border-slate-100 mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-slate-100/50 transition-colors">
-                                <div>
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Tahun {{ $pd->fiscalYear->tahun }}</p>
-                                    <h4 class="text-lg font-black text-slate-800 italic uppercase leading-none">{{ $pd->dueType->nama }}</h4>
-                                </div>
-                                <div class="text-right flex flex-col items-end">
-                                    <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest {{ $pd->status == 'lunas' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">
-                                        {{ $pd->status }}
-                                    </span>
-                                    <p class="text-xs font-black text-slate-900 mt-2 font-mono">
-                                        {{ $pd->dueType->unit_type == 'money' ? 'Rp '.number_format($pd->current_paid_nominal, 0, ',', '.') : $pd->current_paid_qty.' '.$pd->dueType->satuan_barang }}
-                                    </p>
-                                </div>
-                            </div>
-                            @empty
-                            <p class="text-center py-10 text-slate-300 font-bold text-xs italic uppercase">Tidak ada tanggungan pribadi.</p>
-                            @endforelse
-                        </div>
-
-                        <div class="bg-white rounded-[40px] p-8 border border-slate-200 shadow-sm">
-                            <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-2">
-                                <span class="w-1.5 h-6 bg-amber-500 rounded-full"></span> Kolektif Keluarga (KK)
-                            </h3>
-                            @forelse($familyDues as $fd)
-                            <div class="p-5 rounded-3xl bg-amber-50/50 border border-amber-100 mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                <div>
-                                    <h4 class="text-lg font-black text-slate-800 italic uppercase leading-none">{{ $fd->dueType->nama }}</h4>
-                                    <p class="text-[9px] font-bold text-amber-600 mt-2 uppercase tracking-widest">Tanggungan Anggota KK</p>
-                                </div>
-                                <div class="text-right flex flex-col items-end">
-                                    <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest {{ $fd->status == 'lunas' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">
-                                        {{ $fd->status }}
-                                    </span>
-                                    <p class="text-xs font-black text-slate-900 mt-2 font-mono">
-                                        {{ $fd->dueType->unit_type == 'money' ? 'Rp '.number_format($fd->current_paid_nominal, 0, ',', '.') : $fd->current_paid_qty.' '.$fd->dueType->satuan_barang }}
-                                    </p>
-                                </div>
-                            </div>
-                            @empty
-                            <p class="text-center py-10 text-slate-300 font-bold text-xs italic uppercase">Tidak ada tanggungan keluarga.</p>
-                            @endforelse
-                        </div>
+                
+                <div class="flex-1 text-center md:text-left">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1">Anggota Jemaat</p>
+                    <h1 class="text-3xl sm:text-4xl font-black text-slate-900 uppercase tracking-tighter leading-tight mb-2">{{ $member->churchPeople->full_name }}</h1>
+                    <div class="flex flex-wrap justify-center md:justify-start gap-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                        <span class="flex items-center gap-1">
+                            <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                            NIK: {{ $member->churchPeople->nik ?? '-' }}
+                        </span>
+                        <span class="flex items-center gap-1">
+                            <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                            KK: {{ $member->family->nomor_kk ?? '-' }}
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div x-show="showModal" x-cloak class="fixed inset-0 z-[100] overflow-y-auto" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-            <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-md" @click="showModal = false"></div>
-            <div class="flex min-h-full items-center justify-center p-4">
-                <div class="relative w-full max-w-md bg-white rounded-[40px] p-10 shadow-2xl" @click.stop>
-                    <button @click="showModal = false" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
-                    <h3 class="text-2xl font-black text-slate-900 mb-8 italic uppercase tracking-tighter text-center leading-none">Catat Peristiwa</h3>
-                    <form wire:submit="saveEvent" class="space-y-6 text-left">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Jenis Peristiwa</label>
-                            <select wire:model="event_type_id" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-sm focus:ring-2 focus:ring-primary/20 transition-all">
-                                <option value="">-- Pilih Peristiwa --</option>
-                                @foreach($eventTypes as $et) <option value="{{ $et->id }}">{{ $et->nama }}</option> @endforeach
-                            </select>
-                            @error('event_type_id') <span class="text-[10px] text-rose-500 font-bold ml-1 uppercase">{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tanggal</label>
-                            <input wire:model="tanggal" type="date" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-sm focus:ring-2 focus:ring-primary/20 transition-all">
-                            @error('tanggal') <span class="text-[10px] text-rose-500 font-bold ml-1 uppercase">{{ $message }}</span> @enderror
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Gereja / Lokasi</label>
-                                <input wire:model="lokasi" type="text" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-sm focus:ring-2 focus:ring-primary/20 transition-all" placeholder="GKS...">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Pendeta</label>
-                                <input wire:model="pendeta" type="text" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-sm focus:ring-2 focus:ring-primary/20 transition-all">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nomor Surat (Jika ada)</label>
-                            <input wire:model="nomor_surat" type="text" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold font-mono text-sm focus:ring-2 focus:ring-primary/20 transition-all">
-                        </div>
-                        <button type="submit" class="w-full py-5 bg-primary text-white rounded-3xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-blue-500/30 hover:scale-[1.02] active:scale-95 transition-all">Simpan Riwayat</button>
-                    </form>
-                </div>
-            </div>
+        <!-- Tabs Navigation -->
+        <div class="flex bg-slate-200/50 p-1.5 rounded-[28px] mb-8 gap-1 border border-slate-200/30">
+            <button wire:click="setTab('peristiwa')" class="flex-1 py-4 rounded-[22px] text-[10px] font-black uppercase tracking-[0.2em] transition-all {{ $activeTab === 'peristiwa' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-400 hover:text-slate-600' }}">
+                Peristiwa & Arsip
+            </button>
+            <button wire:click="setTab('iuran')" class="flex-1 py-4 rounded-[22px] text-[10px] font-black uppercase tracking-[0.2em] transition-all {{ $activeTab === 'iuran' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-400 hover:text-slate-600' }}">
+                Iuran & Setoran
+            </button>
+            <button wire:click="setTab('profil')" class="flex-1 py-4 rounded-[22px] text-[10px] font-black uppercase tracking-[0.2em] transition-all {{ $activeTab === 'profil' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-400 hover:text-slate-600' }}">
+                Detail Profil
+            </button>
         </div>
 
+        <!-- Tab Content -->
+        <div class="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            
+            @if($activeTab === 'peristiwa')
+                <div class="space-y-6">
+                    <div class="flex justify-between items-center px-2">
+                        <h2 class="text-xl font-black text-slate-900 uppercase tracking-tight">Riwayat Peristiwa</h2>
+                        <button wire:click="$toggle('isAddingEvent')" class="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary transition-all">
+                            {{ $isAddingEvent ? 'Batal' : '+ Peristiwa' }}
+                        </button>
+                    </div>
+
+                    @if($isAddingEvent)
+                        <div class="bg-white rounded-[32px] p-6 sm:p-8 border border-slate-100 shadow-xl animate-in zoom-in-95">
+                            <form wire:submit.prevent="saveEvent" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Jenis Peristiwa</label>
+                                    <select wire:model.live="event_type_id" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-sm">
+                                        <option value="">-- Pilih Peristiwa --</option>
+                                        @foreach($eventTypes as $type) <option value="{{ $type->id }}">{{ $type->nama }}</option> @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Tanggal</label>
+                                    <input wire:model="tanggal" type="date" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Pelayan Firman / Pendeta</label>
+                                    <input wire:model="pendeta" type="text" placeholder="Nama Pendeta..." class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">No. Surat / Akta</label>
+                                    <input wire:model="nomor_surat" type="text" placeholder="No Register..." class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-sm">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <button type="submit" wire:loading.attr="disabled" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-emerald-500 transition-all flex items-center justify-center gap-2">
+                                        <span wire:loading.remove wire:target="saveEvent">Simpan Peristiwa</span>
+                                        <span wire:loading wire:target="saveEvent">Memproses...</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    @endif
+
+                    <div class="space-y-4">
+                        @forelse($member->events as $event)
+                            <div class="bg-white rounded-[28px] p-6 border border-slate-100 shadow-sm flex items-center gap-6 group hover:shadow-md transition-all">
+                                <div class="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors shrink-0">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <h4 class="font-black text-slate-800 uppercase tracking-tight">{{ $event->eventType->nama }}</h4>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase">{{ \Carbon\Carbon::parse($event->tanggal)->isoFormat('D MMMM Y') }}</span>
+                                    </div>
+                                    <p class="text-xs font-bold text-slate-500 italic">{{ $event->nomor_surat ?? 'Tanpa Nomor Surat' }} • Di {{ $event->lokasi ?? 'Gedung Gereja' }}</p>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="py-12 text-center text-slate-400 font-bold uppercase text-[10px] tracking-widest bg-white rounded-[32px] border border-dashed border-slate-200">
+                                Belum ada riwayat peristiwa.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            @endif
+
+            @if($activeTab === 'iuran')
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Personal Dues -->
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-primary rounded-full"></span> Iuran Perorangan
+                        </h3>
+                        @forelse($personalDues as $due)
+                            <div class="bg-white rounded-[28px] p-6 border border-slate-100 shadow-sm">
+                                <div class="flex justify-between items-start mb-4">
+                                    <span class="text-xs font-black text-slate-800 uppercase">{{ $due->dueType->nama }}</span>
+                                    <span class="px-2 py-0.5 rounded-lg text-[8px] font-black uppercase {{ $due->status === 'lunas' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }}">
+                                        {{ $due->status }}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between items-end">
+                                    <div>
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase">Sisa Tagihan</p>
+                                        <p class="text-lg font-black text-slate-900">Rp {{ number_format($due->sisa_nominal, 0, ',', '.') }}</p>
+                                    </div>
+                                    <p class="text-[9px] font-black text-slate-300 uppercase">{{ $due->fiscalYear->tahun }}</p>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-xs font-bold text-slate-300 text-center py-6">Tidak ada iuran perorangan.</p>
+                        @endforelse
+                    </div>
+
+                    <!-- Family Dues -->
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-indigo-400 rounded-full"></span> Iuran Keluarga
+                        </h3>
+                        @forelse($familyDues as $due)
+                            <div class="bg-white rounded-[28px] p-6 border border-slate-100 shadow-sm relative overflow-hidden">
+                                <div class="absolute top-0 left-0 w-1 h-full bg-indigo-400/20"></div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <span class="text-xs font-black text-slate-800 uppercase">{{ $due->dueType->nama }}</span>
+                                    <span class="px-2 py-0.5 rounded-lg text-[8px] font-black uppercase {{ $due->status === 'lunas' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }}">
+                                        {{ $due->status }}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between items-end">
+                                    <div>
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase">Sisa Tagihan KK</p>
+                                        <p class="text-lg font-black text-slate-900">Rp {{ number_format($due->sisa_nominal, 0, ',', '.') }}</p>
+                                    </div>
+                                    <p class="text-[9px] font-black text-slate-300 uppercase">{{ $due->fiscalYear->tahun }}</p>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-xs font-bold text-slate-300 text-center py-6">Tidak ada iuran keluarga.</p>
+                        @endforelse
+                    </div>
+                </div>
+            @endif
+
+            @if($activeTab === 'profil')
+                <div class="bg-white rounded-[40px] shadow-sm border border-slate-100 p-8 sm:p-10 space-y-10">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6">
+                            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] border-b border-slate-100 pb-3">Identitas Dasar</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[9px] font-black text-slate-300 uppercase">Tempat Lahir</label>
+                                    <p class="text-sm font-bold text-slate-700">{{ $member->churchPeople->place_of_birth }}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-black text-slate-300 uppercase">Tanggal Lahir</label>
+                                    <p class="text-sm font-bold text-slate-700">{{ \Carbon\Carbon::parse($member->churchPeople->date_of_birth)->isoFormat('D MMMM Y') }}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-black text-slate-300 uppercase">Jenis Kelamin</label>
+                                    <p class="text-sm font-bold text-slate-700">{{ $member->churchPeople->gender === 'L' ? 'Laki-laki' : 'Perempuan' }}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-black text-slate-300 uppercase">Pekerjaan</label>
+                                    <p class="text-sm font-bold text-slate-700">{{ $member->refPekerjaan->nama ?? '-' }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] border-b border-slate-100 pb-3">Keluarga & Wilayah</h3>
+                            <div class="space-y-4">
+                                <div class="flex justify-between border-b border-slate-50 pb-2">
+                                    <span class="text-[9px] font-black text-slate-300 uppercase">Wilayah Pelayanan</span>
+                                    <span class="text-xs font-black text-primary uppercase">{{ $member->family->wilayah->nama ?? '-' }}</span>
+                                </div>
+                                <div class="flex justify-between border-b border-slate-50 pb-2">
+                                    <span class="text-[9px] font-black text-slate-300 uppercase">Status di Keluarga</span>
+                                    <span class="text-xs font-bold text-slate-700">{{ $member->refHubunganKeluarga->nama ?? '-' }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-[9px] font-black text-slate-300 uppercase block mb-1">Alamat Domisili</span>
+                                    <p class="text-xs font-bold text-slate-700">{{ $member->churchPeople->address ?? $member->family->alamat }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+        </div>
     </div>
 </div>

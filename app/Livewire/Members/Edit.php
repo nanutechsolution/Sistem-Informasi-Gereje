@@ -5,71 +5,47 @@ namespace App\Livewire\Members;
 use App\Models\Member;
 use App\Models\RefHubunganKeluarga;
 use App\Models\RefPekerjaan;
-use Carbon\Carbon;
 use Livewire\Component;
 
 class Edit extends Component
 {
     public Member $member;
+    public $personName; // Read-only
 
-    public $nama, $nik, $tempat_lahir, $tanggal_lahir, $jenis_kelamin, $no_hp;
-    public $hubungan_keluarga_id, $pekerjaan_id; // Pakai ID
-    public $status_baptis, $status_sidi, $status_nikah;
-
-    protected $messages = [
-        'nama.required' => 'Nama lengkap wajib diisi.',
-        'nik.digits' => 'NIK wajib 16 digit.',
-        'hubungan_keluarga_id.required' => 'Hubungan keluarga wajib dipilih.',
-    ];
+    // Data yang bisa diubah di level Member
+    public $hubungan_keluarga_id;
+    public $pekerjaan_id;
+    public $status_keanggotaan;
 
     public function mount(Member $member)
     {
-        $this->member = $member;
+        $this->member = $member->load('churchPeople');
+        
+        // Data Orang (Display Only)
+        $this->personName = $member->churchPeople->full_name;
 
-        $this->nama = $member->nama;
-        $this->nik = $member->nik;
-        $this->tempat_lahir = $member->tempat_lahir;
-        $this->tanggal_lahir = Carbon::parse($member->tanggal_lahir)
-            ->format('Y-m-d');
-        $this->jenis_kelamin = $member->jenis_kelamin;
-        $this->no_hp = $member->no_hp;
-
-        // Load ID relasi
+        // Data Member
         $this->hubungan_keluarga_id = $member->hubungan_keluarga_id;
         $this->pekerjaan_id = $member->pekerjaan_id;
-
-        $this->status_baptis = $member->status_baptis;
-        $this->status_sidi = $member->status_sidi;
-        $this->status_nikah = $member->status_nikah;
+        $this->status_keanggotaan = $member->status_keanggotaan;
     }
 
     public function update()
     {
         $this->validate([
-            'nama' => 'required|min:3',
-            'nik' => 'nullable|numeric|digits:16|unique:members,nik,' . $this->member->id,
-            'tempat_lahir' => 'required|string',
-            'tanggal_lahir' => 'required|date',
-            'jenis_kelamin' => 'required|in:L,P',
             'hubungan_keluarga_id' => 'required|exists:ref_hubungan_keluargas,id',
-            'pekerjaan_id' => 'nullable|exists:ref_pekerjaans,id',
+            'pekerjaan_id' => 'required|exists:ref_pekerjaans,id',
+            'status_keanggotaan' => 'required|in:aktif,pindah,meninggal',
         ]);
 
         $this->member->update([
-            'nama' => $this->nama,
-            'nik' => $this->nik,
-            'tempat_lahir' => $this->tempat_lahir,
-            'tanggal_lahir' => $this->tanggal_lahir,
-            'jenis_kelamin' => $this->jenis_kelamin,
-            'no_hp' => $this->no_hp,
             'hubungan_keluarga_id' => $this->hubungan_keluarga_id,
             'pekerjaan_id' => $this->pekerjaan_id,
+            'status_keanggotaan' => $this->status_keanggotaan,
         ]);
 
-        $this->dispatch('notify', message: 'Data anggota berhasil diperbarui!', type: 'success');
-
-        // Gunakan objek family untuk redirect
-        return redirect()->route('families.edit', $this->member->family);
+        $this->dispatch('notify', message: 'Data keanggotaan diperbarui.', type: 'success');
+        return redirect()->route('families.edit', $this->member->family->uuid);
     }
 
     public function render()

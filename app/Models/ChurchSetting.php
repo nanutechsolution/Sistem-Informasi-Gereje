@@ -10,7 +10,13 @@ class ChurchSetting extends Model
     use HasUuids;
     protected $guarded = [];
 
-    public function uniqueIds() { return ['uuid']; }
+    protected $casts = [
+        'misi' => 'array',
+    ];
+    public function uniqueIds()
+    {
+        return ['uuid'];
+    }
 
     /**
      * Singleton: Ambil setting gereja saat ini (berdasarkan tenant/id pertama)

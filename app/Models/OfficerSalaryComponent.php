@@ -2,48 +2,70 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class OfficerSalaryComponent extends Model
 {
-    use HasUuids, SoftDeletes;
-    protected $guarded = [];
+    use HasFactory;
 
-    public function uniqueIds()
-    {
-        return ['uuid'];
-    }
+    protected $table = 'officer_salary_components';
+
+    protected $fillable = [
+        'uuid',
+        'church_officer_id',
+        'ref_salary_component_id',
+        'ref_budget_post_id',
+        'nominal',
+        'is_fixed',
+        'tanggal_mulai',
+        'tanggal_berakhir',
+        'is_active',
+    ];
 
     protected $casts = [
-        'nominal' => 'float',
         'is_fixed' => 'boolean',
         'is_active' => 'boolean',
+        'nominal' => 'decimal:2',
         'tanggal_mulai' => 'date',
         'tanggal_berakhir' => 'date',
     ];
 
-    public function officer()
+    // Auto-generate UUID saat membuat record baru
+    protected static function booted()
+    {
+        static::creating(function ($component) {
+            if (empty($component->uuid)) {
+                $component->uuid = (string) Str::uuid();
+            }
+        });
+    }
+
+    // Relasi ke ChurchOfficer
+    public function churchOfficer()
     {
         return $this->belongsTo(ChurchOfficer::class, 'church_officer_id');
     }
 
+    // Relasi opsional ke ref_budget_post
     public function budgetPost()
     {
         return $this->belongsTo(RefBudgetPost::class, 'ref_budget_post_id');
     }
 
-    // Scope: Ambil komponen yang valid saat ini (Aktif & Dalam Periode)
-    public function scopeActive($query)
+
+    /**
+     * Relasi ke RefSalaryComponent
+     */
+    public function refSalaryComponent()
     {
-        $now = Carbon::now();
-        return $query->where('is_active', true)
-            ->where('tanggal_mulai', '<=', $now)
-            ->where(function ($q) use ($now) {
-                $q->whereNull('tanggal_berakhir')
-                    ->orWhere('tanggal_berakhir', '>=', $now);
-            });
+        return $this->belongsTo(RefSalaryComponent::class, 'ref_salary_component_id');
+    }
+
+
+    public function component()
+    {
+        return $this->belongsTo(RefSalaryComponent::class, 'ref_salary_component_id');
     }
 }

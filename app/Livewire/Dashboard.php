@@ -21,32 +21,34 @@ class Dashboard extends Component
         $user = Auth::user();
         $today = Carbon::today();
         
+        // Data Dasar (Bisa dilihat jika punya permission view_dashboard)
         $data = [
-            // Data Global (Semua User Lihat)
             'birthdays' => $this->getBirthdays($today),
             'upcomingGeneralSchedules' => $this->getGeneralSchedules($today),
             'myNextSchedule' => $this->getMyNextSchedule($user, $today),
         ];
 
-        // 1. DATA KHUSUS KEUANGAN (Bendahara & Admin)
-        if ($user->can('manage_finance')) {
-            $data['financial'] = $this->getFinancialData();
-            $data['pendingPksCount'] = ActivitySchedule::where('ref_activity_type_id', 2) // PKS
-                ->where('status_setoran', 'pending')
-                ->where('nominal_persembahan', '>', 0)
-                ->count();
-        }
-
-        // 2. DATA KHUSUS SEKRETARIAT (Sekretaris & Admin)
+        // 1. STATISTIK DATABASE (manage_database)
         if ($user->can('manage_database')) {
             $data['stats'] = [
                 'kk' => Family::count(),
-                'jiwa' => Member::count(),
-                'laki' => Member::where('jenis_kelamin', 'L')->count(),
-                'perempuan' => Member::where('jenis_kelamin', 'P')->count(),
+                'jiwa' => Member::active()->count(),
+                'laki' => Member::active()->whereHas('churchPeople', fn($q) => $q->where('gender', 'L'))->count(),
+                'perempuan' => Member::active()->whereHas('churchPeople', fn($q) => $q->where('gender', 'P'))->count(),
                 'letters_this_month' => Letter::whereMonth('tanggal_cetak', $today->month)
                     ->whereYear('tanggal_cetak', $today->year)->count(),
             ];
+        }
+
+        // 2. RINGKASAN KEUANGAN (manage_finance)
+        if ($user->can('manage_finance')) {
+            $data['financial'] = $this->getFinancialData();
+            
+            // Hitung setoran PKS yang masih menggantung
+            $data['pendingPksCount'] = ActivitySchedule::whereHas('type', fn($q) => $q->where('nama', 'like', '%PKS%'))
+                ->where('status_setoran', 'pending')
+                ->where('nominal_persembahan', '>', 0)
+                ->count();
         }
 
         return view('livewire.dashboard', $data);
@@ -54,7 +56,7 @@ class Dashboard extends Component
 
     private function getFinancialData()
     {
-        $activeYear = FiscalYear::active();
+        $activeYear = FiscalYear::where('is_active', true)->first();
         
         $accounts = RefAccount::where('is_active', true)->get()->map(function($acc) use ($activeYear) {
             $saldoAwal = $activeYear ? OpeningBalance::where('fiscal_year_id', $activeYear->id)
@@ -66,8 +68,6 @@ class Dashboard extends Component
             // Pindah buku (keluar dari sini)
             $transferKeluar = Transaction::where('ref_account_id', $acc->id)->where('jenis', 'pindah_buku')->sum('nominal');
             
-            // Pindah buku (masuk ke sini - dicatat sebagai 'masuk' di trx tujuan, jadi sudah tercover di $masuk)
-
             $acc->saldo_akhir = $saldoAwal + $masuk - $keluar - $transferKeluar;
             return $acc;
         });
@@ -81,17 +81,26 @@ class Dashboard extends Component
     private function getBirthdays($today)
     {
         $nextWeek = (clone $today)->addDays(7);
-        return Member::with('family.refWilayah')
-            ->whereRaw("DATE_FORMAT(tanggal_lahir, '%m-%d') BETWEEN ? AND ?", [$today->format('m-d'), $nextWeek->format('m-d')])
-            ->orderByRaw("DATE_FORMAT(tanggal_lahir, '%m-%d') ASC")
-            ->limit(6)->get();
+        // Mengambil data dari relasi churchPeople
+        return Member::active()
+            ->with(['churchPeople', 'family.wilayah'])
+            ->whereHas('churchPeople', function($q) use ($today, $nextWeek) {
+                $q->whereRaw("DATE_FORMAT(date_of_birth, '%m-%d') BETWEEN ? AND ?", [
+                    $today->format('m-d'), 
+                    $nextWeek->format('m-d')
+                ]);
+            })
+            ->get()
+            ->sortBy(fn($m) => Carbon::parse($m->churchPeople->date_of_birth)->format('m-d'))
+            ->take(6);
     }
 
     private function getGeneralSchedules($today)
     {
         return ActivitySchedule::with(['type', 'wilayah'])
             ->where('tanggal', '>=', $today)
-            ->where('tanggal', '<=', (clone $today)->addDays(14)) // 2 Minggu ke depan
+            ->where('tanggal', '<=', (clone $today)->addDays(14))
+            ->whereHas('type', fn($q) => $q->where('nama', 'not like', '%PKS%')) // Kecuali PKS di agenda umum
             ->orderBy('tanggal')
             ->orderBy('jam_mulai')
             ->limit(5)
@@ -100,7 +109,7 @@ class Dashboard extends Component
 
     private function getMyNextSchedule($user, $today)
     {
-        // Jika user terhubung ke member, cari jadwal dia
+        // Gunakan helper member_id dari model User
         if ($user->member_id) {
             return ActivitySchedule::with(['type', 'family'])
                 ->whereHas('servants', function($q) use ($user) {

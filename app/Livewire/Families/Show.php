@@ -17,8 +17,10 @@ class Show extends Component
 
     public function mount(Family $family)
     {
+        // Eager load relasi dengan struktur data terbaru (churchPeople)
         $this->family = $family->load([
-            'refWilayah',
+            'wilayah',
+            'members.churchPeople',
             'members.refHubunganKeluarga',
             'members.refPekerjaan'
         ]);
@@ -31,29 +33,38 @@ class Show extends Component
 
     public function render()
     {
-        // 1. TANGGUNGAN (Uang/Barang)
+        // Ambil semua ID anggota yang ada di dalam KK ini
+        $memberIds = $this->family->members->pluck('id')->toArray();
+
+        // 1. TANGGUNGAN (Kewajiban atas nama KK dan Anggota Jiwa)
         $familyDues = DuesRegistry::with(['dueType', 'fiscalYear'])
             ->where('assignee_type', Family::class)
             ->where('assignee_id', $this->family->id)
-            ->latest()->get();
+            ->latest()
+            ->get();
 
-        $memberIds = $this->family->members->pluck('id');
-        $individualDues = DuesRegistry::with(['dueType', 'fiscalYear', 'assignee'])
+        $individualDues = DuesRegistry::with(['dueType', 'fiscalYear', 'assignee.churchPeople'])
             ->where('assignee_type', Member::class)
             ->whereIn('assignee_id', $memberIds)
-            ->latest()->get();
+            ->latest()
+            ->get();
 
-        // 2. RIWAYAT PKS (Pelaksanaan & Persembahan)
-        $pksTypeId = RefActivityType::where('nama', 'like', '%PKS%')->value('id');
-        $pksHistory = ActivitySchedule::where('family_id', $this->family->id)
-            ->where('ref_activity_type_id', $pksTypeId)
+        // 2. RIWAYAT PKS (Berdasarkan Family ID)
+        $pksType = RefActivityType::where('nama', 'like', '%PKS%')->first();
+        $pksHistory = ActivitySchedule::with(['servants.member.churchPeople'])
+            ->where('family_id', $this->family->id)
+            ->where('ref_activity_type_id', $pksType?->id)
             ->orderBy('tanggal', 'desc')
             ->get();
 
-        // 3. RIWAYAT LELANG (Anggota Keluarga)
+        // 3. RIWAYAT LELANG (DIFILTER KETAT: Hanya anggota KK ini)
         $auctionHistory = Auction::with(['event'])
-            ->whereIn('pemenang_member_id', $memberIds)
-            ->orWhere('pemenang_nama', 'like', '%' . $this->family->kepala_keluarga . '%')
+            ->whereIn('pemenang_member_id', $memberIds) // Filter utama berdasarkan ID member
+            ->orWhere(function($q) {
+                // Tambahan fallback jika nama diketik manual tapi harus persis nama Kepala Keluarga ini
+                $q->where('pemenang_nama', $this->family->kepala_keluarga)
+                  ->whereNull('pemenang_member_id'); // Pastikan yang tanpa ID saja yang dicari manual
+            })
             ->latest()
             ->get();
 

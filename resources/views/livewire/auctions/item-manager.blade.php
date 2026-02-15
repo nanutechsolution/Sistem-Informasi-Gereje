@@ -1,270 +1,280 @@
-<div class="py-6 sm:py-12 bg-slate-50 min-h-screen" 
+<div class="py-4 sm:py-10 bg-slate-50 min-h-screen text-slate-900" 
      x-data="{ 
-        showItem: @entangle('isModalOpen').live, 
-        showPayment: @entangle('isPaymentModalOpen').live, 
-        showHistory: @entangle('isHistoryModalOpen').live,
-        formatRupiah(value) {
-            if(!value) return '';
-            let val = value.toString().replace(/\D/g, '');
+        formatRupiah(num) {
+            if (!num) return '';
+            let val = num.toString().replace(/[^0-9]/g, '');
             return val.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
      }">
-    
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
         <!-- Header -->
-        <div class="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-                <a href="{{ route('auctions.index') }}" class="text-[10px] font-black text-slate-400 hover:text-primary transition-all flex items-center gap-1 mb-3 uppercase tracking-widest group">
-                    <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path></svg>
-                    Kembali
-                </a>
-                <h1 class="text-3xl font-black text-slate-900 leading-none italic uppercase">{{ $event->nama_event }}</h1>
-                <div class="mt-4 flex flex-wrap gap-2">
-                    <span class="px-3 py-1 bg-primary text-white text-[10px] font-black uppercase rounded-full shadow-lg shadow-blue-500/20">Target: {{ $event->tujuan_kas }}</span>
-                    <span class="px-3 py-1 bg-white border border-slate-200 text-slate-500 text-[10px] font-black uppercase rounded-full italic">{{ \Carbon\Carbon::parse($event->tanggal_event)->isoFormat('D MMMM Y') }}</span>
+        <div class="mb-6 sm:mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="w-full md:w-auto">
+                <div class="flex items-center gap-2 mb-2 overflow-x-auto no-scrollbar whitespace-nowrap">
+                    <a href="{{ route('auctions.index') }}" class="text-[10px] font-black text-primary uppercase tracking-widest hover:underline shrink-0">Event Lelang</a>
+                    <span class="text-slate-300">/</span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">{{ $event->nama_event }}</span>
                 </div>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none">Item Lelang</h1>
             </div>
-            
-            <button wire:click="create" class="inline-flex items-center px-8 py-4 bg-slate-900 text-white rounded-[24px] font-black text-xs shadow-2xl hover:scale-105 transition-all">
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="3.5"/></svg>
-                TAMBAH BARANG
+            <button wire:click="create" class="w-full md:w-auto px-6 py-4 bg-slate-900 text-white rounded-2xl sm:rounded-3xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-primary transition-all flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                Tambah Item
             </button>
         </div>
 
-        <!-- Progress Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 text-center sm:text-left">
-            <div class="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
-                <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Total Piutang (Nota)</p>
-                <p class="text-xl font-black text-slate-900">Rp {{ number_format($items->sum('harga_jadi'), 0, ',', '.') }}</p>
-            </div>
-            <div class="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
-                <p class="text-[10px] font-black text-emerald-500 uppercase mb-1">Total Uang Masuk</p>
-                <p class="text-xl font-black text-emerald-600">Rp {{ number_format($items->sum('total_terbayar_cache'), 0, ',', '.') }}</p>
-            </div>
-            <div class="bg-slate-900 p-6 rounded-[32px] text-white shadow-xl relative overflow-hidden">
-                <p class="text-[10px] font-black text-slate-400 uppercase mb-1 relative z-10">Sisa Piutang</p>
-                <p class="text-xl font-black italic text-amber-400 relative z-10">Rp {{ number_format($items->sum('harga_jadi') - $items->sum('total_terbayar_cache'), 0, ',', '.') }}</p>
+        <!-- Filter & Search -->
+        <div class="bg-white rounded-[24px] sm:rounded-[32px] p-4 sm:p-6 shadow-sm border border-slate-100 mb-6 sm:mb-8">
+            <div class="relative w-full">
+                <input wire:model.live.debounce.300ms="search" type="text" class="w-full bg-slate-50 border-none rounded-xl sm:rounded-2xl py-3 sm:py-4 pl-10 sm:pl-12 pr-4 font-bold text-sm focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Cari barang atau nama pemenang...">
+                <svg class="w-4 h-4 sm:w-5 h-5 text-slate-300 absolute left-3.5 sm:left-4 top-3 sm:top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
         </div>
 
-        <!-- Table Area -->
-        <div class="bg-white rounded-[40px] shadow-sm border border-slate-200 overflow-hidden">
-            <div class="p-6 border-b border-slate-50 bg-slate-50/30">
-                <div class="relative max-w-md">
-                    <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input wire:model.live.debounce.300ms="search" type="text" class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-primary/5 transition-all" placeholder="Cari barang atau pemenang...">
-                </div>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
-                        <tr>
-                            <th class="px-8 py-6">Barang & Donatur</th>
-                            <th class="px-6 py-6 text-center">Pemenang</th>
-                            <th class="px-6 py-6 text-right">Harga Jadi</th>
-                            <th class="px-6 py-6 text-right">Terbayar</th>
-                            <th class="px-8 py-6 text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-50">
-                        @forelse($items as $item)
-                        <tr class="hover:bg-blue-50/30 transition-colors group">
-                            <td class="px-8 py-6">
-                                <div class="font-black text-slate-900 leading-none">{{ $item->nama_barang }}</div>
-                                <div class="text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-tighter italic">Donatur: {{ $item->donatur_nama ?? '-' }}</div>
-                            </td>
-                            <td class="px-6 py-6 text-center">
-                                <span class="px-3 py-1 bg-slate-100 rounded-xl font-black text-[10px] uppercase text-slate-600">{{ $item->pemenang_nama ?? '-' }}</span>
-                            </td>
-                            <td class="px-6 py-6 text-right font-black">Rp {{ number_format($item->harga_jadi, 0, ',', '.') }}</td>
-                            <td class="px-6 py-6 text-right">
-                                <button wire:click="openHistoryModal({{ $item->id }})" class="ml-auto inline-block">
-                                    <span class="px-3 py-1 rounded-xl text-[10px] font-black uppercase {{ $item->status_lunas ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700' }}">
-                                        Rp {{ number_format($item->total_terbayar_cache, 0, ',', '.') }}
-                                    </span>
-                                </button>
-                            </td>
-                            <td class="px-8 py-6 text-right">
-                                <div class="flex justify-end gap-2">
-                                    @if(!$item->status_lunas)
-                                    <button wire:click="openPaymentModal({{ $item->id }})" class="px-5 py-2 bg-emerald-500 text-white rounded-xl font-black text-[10px] uppercase shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all transform active:scale-95">Bayar</button>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="5" class="py-24 text-center text-slate-300 italic font-black uppercase tracking-widest text-xs">Belum ada barang terdaftar.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="mt-8">{{ $items->links() }}</div>
-    </div>
-
-    <!-- MODAL 1: INPUT BARANG (Dukungan Batch & Lookup) -->
-    <div x-show="showItem" x-cloak class="fixed inset-0 z-[100] overflow-y-auto">
-        <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm transition-opacity" @click="showItem = false"></div>
-        <div class="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4 text-center">
-            <div class="relative w-full max-w-2xl bg-white rounded-t-[40px] sm:rounded-[40px] p-8 sm:p-12 shadow-2xl text-left overflow-visible transition-all">
-                <div class="absolute top-0 left-0 w-full h-1.5 bg-primary"></div>
-                
-                <div class="flex justify-between items-start mb-8">
-                    <div>
-                        <h3 class="text-3xl font-black text-slate-900 leading-none italic uppercase tracking-tighter">{{ $editId ? 'Ubah' : 'Batch Input' }} Lelang</h3>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Sinkronisasi Jemaat & Nota</p>
-                    </div>
-                    @if(!$editId)
-                    <div class="text-right">
-                        <label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Jumlah Item</label>
-                        <input wire:model.live="jumlah" type="number" min="1" max="50" class="w-20 bg-slate-50 border-none rounded-xl p-2 text-center font-black text-primary focus:ring-0 shadow-inner">
-                    </div>
-                    @endif
-                </div>
-                
-                <form wire:submit="save" class="space-y-8">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Nama Barang Utama</label>
-                            <input wire:model.live="nama_barang" type="text" class="w-full bg-white border-none rounded-2xl p-4 font-bold text-slate-900 shadow-sm focus:ring-2 focus:ring-primary/10 transition-all">
+        <!-- Mobile List (Cards) -->
+        <div class="grid grid-cols-1 gap-4 md:hidden mb-8">
+            @forelse($items as $item)
+                <div class="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100 relative overflow-hidden group">
+                    <div class="absolute left-0 top-0 bottom-0 w-1.5 {{ $item->is_lunas ? 'bg-emerald-400' : 'bg-amber-400' }}"></div>
+                    
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="min-w-0">
+                            <span class="block font-black text-slate-800 uppercase leading-tight truncate text-sm">{{ $item->nama_barang }}</span>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Donatur: {{ $item->donatur_nama ?? 'Anonim' }}</span>
                         </div>
-                        <div class="relative" x-data="{ open: false }">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Donatur</label>
-                            <input wire:model.live="searchDonatur" @focus="open = true" x-on:click.away="open = false" type="text" class="w-full bg-white border-none rounded-2xl p-4 font-bold text-slate-900 shadow-sm focus:ring-2 focus:ring-primary/10 transition-all placeholder:text-slate-200" placeholder="Cari nama...">
-                            @if(count($foundDonatur) > 0)
-                            <div x-show="open" class="absolute z-50 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden divide-y divide-slate-50">
-                                @foreach($foundDonatur as $m)
-                                <button type="button" wire:mousedown.prevent="selectDonatur({{ $m['id'] }}, '{{ $m['nama'] }}')" @click="open = false" class="w-full text-left p-4 hover:bg-blue-50 transition-colors">
-                                    <p class="font-black text-slate-900 text-sm leading-none">{{ $m['nama'] }}</p>
+                        <div class="text-right">
+                            <p class="text-xs font-black text-slate-900 leading-none text-nowrap">Rp {{ number_format($item->harga_jadi, 0, ',', '.') }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 mb-4 bg-slate-50 p-2 rounded-xl">
+                        <div class="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center text-[10px] font-black text-slate-500 uppercase">
+                            {{ substr($item->pemenang_nama, 0, 1) }}
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-600 truncate">{{ $item->pemenang_nama }}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-50">
+                        <div>
+                            @if($item->is_lunas)
+                                <span class="px-2 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[9px] font-black uppercase tracking-widest">Lunas</span>
+                            @else
+                                <span class="text-[9px] font-bold text-slate-400 uppercase">Sisa Piutang:</span>
+                                <span class="block text-xs font-black text-amber-600 leading-none mt-0.5">Rp {{ number_format($item->sisa_piutang, 0, ',', '.') }}</span>
+                            @endif
+                        </div>
+                        <div class="flex gap-2">
+                            <button wire:click="openHistoryModal({{ $item->id }})" class="p-2 text-slate-400 hover:text-primary transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </button>
+                            @if(!$item->is_lunas)
+                                <button wire:click="openPaymentModal({{ $item->id }})" class="px-4 py-2 bg-emerald-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100">
+                                    Bayar
                                 </button>
-                                @endforeach
-                            </div>
                             @endif
                         </div>
                     </div>
+                </div>
+            @empty
+                <div class="bg-white py-12 text-center rounded-[24px] border-2 border-dashed border-slate-100">
+                    <p class="text-slate-400 font-bold text-xs uppercase tracking-widest">Tidak ada item ditemukan</p>
+                </div>
+            @endforelse
+        </div>
 
-                    <div class="space-y-4 max-h-[350px] overflow-y-auto pr-3 custom-scrollbar">
-                        @foreach($items_list as $index => $item)
-                        <div class="flex flex-col gap-2 p-3 bg-white border border-slate-100 rounded-2xl shadow-sm">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center font-black text-xs text-slate-400">#{{ $index + 1 }}</div>
-                                <div class="flex-1 relative">
-                                    <input type="text" wire:model.live.debounce.300ms="items_list.{{ $index }}.pemenang_nama" x-on:input="$wire.searchMemberBatch({{ $index }}, $el.value)" class="w-full bg-transparent border-none p-2 font-black text-sm text-slate-800 focus:ring-0 placeholder:text-slate-300" placeholder="Pemenang...">
-                                    @if($activeSearchIndex === $index && !empty($foundPemenangBatch))
-                                    <div class="absolute z-[110] w-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden divide-y divide-slate-50 animate-in fade-in">
-                                        @foreach($foundPemenangBatch as $fp)
-                                        <button type="button" wire:click="selectPemenangBatch({{ $index }}, {{ $fp['id'] }}, '{{ $fp['nama'] }}')" class="w-full text-left p-3 hover:bg-emerald-50 transition-colors">
-                                            <p class="font-black text-slate-800 text-xs">{{ $fp['nama'] }}</p>
-                                        </button>
-                                        @endforeach
-                                    </div>
+        <!-- Table Desktop -->
+        <div class="hidden md:block bg-white rounded-[40px] shadow-xl border border-slate-100 overflow-hidden mb-8">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 border-b border-slate-100">
+                        <th class="py-5 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Barang</th>
+                        <th class="py-5 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Harga Jadi</th>
+                        <th class="py-5 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Pemenang</th>
+                        <th class="py-5 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
+                        <th class="py-5 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    @foreach($items as $item)
+                        <tr class="group hover:bg-slate-50/50 transition-all">
+                            <td class="py-4 px-8">
+                                <span class="block font-black text-slate-800 uppercase leading-tight">{{ $item->nama_barang }}</span>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Donatur: {{ $item->donatur_nama ?? 'Anonim' }}</span>
+                            </td>
+                            <td class="py-4 px-6 text-right font-mono font-black text-slate-900">
+                                Rp {{ number_format($item->harga_jadi, 0, ',', '.') }}
+                            </td>
+                            <td class="py-4 px-6">
+                                <span class="block font-bold text-slate-700 text-sm truncate max-w-[150px]">{{ $item->pemenang_nama }}</span>
+                                @if(!$item->pemenang_member_id)
+                                    <span class="text-[8px] font-black text-amber-500 uppercase tracking-widest">Pihak Luar</span>
+                                @endif
+                            </td>
+                            <td class="py-4 px-6 text-center">
+                                @if($item->is_lunas)
+                                    <span class="px-3 py-1 bg-emerald-100 text-emerald-600 rounded-full text-[9px] font-black uppercase tracking-widest">Lunas</span>
+                                @else
+                                    <span class="px-3 py-1 bg-amber-100 text-amber-600 rounded-full text-[9px] font-black uppercase tracking-widest text-nowrap">Sisa: Rp {{ number_format($item->sisa_piutang, 0, ',', '.') }}</span>
+                                @endif
+                            </td>
+                            <td class="py-4 px-8 text-right">
+                                <div class="flex justify-end gap-2">
+                                    <button wire:click="openHistoryModal({{ $item->id }})" class="p-2 text-slate-400 hover:text-primary transition-colors" title="Riwayat Bayar">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </button>
+                                    @if(!$item->is_lunas)
+                                    <button wire:click="openPaymentModal({{ $item->id }})" class="px-4 py-2 bg-emerald-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-md">
+                                        Bayar
+                                    </button>
                                     @endif
                                 </div>
-                                <div class="w-40 relative">
-                                    <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300">Rp</span>
-                                    <input wire:model="items_list.{{ $index }}.harga_jadi" type="tel" x-on:input="$el.value = formatRupiah($el.value)" class="w-full bg-slate-50 border-none rounded-xl p-3 pl-8 font-black text-right text-sm text-primary focus:ring-2 focus:ring-primary/10">
-                                </div>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-
-                    <div class="pt-6 flex gap-4">
-                        <button type="button" @click="showItem = false" class="flex-1 py-5 bg-slate-100 rounded-[28px] font-black text-[10px] uppercase text-slate-400 hover:bg-slate-200 transition-all">Batal</button>
-                        <button type="submit" class="flex-[2] py-5 bg-primary text-white rounded-[28px] font-black text-[10px] uppercase shadow-2xl hover:bg-blue-800 transition transform active:scale-95">SIMPAN NOTA LELANG</button>
-                    </div>
-                </form>
-            </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
+
+        <div class="mt-4">{{ $items->links() }}</div>
     </div>
 
-    <!-- MODAL 2: VERIFIKASI PEMBAYARAN (FIXED ERRORS) -->
-    <div x-show="showPayment" x-cloak class="fixed inset-0 z-[100] overflow-y-auto">
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showPayment = false"></div>
-        <div class="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4 text-center">
-            <div class="relative w-full max-w-lg bg-white rounded-t-[40px] sm:rounded-[40px] p-10 shadow-2xl overflow-hidden transition-all animate-in slide-in-from-bottom duration-300"
-                 x-data="{ 
-                    localNominal: @entangle('nominal_bayar'),
-                    init() { this.$watch('localNominal', v => { if(this.$refs.payInput) this.$refs.payInput.value = this.formatRupiah(v); }); }
-                 }">
-                <div class="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
-                <h3 class="text-3xl font-black text-slate-900 mb-2 italic uppercase tracking-tighter leading-none">Verifikasi Bayar</h3>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-10 border-b border-slate-50 pb-4">{{ $activeItemName }}</p>
-                
-                <form wire:submit="savePayment" class="space-y-8 text-left">
-                    <div class="text-center group">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-4 tracking-[0.2em]">Jumlah Fisik Uang</label>
+    <!-- Modal Form Tambah (Single/Batch) -->
+    @if($isModalOpen)
+    <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in transition-all">
+        <div class="bg-white w-full max-w-4xl rounded-t-[32px] sm:rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]">
+            <div class="p-6 sm:p-8 border-b border-slate-50 flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-black uppercase tracking-tight">Input Item Lelang</h2>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mendukung pemenang dari luar jemaat</p>
+                </div>
+                <button wire:click="$set('isModalOpen', false)" class="text-slate-300 hover:text-rose-500 transition-colors p-2"><svg class="w-6 h-6 sm:w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 sm:space-y-8 custom-scrollbar">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                    <div class="space-y-5 sm:space-y-6">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nama Barang Utama</label>
+                            <input wire:model="nama_barang" type="text" class="w-full bg-slate-50 border-none rounded-xl sm:rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary/20" placeholder="Contoh: Kain Tenun">
+                            @error('nama_barang') <span class="text-[10px] text-rose-500 font-bold ml-1 mt-1 block">{{ $message }}</span> @enderror
+                        </div>
                         <div class="relative">
-                            <span class="absolute left-8 top-1/2 -translate-y-1/2 text-3xl font-black text-emerald-200">Rp</span>
-                            <input x-ref="payInput" type="tel" x-on:input="localNominal = formatRupiah($el.value); $el.value = localNominal"
-                                class="w-full bg-emerald-50 border-none rounded-[32px] p-8 text-center text-4xl font-black text-emerald-700 focus:ring-4 focus:ring-emerald-200 shadow-inner transition-all">
-                        </div>
-                        @error('nominal_bayar') <span class="text-rose-500 text-[10px] font-bold mt-3 block uppercase animate-bounce italic">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div class="space-y-5 bg-slate-50 p-6 rounded-[32px] border border-slate-100">
-                        <div>
-                            <label class="block text-[10px] font-black text-primary uppercase ml-1 mb-2 tracking-widest">Target Pos Pelaporan (RAPB)</label>
-                            <select wire:model="ref_budget_post_id" class="w-full bg-white border border-slate-200 rounded-2xl p-4 font-black text-sm text-primary focus:ring-4 focus:ring-primary/10 appearance-none cursor-pointer">
-                                <option value="">-- Pilih Pos Anggaran --</option>
-                                @foreach($budgetPosts as $pos) <option value="{{ $pos->id }}">{{ $pos->kode }} - {{ $pos->nama }}</option> @endforeach
-                            </select>
-                            @error('ref_budget_post_id') <span class="text-rose-500 text-[9px] font-bold mt-1 block uppercase ml-1">{{ $message }}</span> @enderror
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Donatur</label>
+                            <input wire:model.live.debounce.300ms="searchDonatur" type="text" class="w-full bg-slate-50 border-none rounded-xl sm:rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 placeholder:text-slate-300" placeholder="Cari jemaat atau ketik nama pihak luar...">
+                            @if(!empty($foundDonatur))
+                                <div class="absolute z-50 w-full mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden divide-y">
+                                    @foreach($foundDonatur as $d)
+                                        <button wire:click="selectDonatur({{ $d->id }}, '{{ $d->churchPeople->full_name }}')" class="w-full text-left p-4 hover:bg-slate-50 transition-colors">
+                                            <p class="font-black text-slate-800 text-sm uppercase">{{ $d->churchPeople->full_name }}</p>
+                                            <p class="text-[9px] text-slate-400 font-bold">ANGGOTA JEMAAT</p>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
                         <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase ml-1 mb-2 tracking-widest">Dompet / Kas Utama</label>
-                            <select wire:model="ref_account_id" class="w-full bg-white border border-slate-200 rounded-2xl p-4 font-bold text-sm text-slate-700 appearance-none cursor-pointer">
-                                <option value="">-- Pilih Kas --</option>
-                                @foreach($accounts as $acc) <option value="{{ $acc->id }}">{{ $acc->nama }}</option> @endforeach
-                            </select>
-                            @error('ref_account_id') <span class="text-rose-500 text-[9px] font-bold mt-1 block uppercase ml-1">{{ $message }}</span> @enderror
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Jumlah Item (Batch)</label>
+                            <input wire:model.live="jumlah" type="number" class="w-full bg-slate-50 border-none rounded-xl sm:rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary/20">
+                            <p class="text-[9px] text-slate-400 mt-1 ml-1">Masukkan jumlah jika ingin input banyak pemenang untuk item sejenis.</p>
                         </div>
                     </div>
 
-                    <div class="pt-4 flex gap-4">
-                        <button type="button" @click="showPayment = false" class="flex-1 py-5 bg-slate-100 rounded-[28px] font-black text-[10px] uppercase text-slate-500 hover:bg-slate-200 transition-all">Batal</button>
-                        <button type="submit" wire:loading.attr="disabled" class="flex-[2] py-5 bg-emerald-500 text-white rounded-[28px] font-black text-[10px] uppercase shadow-2xl shadow-emerald-500/30 hover:bg-emerald-600 transition transform active:scale-95">
-                            <span wire:loading.remove>VERIFIKASI & SIMPAN</span>
-                            <span wire:loading>Memproses Jurnal...</span>
-                        </button>
+                    <div class="space-y-4">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Daftar Pemenang & Harga Jadi</label>
+                        <div class="space-y-3 max-h-[350px] lg:max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                            @foreach($items_list as $index => $item)
+                                <div class="p-4 bg-slate-50 rounded-2xl sm:rounded-3xl border border-slate-100 relative overflow-visible" wire:key="item-input-{{ $index }}">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="w-5 h-5 bg-slate-200 rounded-full flex items-center justify-center text-[9px] font-black text-slate-500">#{{ $index + 1 }}</span>
+                                        <span class="text-[9px] font-black text-slate-400 uppercase">Detail Item</span>
+                                    </div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div class="relative">
+                                            <input wire:model.live="items_list.{{ $index }}.pemenang_nama" 
+                                                   wire:keyup="searchMemberBatch({{ $index }}, $event.target.value)"
+                                                   type="text" class="w-full bg-white border-none rounded-xl p-3 text-[11px] font-bold shadow-sm" placeholder="Nama Pemenang (Ketik Bebas)">
+                                            
+                                            @if($activeSearchIndex === $index && !empty($foundPemenangBatch))
+                                                <div class="absolute z-50 w-full mt-1 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden divide-y">
+                                                    @foreach($foundPemenangBatch as $m)
+                                                        <button wire:click="selectPemenangBatch({{ $index }}, {{ $m['id'] }}, '{{ $m['church_people']['full_name'] }}')" class="w-full text-left p-3 hover:bg-slate-50 transition-colors">
+                                                            <p class="font-black text-slate-800 text-[10px] uppercase">{{ $m['church_people']['full_name'] }}</p>
+                                                        </button>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <div class="relative" x-data="{ localVal: @entangle('items_list.'.$index.'.harga_jadi') }">
+                                            <span class="absolute left-3 top-3 text-[10px] font-black text-slate-300">Rp</span>
+                                            <input x-model="localVal" 
+                                                   x-on:input="localVal = formatRupiah($event.target.value)"
+                                                   type="text" class="w-full bg-white border-none rounded-xl py-3 pl-8 pr-3 text-[11px] font-black shadow-sm text-right" placeholder="Harga">
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
-                </form>
+                </div>
+            </div>
+
+            <div class="p-6 sm:p-8 border-t border-slate-50 bg-slate-50/30 sticky bottom-0">
+                <button wire:click="save" wire:loading.attr="disabled" class="w-full py-4 sm:py-5 bg-slate-900 text-white rounded-2xl sm:rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-primary transition-all flex items-center justify-center gap-3 group">
+                    <span wire:loading.remove wire:target="save">Simpan Semua Item lelang</span>
+                    <span wire:loading wire:target="save" class="flex items-center gap-2">
+                        <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Memproses...
+                    </span>
+                </button>
             </div>
         </div>
     </div>
+    @endif
 
-    <!-- MODAL 3: AUDIT HISTORY (RIWAYAT CICILAN) -->
-    <div x-show="showHistory" x-cloak class="fixed inset-0 z-[100] overflow-y-auto">
-        <div class="fixed inset-0 bg-slate-900/90 backdrop-blur-md" @click="showHistory = false"></div>
-        <div class="flex min-h-full items-center justify-center p-4 text-center">
-            <div class="relative w-full max-w-2xl bg-white rounded-[40px] p-10 shadow-2xl text-left overflow-hidden">
-                <h3 class="text-2xl font-black text-slate-900 mb-6 italic uppercase tracking-tighter border-b border-slate-50 pb-4">Audit Cicilan: {{ $activeItemName }}</h3>
-                
-                <div class="overflow-hidden border border-slate-100 rounded-3xl bg-slate-50/50 mb-8">
-                    <table class="w-full text-left text-xs">
-                        <thead class="bg-white border-b border-slate-100 font-black text-slate-400 uppercase tracking-widest">
-                            <tr>
-                                <th class="px-6 py-4">Tanggal</th>
-                                <th class="px-6 py-4 text-right">Nominal</th>
-                                <th class="px-6 py-4">Akun Kas</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @forelse($paymentHistory as $pay)
-                            <tr class="hover:bg-white transition-colors">
-                                <td class="px-6 py-4 font-bold text-slate-600">{{ $pay->tanggal_bayar->format('d M Y') }}</td>
-                                <td class="px-6 py-4 font-black text-emerald-600 text-right">Rp {{ number_format($pay->nominal, 0, ',', '.') }}</td>
-                                <td class="px-6 py-4 font-bold text-slate-400 italic text-[10px] uppercase">{{ $pay->transaction->account->nama ?? '-' }}</td>
-                            </tr>
-                            @empty
-                            <tr><td colspan="3" class="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-[10px]">Belum ada riwayat pembayaran.</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+    <!-- Modal Bayar -->
+    @if($isPaymentModalOpen)
+    <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in zoom-in-95 transition-all">
+        <div class="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-[40px] shadow-2xl p-8 sm:p-10 relative">
+            <h2 class="text-2xl font-black uppercase tracking-tight mb-2">Terima Bayar</h2>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 border-l-4 border-emerald-500 pl-3">{{ $activeItemName }}</p>
+
+            <div class="space-y-6">
+                <div x-data="{ localNominal: @entangle('nominal_bayar') }">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nominal Setoran (Rp)</label>
+                    <div class="relative">
+                        <span class="absolute left-5 top-5 text-lg font-black text-slate-300">Rp</span>
+                        <input x-model="localNominal" 
+                               x-on:input="localNominal = formatRupiah($event.target.value)"
+                               type="text" class="w-full bg-slate-50 border-none rounded-2xl py-5 pl-12 pr-6 font-black text-2xl text-emerald-600 focus:ring-2 focus:ring-emerald-500/20 shadow-inner" placeholder="0">
+                    </div>
+                    @error('nominal_bayar') <span class="text-[10px] text-rose-500 font-bold ml-1 mt-1 block">{{ $message }}</span> @enderror
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Simpan Ke Kas</label>
+                    <div class="relative group">
+                        <select wire:model="ref_account_id" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 appearance-none">
+                            @foreach($accounts as $acc) <option value="{{ $acc->id }}">{{ $acc->nama }}</option> @endforeach
+                        </select>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </div>
+                    @error('ref_account_id') <span class="text-[10px] text-rose-500 font-bold ml-1 mt-1 block">Silakan pilih kas.</span> @enderror
                 </div>
                 
-                <button @click="showHistory = false" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl">Tutup Riwayat</button>
+                <div class="pt-2">
+                    <button wire:click="savePayment" wire:loading.attr="disabled" class="w-full py-5 bg-emerald-500 text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-emerald-600 transition-all flex items-center justify-center gap-3">
+                        <span wire:loading.remove wire:target="savePayment">Verifikasi Pembayaran</span>
+                        <span wire:loading wire:target="savePayment" class="flex items-center gap-2">
+                            <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            Memproses...
+                        </span>
+                    </button>
+                    <button wire:click="$set('isPaymentModalOpen', false)" class="w-full text-[10px] font-black text-slate-300 hover:text-slate-500 uppercase tracking-[0.2em] mt-4 transition-colors">Batal & Tutup</button>
+                </div>
             </div>
         </div>
     </div>
+    @endif
 </div>

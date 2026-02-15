@@ -1,7 +1,7 @@
 <div class="py-10 bg-gray-100 min-h-screen print:bg-white print:py-0">
     <div class="max-w-3xl mx-auto bg-white shadow-2xl rounded-[40px] overflow-hidden print:shadow-none print:rounded-none">
 
-        <!-- Action Bar (Hide on Print) -->
+        <!-- Action Bar -->
         <div class="px-10 py-6 bg-slate-900 flex justify-between items-center print:hidden">
             <a href="{{ route('finance.payroll') }}" class="text-white/60 hover:text-white flex items-center gap-2 font-bold text-sm">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,20 +66,12 @@
                             Penghasilan (Earnings)
                         </h4>
                         <div class="space-y-4">
-                            <div class="flex justify-between text-sm">
-                                <span class="font-medium text-slate-600">Gaji Pokok / Pemeliharaan</span>
-                                <span class="font-bold text-slate-900">Rp {{ number_format($payroll->gaji_pokok, 0, ',', '.') }}</span>
-                            </div>
-                            <div class="flex justify-between text-sm">
-                                <span class="font-medium text-slate-600">Tunjangan Perumahan</span>
-                                <span class="font-bold text-slate-900">Rp {{ number_format($payroll->tunjangan_perumahan, 0, ',', '.') }}</span>
-                            </div>
-                            @if($payroll->tunjangan_lain > 0)
-                            <div class="flex justify-between text-sm">
-                                <span class="font-medium text-slate-600">Tunjangan Lainnya</span>
-                                <span class="font-bold text-slate-900">Rp {{ number_format($payroll->tunjangan_lain, 0, ',', '.') }}</span>
-                            </div>
-                            @endif
+                            @foreach($payroll->items->where('jenis','penerimaan') as $item)
+                                <div class="flex justify-between text-sm">
+                                    <span class="font-medium text-slate-600">{{ $item->nama_snapshot }}</span>
+                                    <span class="font-bold text-slate-900">Rp {{ number_format($item->nominal_snapshot, 0, ',', '.') }}</span>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
 
@@ -90,10 +82,12 @@
                             Potongan (Deductions)
                         </h4>
                         <div class="space-y-4">
-                            <div class="flex justify-between text-sm">
-                                <span class="font-medium text-slate-600">Iuran Dana Pensiun</span>
-                                <span class="font-bold text-rose-600">- Rp {{ number_format($payroll->iuran_pensiun, 0, ',', '.') }}</span>
-                            </div>
+                            @foreach($payroll->items->where('jenis','potongan') as $item)
+                                <div class="flex justify-between text-sm">
+                                    <span class="font-medium text-slate-600">{{ $item->nama_snapshot }}</span>
+                                    <span class="font-bold text-rose-600">- Rp {{ number_format($item->nominal_snapshot, 0, ',', '.') }}</span>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>
@@ -102,7 +96,7 @@
             <!-- Net Total -->
             <div class="mt-4 p-8 bg-slate-50 rounded-[32px] border border-slate-100 flex justify-between items-center">
                 <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Total Diterima (Netto)</span>
-                <span class="text-3xl font-black text-slate-900 tracking-tighter">Rp {{ number_format($payroll->netto, 0, ',', '.') }}</span>
+                <span class="text-3xl font-black text-slate-900 tracking-tighter">Rp {{ number_format($payroll->take_home_pay, 0, ',', '.') }}</span>
             </div>
 
             <!-- Footer Signatures -->
@@ -112,7 +106,6 @@
                     <p class="font-bold text-slate-900 border-b border-slate-900 inline-block px-4">{{ $payroll->officer->member->nama }}</p>
                 </div>
 
-                <!-- Digital Validation -->
                 <div class="flex flex-col items-center">
                     <div class="w-20 h-20 bg-slate-50 border border-slate-100 p-2 rounded-xl mb-2 flex items-center justify-center opacity-60">
                         <svg class="w-full h-full text-slate-300" fill="currentColor" viewBox="0 0 24 24">
@@ -135,20 +128,9 @@
 
 <style>
     @media print {
-
-        nav,
-        .action-bar {
-            display: none !important;
-        }
-
-        body {
-            background-color: white !important;
-        }
-
-        .shadow-2xl {
-            box-shadow: none !important;
-        }
+        nav, .action-bar { display: none !important; }
+        body { background-color: white !important; }
+        .shadow-2xl { box-shadow: none !important; }
     }
 </style>
-
 </div>

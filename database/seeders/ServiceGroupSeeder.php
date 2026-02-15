@@ -2,56 +2,66 @@
 
 namespace Database\Seeders;
 
-use App\Models\ServiceGroup;
-use App\Models\ChurchOfficer;
-use App\Models\RefWilayah;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
+use App\Models\ChurchPeople;
+use Illuminate\Support\Facades\DB;
 
 class ServiceGroupSeeder extends Seeder
 {
-    /**
-     * Membuat 4 Kelompok Pelayanan dengan role default (PF & Pendamping).
-     */
-    public function run(): void
+    public function run()
     {
-        $officers = ChurchOfficer::active()->get();
+        DB::transaction(function () {
+            // Kita fokus ke Data Nama Orang saja dulu
+            // Struktur array disederhanakan (tanpa jabatan)
+            $dataPersonil = [
+                'Kelompok 1' => [
+                    'Yohanis Umbu Lele',
+                    'Margaretah Lende',
+                    'Margaretha Dairo Loru',
+                    'Selfiana Malo',
+                    'Darius Ama Kii',
+                ],
+                'Kelompok 2' => [
+                    'Pdt. Alponia Malo, S.Th',
+                    'Nikodemus D. Wella',
+                    'Mardiana Malo',
+                    'Afrance Nata',
+                    'Yuliana Bolu',
+                ],
+                'Kelompok 3' => [
+                    'Ningsi R. D. Mosa',
+                    'Melkianus R. Bulu',
+                    'Damianus Wunda Deke',
+                    'Vikaris',
+                    'Noviana T. Ina',
+                ],
+                'Kelompok 4' => [
+                    'Benyamin T. Dona',
+                    'Meriana D. Milla',
+                    'Yuliana Bulu',
+                    'Andi Nono',
+                    'Crhistina Bulu',
+                ],
+            ];
 
-        if ($officers->count() < 20) {
-            $this->command->warn("Peringatan: Jumlah pegawai aktif hanya {$officers->count()}.");
-        }
-
-        // Acak pegawai
-        $shuffledOfficers = $officers->shuffle();
-        $groupsChunks = $shuffledOfficers->chunk(5);
-        $wilayahs = RefWilayah::all();
-
-        $counter = 1;
-        foreach ($groupsChunks as $chunk) {
-            if ($counter > 4) break;
-
-            $group = ServiceGroup::create([
-                'uuid' => (string) Str::uuid(),
-                'nama_kelompok' => "Kelompok Pelayanan $counter",
-                'ref_wilayah_id' => $wilayahs->isNotEmpty() ? $wilayahs->random()->id : null,
-                'is_active' => true,
-            ]);
-
-            // UPDATE LOGIC: Set Peran Default
-            // Orang pertama di list jadi 'Pembaca Firman', sisanya 'Pendamping'
-            $isFirst = true;
-            foreach ($chunk as $officer) {
-                $peran = $isFirst ? 'Pembaca Firman' : 'Pendamping';
-                
-                $group->officers()->attach($officer->id, [
-                    'peran_default' => $peran
-                ]);
-                
-                $isFirst = false;
+            // Loop hanya untuk insert ke tabel church_people
+            foreach ($dataPersonil as $kelompok => $listNama) {
+                foreach ($listNama as $nama) {
+                    // Gunakan firstOrCreate agar tidak duplikat jika seeder dijalankan berulang
+                    ChurchPeople::firstOrCreate(
+                        ['full_name' => $nama], // Cek berdasarkan nama
+                        [
+                            'nik' => null, // NIK bisa dilengkapi nanti
+                            'gender' => 'L', // Default, bisa diedit nanti
+                            'place_of_birth' => 'Sumba',
+                            'date_of_birth' => '1980-01-01', // Tanggal lahir default
+                            'address' => 'Data Migrasi ' . $kelompok, // Penanda asal data
+                        ]
+                    );
+                    
+                    $this->command->info("Input Orang: $nama ($kelompok)");
+                }
             }
-
-            $this->command->info("Kelompok $counter: {$chunk->first()->member->nama} set sebagai PF Default.");
-            $counter++;
-        }
+        });
     }
 }

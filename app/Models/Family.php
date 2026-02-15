@@ -34,6 +34,10 @@ class Family extends Model
         return $this->hasMany(Member::class);
     }
 
+    public function wilayah(): BelongsTo
+    {
+        return $this->belongsTo(RefWilayah::class, 'wilayah_id');
+    }
     public function refWilayah(): BelongsTo
     {
         return $this->belongsTo(RefWilayah::class, 'wilayah_id');

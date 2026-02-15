@@ -1,95 +1,56 @@
-<div class="py-6 sm:py-12 bg-slate-50 min-h-screen" x-data="{ showModal: @entangle('isModalOpen').live, showBatch: @entangle('isBatchModalOpen').live, showAudit: @entangle('isAuditModalOpen').live }">
+<div class="py-6 sm:py-10 bg-slate-50 min-h-screen text-slate-900" x-data="{ showModal: @entangle('isModalOpen').live, showBatch: @entangle('isBatchModalOpen').live }">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- HEADER -->
+
+        <!-- HEADER & ACTIONS -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
             <div>
-                <h1 class="text-4xl font-black text-slate-900 tracking-tighter leading-none italic uppercase">PKS Scheduler</h1>
-                <p class="text-slate-500 mt-3 font-medium border-l-4 border-primary pl-4 uppercase text-[10px] tracking-widest leading-relaxed">
-                    Manajemen Keadilan Pelayanan & Jadwal Ibadah Rumah Tangga
-                </p>
+                <h1 class="text-4xl font-black text-slate-900 uppercase tracking-tighter leading-none">Penjadwalan PKS</h1>
+                <p class="text-slate-500 mt-2 font-medium text-xs uppercase tracking-[0.2em] border-l-4 border-primary pl-3">Manajemen Ibadah Sektor</p>
             </div>
             <div class="flex flex-wrap gap-3 w-full md:w-auto">
-                <a href="{{ route('schedules.pks.print', ['startDate' => $filterStartDate, 'endDate' => $filterEndDate, 'wilayah' => $filterWilayah]) }}"
-                    target="_blank"
-                    class="flex-1 md:flex-none px-6 py-4 bg-white border border-slate-200 text-slate-900 rounded-[24px] font-black text-xs shadow-sm hover:bg-slate-50 transition-all uppercase tracking-widest flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  <button onclick="window.open('{{ route('schedules.pks.print', ['startDate' => $filterStartDate, 'endDate' => $filterEndDate, 'wilayah' => $filterWilayah]) }}')" 
+                    class="flex-1 md:flex-none px-6 py-4 bg-white border border-slate-200 text-slate-900 rounded-3xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    Cetak Agenda
+                </button>
+                <button @click="showBatch = true" class="flex-1 md:flex-none px-6 py-4 bg-white border border-slate-200 text-slate-900 rounded-3xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 v2M7 7h10" />
                     </svg>
-                    CETAK JADWAL
-                </a>
-                <button wire:click="$set('isAuditModalOpen', true)" class="flex-1 md:flex-none px-6 py-4 bg-white border border-slate-200 text-slate-900 rounded-[24px] font-black text-xs shadow-sm hover:bg-slate-50 transition-all uppercase tracking-widest flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    Generator Massal
+                </button>
+                <button wire:click="create" class="flex-1 md:flex-none px-8 py-4 bg-slate-900 text-white rounded-3xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-slate-200 hover:scale-105 transition-all flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
-                    CEK ANTRIAN
+                    Tambah Manual
                 </button>
-                <button wire:click="$set('isBatchModalOpen', true)"
-                    class="flex-1 md:flex-none px-6 py-4 bg-emerald-600 text-white rounded-[24px] font-black text-xs shadow-xl shadow-emerald-500/20 hover:scale-105 transition-all uppercase tracking-widest">
-                    GENERATE WILAYAH
-                </button>
-                <button wire:click="create"
-                    class="flex-1 md:flex-none px-6 py-4 bg-slate-900 text-white rounded-[24px] font-black text-xs shadow-xl shadow-slate-500/20 hover:scale-105 transition-all uppercase tracking-widest">
-                    INPUT MANUAL
-                </button>
-            </div>
-        </div>
 
-        <!-- STATISTICS WIDGETS -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 text-center sm:text-left">
-            <div class="bg-white p-8 rounded-[40px] border border-slate-200 shadow-sm">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">Total Terjadwal</p>
-                <h3 class="text-3xl font-black text-slate-900 italic">{{ $stats['total'] }} <span class="text-xs font-bold text-slate-400 not-italic uppercase tracking-normal">Rumah</span></h3>
-            </div>
-            <div class="bg-white p-8 rounded-[40px] border border-slate-200 shadow-sm border-l-4 border-emerald-500">
-                <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1 leading-none">Sudah Terlaksana</p>
-                <h3 class="text-3xl font-black text-slate-900 italic">{{ $stats['terlaksana'] }} <span class="text-xs font-bold text-slate-400 not-italic">LOKASI</span></h3>
-            </div>
-            <div class="bg-white p-8 rounded-[40px] border border-slate-200 shadow-sm border-l-4 border-blue-500">
-                <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1 leading-none">Menunggu Rencana</p>
-                <h3 class="text-3xl font-black text-slate-900 italic">{{ $stats['rencana'] }} <span class="text-xs font-bold text-slate-400 not-italic">LOKASI</span></h3>
-            </div>
-            <div @click="showAudit = true" class="bg-rose-50 p-8 rounded-[40px] border border-rose-100 shadow-sm relative overflow-hidden group cursor-pointer hover:bg-rose-100 transition-all">
-                <p class="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1 leading-none">Belum Masuk Jadwal</p>
-                <h3 class="text-3xl font-black text-rose-600 italic">{{ $stats['belum_terjadwal'] }} <span class="text-xs font-bold text-rose-400 not-italic uppercase tracking-normal">Keluarga</span></h3>
-                <div class="absolute -right-4 -bottom-4 text-rose-200/30 group-hover:scale-110 transition-transform"><svg class="w-24 h-24" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                    </svg></div>
+
             </div>
         </div>
 
         <!-- FILTERS -->
-        <div class="bg-white rounded-[32px] p-4 shadow-sm border border-slate-100 mb-8 flex flex-col md:flex-row gap-4 items-end">
-            <div class="relative flex-1 w-full">
-                <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-4">Cari Tuan Rumah</label>
-                <input wire:model.live.debounce.300ms="search" type="text" class="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-2xl font-bold text-sm focus:ring-4 focus:ring-primary/5 transition-all" placeholder="Ketik nama...">
-                <svg class="absolute left-4 top-[58px] -translate-y-1/2 w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="3" />
-                </svg>
+        <div class="bg-white rounded-[40px] p-6 shadow-sm border border-slate-100 mb-8 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div class="md:col-span-1">
+                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Pencarian</label>
+                <input wire:model.live.debounce.300ms="search" type="text" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-sm focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Nama Tuan Rumah...">
             </div>
-            <div class="w-full md:w-48">
-                <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-4">Wilayah</label>
-                <select wire:model.live="filterWilayah" class="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 font-bold text-sm cursor-pointer appearance-none">
-                    <option value="">Semua</option>
+            <div>
+                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Wilayah</label>
+                <select wire:model.live="filterWilayah" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-sm">
+                    <option value="">Semua Wilayah</option>
                     @foreach($wilayahs as $w) <option value="{{ $w->id }}">{{ $w->nama }}</option> @endforeach
                 </select>
             </div>
-            <div class="w-full md:w-48">
-                <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-4">Status</label>
-                <select wire:model.live="filterStatus" class="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 font-bold text-sm cursor-pointer appearance-none">
-                    <option value="">Semua Status</option>
-                    <option value="rencana">📅 Rencana</option>
-                    <option value="terlaksana">✅ Terlaksana</option>
-                    <option value="batal">❌ Batal</option>
-                </select>
-            </div>
-            <div class="flex gap-2 w-full md:w-auto">
+            <div class="md:col-span-2 flex gap-3">
                 <div class="flex-1">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-4">Dari</label>
-                    <input wire:model.live="filterStartDate" type="date" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-xs">
+                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Dari Tanggal</label>
+                    <input wire:model.live="filterStartDate" type="date" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-sm">
                 </div>
                 <div class="flex-1">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-4">Sampai</label>
-                    <input wire:model.live="filterEndDate" type="date" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-xs">
+                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Sampai Tanggal</label>
+                    <input wire:model.live="filterEndDate" type="date" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-sm">
                 </div>
             </div>
         </div>
@@ -97,249 +58,187 @@
         <!-- GRID JADWAL -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             @forelse($schedules as $item)
-            <div class="bg-white rounded-[50px] p-10 border border-slate-200 shadow-sm hover:shadow-2xl transition-all duration-500 group flex flex-col relative overflow-hidden">
-                <div class="flex justify-between items-start mb-8 relative z-10">
-                    <div class="h-14 w-14 rounded-3xl bg-slate-900 text-white flex flex-col items-center justify-center shadow-xl group-hover:bg-primary transition-colors">
-                        <span class="text-xl font-black leading-none">{{ $item->tanggal->format('d') }}</span>
-                        <span class="text-[9px] font-bold uppercase tracking-tighter">{{ $item->tanggal->format('M') }}</span>
+            @php
+            $head = $item->family->members->sortBy('hubungan_keluarga_id')->first();
+            $hostName = $head->churchPeople->full_name ?? 'Keluarga';
+            @endphp
+            <div class="bg-white rounded-[45px] p-8 border border-slate-200/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group flex flex-col relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-6">
+                    <span class="px-3 py-1 bg-slate-100 rounded-full text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ \Carbon\Carbon::parse($item->jam_mulai)->format('H:i') }} WITA</span>
+                </div>
+
+                <div class="flex items-center gap-5 mb-8">
+                    <div class="h-16 w-16 bg-slate-900 text-white rounded-3xl flex flex-col items-center justify-center shadow-lg group-hover:bg-primary transition-colors">
+                        <span class="text-2xl font-black leading-none">{{ $item->tanggal->format('d') }}</span>
+                        <span class="text-[10px] font-bold uppercase tracking-widest">{{ $item->tanggal->format('M') }}</span>
                     </div>
-                    <div class="text-right">
-                        <span class="px-3 py-1 text-[9px] font-black uppercase rounded-full border {{ $item->status == 'terlaksana' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : ($item->status == 'rencana' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-rose-50 text-rose-600 border-rose-100') }}">
-                            {{ $item->status }}
-                        </span>
-                        <p class="text-[10px] font-black text-slate-400 mt-2 uppercase tracking-widest">{{ $item->family->refWilayah->nama ?? '-' }}</p>
+                    <div>
+                        <h3 class="text-xl font-black text-slate-900 leading-tight uppercase truncate w-40">{{ $hostName }}</h3>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 flex items-center gap-1">
+                            <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            </svg>
+                            {{ $item->family->wilayah->nama ?? '-' }}
+                        </p>
                     </div>
                 </div>
 
-                <div class="mb-10 relative z-10 flex-1">
-                    <p class="text-[9px] font-black text-primary uppercase tracking-[0.2em] mb-1 leading-none">Tuan Rumah:</p>
-                    <h3 class="text-2xl font-black text-slate-900 leading-tight uppercase italic mb-4">{{ $item->family->kepala_keluarga ?? '-' }}</h3>
-
-                    <div class="bg-slate-50 p-5 rounded-[32px] border border-slate-100/50">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center text-[8px] font-black shadow-lg">PF</div>
-                            <p class="text-xs font-bold text-slate-700 truncate">{{ $item->servants->where('peran', 'Pembaca Firman')->first()->member->nama ?? 'Belum Ada' }}</p>
-                        </div>
-
-                        @if($item->tema)
-                        <div class="mb-4">
-                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Tema Firman:</p>
-                            <p class="text-xs font-bold text-primary italic leading-snug">"{{ $item->tema }}"</p>
-                        </div>
-                        @endif
-
-                        <div class="flex -space-x-2 pl-1">
-                            @foreach($item->servants->where('peran', 'Pendamping')->take(5) as $p)
-                            <div class="w-7 h-7 rounded-full bg-white border-2 border-slate-100 flex items-center justify-center text-[8px] font-black text-slate-400 uppercase shadow-sm" title="{{ $p->member->nama }}">
-                                {{ substr($p->member->nama, 0, 1) }}
-                            </div>
-                            @endforeach
-                        </div>
+                <div class="bg-slate-50 rounded-[30px] p-5 border border-slate-100 mb-6 space-y-3">
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Tema / Firman:</p>
+                        <p class="text-xs font-bold text-slate-700 italic">"{{ $item->tema }}"</p>
+                    </div>
+                    <div class="flex items-center gap-3 pt-3 border-t border-slate-200/50">
+                        <div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-[10px] font-black text-primary">PF</div>
+                        <p class="text-xs font-bold text-slate-800 truncate">{{ $item->servants->where('peran', 'Pembaca Firman')->first()->member->churchPeople->full_name ?? '-' }}</p>
                     </div>
                 </div>
 
-                <div class="mt-auto pt-8 border-t border-slate-100 relative z-10 flex justify-between items-end">
-                    <div class="flex gap-2">
-                        <button wire:click="delete({{ $item->id }})" wire:confirm="Hapus jadwal ini?" class="p-4 bg-rose-50 text-rose-400 rounded-3xl hover:bg-rose-500 hover:text-white transition-all shadow-sm">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                        </button>
-                        <a href="{{ route('schedules.servants', $item) }}" class="p-4 bg-slate-900 text-white rounded-3xl hover:bg-primary transition-all shadow-xl">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
-                        </a>
-                    </div>
+                <div class="mt-auto pt-4 flex justify-between items-center">
+
+                    <button wire:click="delete({{ $item->id }})" wire:confirm="Hapus jadwal ini?" class="p-3 text-rose-300 hover:text-rose-500 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
                 </div>
             </div>
             @empty
-            <div class="col-span-full py-40 text-center bg-white rounded-[50px] border-2 border-dashed border-slate-200">
-                <p class="text-slate-400 font-black uppercase text-xs tracking-widest italic animate-pulse">Belum ada jadwal ibadah yang sesuai filter.</p>
-            </div>
+            <div class="col-span-full py-20 text-center bg-white rounded-[40px] border border-dashed border-slate-200 text-slate-400 font-bold uppercase tracking-widest text-xs">Belum ada jadwal.</div>
             @endforelse
         </div>
 
-        <div class="mt-12">{{ $schedules->links() }}</div>
+        <div class="mt-10">{{ $schedules->links() }}</div>
     </div>
 
-    <!-- MODAL AUDIT ANTRIAN -->
-    <div x-show="showAudit" x-cloak class="fixed inset-0 z-[100] overflow-y-auto">
-        <div class="fixed inset-0 bg-slate-900/90 backdrop-blur-md" @click="showAudit = false"></div>
-        <div class="flex min-h-full items-center justify-center p-4">
-            <div class="relative w-full max-w-3xl bg-white rounded-[50px] p-10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                <div class="absolute top-0 left-0 w-full h-1.5 bg-rose-500"></div>
+    <!-- MODAL INPUT MANUAL -->
+    <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" @click="showModal = false"></div>
+        <div class="relative bg-white w-full max-w-xl rounded-[50px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div class="absolute top-0 left-0 w-full h-2 bg-primary"></div>
+            <div class="p-10">
+                <h2 class="text-2xl font-black uppercase tracking-tight mb-8">Input Jadwal PKS</h2>
 
-                <h3 class="text-2xl font-black text-slate-900 mb-2 italic uppercase tracking-tighter leading-none">Daftar Antrian Pelayanan</h3>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8 border-b border-slate-50 pb-4">
-                    KK yang belum dijadwalkan antara {{ \Carbon\Carbon::parse($filterStartDate)->format('d M') }} - {{ \Carbon\Carbon::parse($filterEndDate)->format('d M Y') }}
-                </p>
+                @if($clashWarning)
+                <div class="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-3xl flex items-start gap-3 animate-in fade-in shadow-sm border-l-4 border-l-rose-500">
+                    <svg class="w-6 h-6 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <p class="text-xs font-bold text-rose-800 leading-snug">{{ $clashWarning }}</p>
+                    </div>
+                </div>
+                @endif
 
-                <div class="max-h-[400px] overflow-y-auto pr-4 custom-scrollbar">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        @forelse($unscheduledList as $un)
-                        <div class="p-4 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between group hover:bg-rose-50 transition-colors">
-                            <div>
-                                <p class="font-black text-slate-800 text-sm uppercase italic leading-none mb-1">{{ $un->kepala_keluarga }}</p>
-                                <p class="text-[9px] font-bold text-slate-400 uppercase">{{ $un->refWilayah->nama ?? '-' }}</p>
-                            </div>
-                            <button wire:click="selectFamily({{ $un->id }}, '{{ $un->kepala_keluarga }}', '{{ $un->nomor_kk }}')" @click="showAudit = false; showModal = true" class="p-3 bg-white rounded-2xl text-slate-300 hover:text-primary shadow-sm border border-slate-100 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
-                                </svg>
+                <div class="space-y-6">
+                    <div class="relative">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Pilih Tuan Rumah</label>
+                        @if($selectedFamilyLabel)
+                        <div class="flex justify-between items-center bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                            <span class="font-black text-blue-900 text-sm truncate mr-2">{{ $selectedFamilyLabel }}</span>
+                            <button wire:click="$set('selectedFamilyLabel', null)" class="text-[10px] font-black text-rose-500 uppercase hover:underline">Ganti</button>
+                        </div>
+                        @else
+                        <input wire:model.live.debounce.300ms="searchFamily" type="text" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary/20" placeholder="Ketik nama keluarga / No KK...">
+                        @if(!empty($foundFamilies))
+                        <div class="absolute z-10 w-full mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+                            @foreach($foundFamilies as $f)
+                            <button wire:click="selectFamily({{ $f->id }}, '{{ $f->members->sortBy('hubungan_keluarga_id')->first()->churchPeople->full_name ?? 'Keluarga' }}')" class="w-full text-left p-4 hover:bg-slate-50 border-b border-slate-50 last:border-0 transition-colors">
+                                <p class="font-black text-slate-800 text-sm uppercase">{{ $f->members->sortBy('hubungan_keluarga_id')->first()->churchPeople->full_name ?? 'Keluarga' }}</p>
+                                <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">KK: {{ $f->nomor_kk }} • {{ $f->wilayah->nama }}</p>
                             </button>
+                            @endforeach
                         </div>
-                        @empty
-                        <div class="col-span-2 py-20 text-center">
-                            <p class="text-slate-300 font-black uppercase text-xs italic tracking-widest">Luar biasa! Semua KK sudah masuk dalam jadwal.</p>
-                        </div>
-                        @endforelse
-                    </div>
-                </div>
-
-                <div class="mt-8 pt-6 border-t border-slate-50 text-center">
-                    <button @click="showAudit = false" class="px-10 py-3 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl active:scale-95 transition-transform">Selesai</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL GENERATOR WILAYAH -->
-    <div x-show="showBatch" x-cloak class="fixed inset-0 z-[100] overflow-y-auto">
-        <div class="fixed inset-0 bg-emerald-900/90 backdrop-blur-md" @click="showBatch = false"></div>
-        <div class="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
-            <div class="relative w-full max-w-lg bg-white rounded-t-[50px] sm:rounded-[50px] p-10 shadow-2xl transition-all overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-1.5 bg-emerald-500 shadow-lg shadow-emerald-500/50"></div>
-
-                <h3 class="text-3xl font-black text-slate-900 mb-2 italic uppercase tracking-tighter leading-none">Generator Wilayah</h3>
-                <p class="text-xs font-bold text-emerald-600 mb-10 uppercase tracking-widest border-b border-slate-50 pb-4">Membuat jadwal rutin mingguan per Wilayah</p>
-
-                <form wire:submit="generateBatch" class="space-y-6 text-left">
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Pilih Wilayah</label>
-                        <select wire:model="batch_wilayah_id" class="w-full bg-slate-50 border-none rounded-2xl p-5 font-black text-slate-700 shadow-inner">
-                            <option value="">-- Pilih Wilayah --</option>
-                            @foreach($wilayahs as $w) <option value="{{ $w->id }}">{{ $w->nama }}</option> @endforeach
-                        </select>
-                        @error('batch_wilayah_id') <span class="text-rose-600 text-[10px] font-bold mt-1 block">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Pilih Kelompok Pelayanan</label>
-                        <select wire:model="batch_group_id" class="w-full bg-slate-50 border-none rounded-2xl p-5 font-black text-slate-700 shadow-inner">
-                            <option value="">-- Pilih Kelompok --</option>
-                            @foreach($groups as $g) <option value="{{ $g->id }}">{{ $g->nama_kelompok }}</option> @endforeach
-                        </select>
-                        @error('batch_group_id') <span class="text-rose-600 text-[10px] font-bold mt-1 block">{{ $message }}</span> @enderror
+                        @endif
+                        @endif
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Mulai Tanggal</label>
-                            <input wire:model="batch_start_date" type="date" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold shadow-inner">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Jam Ibadah</label>
-                            <input wire:model="batch_time" type="time" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold shadow-inner">
-                        </div>
-                    </div>
-
-                    <div class="pt-6 flex gap-4">
-                        <button type="button" @click="showBatch = false" class="flex-1 py-5 bg-slate-100 rounded-[24px] font-black text-[10px] uppercase text-slate-400">Batal</button>
-                        <button type="submit" class="flex-[2] py-5 bg-emerald-600 text-white rounded-[24px] font-black text-[10px] uppercase shadow-2xl hover:bg-emerald-700 transition transform active:scale-95">Mulai Generator</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL MANUAL INPUT -->
-    <div x-show="showModal" x-cloak class="fixed inset-0 z-[100] overflow-y-auto">
-        <div class="fixed inset-0 bg-slate-900/90 backdrop-blur-md" @click="showModal = false"></div>
-        <div class="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4 text-center">
-            <div class="relative w-full max-w-2xl bg-white rounded-t-[40px] sm:rounded-[40px] p-10 shadow-2xl text-left overflow-hidden transition-all animate-in slide-in-from-bottom duration-300">
-                <div class="absolute top-0 left-0 w-full h-1.5 bg-primary"></div>
-                <h3 class="text-3xl font-black text-slate-900 mb-8 italic uppercase tracking-tighter leading-none">Input Manual PKS</h3>
-
-                <form wire:submit="save" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <!-- TUAN RUMAH -->
-                        <div class="relative" x-data="{ open: false }">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tuan Rumah (KK)</label>
-                            @if($selectedFamilyLabel)
-                            <div class="p-5 bg-blue-50 border border-blue-100 rounded-3xl flex justify-between items-center animate-in zoom-in-95">
-                                <span class="font-black text-slate-800 text-sm truncate mr-2">{{ $selectedFamilyLabel }}</span>
-                                <button type="button" wire:click="$set('selectedFamilyLabel', null)" class="text-[9px] font-black text-primary uppercase underline">Ganti</button>
-                            </div>
-                            @else
-                            <input wire:model.live.debounce.300ms="searchFamily" @focus="open = true" x-on:click.away="open = false" type="text" class="w-full bg-slate-50 border-none rounded-3xl p-5 font-bold focus:ring-4 focus:ring-primary/5 shadow-inner" placeholder="Ketik nama KK...">
-                            @if(count($foundFamilies) > 0)
-                            <div x-show="open" class="absolute z-50 w-full mt-2 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden divide-y divide-slate-50">
-                                @foreach($foundFamilies as $f)
-                                <button type="button" wire:mousedown.prevent="selectFamily({{ $f['id'] }}, '{{ $f['kepala_keluarga'] }}', '{{ $f['nomor_kk'] }}')" @click="open = false" class="w-full text-left p-4 hover:bg-blue-50 transition-colors">
-                                    <p class="font-black text-slate-900 text-sm uppercase leading-none">{{ $f['kepala_keluarga'] }}</p>
-                                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">KK: {{ $f['nomor_kk'] }}</p>
-                                </button>
-                                @endforeach
-                            </div>
-                            @endif
-                            @endif
-                            @error('family_id') <span class="text-rose-600 text-[10px] font-bold mt-1 block ml-2">{{ $message }}</span> @enderror
-                        </div>
-
-                        <!-- KELOMPOK TIM -->
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Pilih Kelompok Tim</label>
-                            <select wire:model.live="service_group_id" class="w-full bg-slate-50 border-none rounded-3xl p-5 font-black shadow-inner appearance-none cursor-pointer">
-                                <option value="">-- Gunakan Kelompok --</option>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Gunakan Kelompok</label>
+                            <select wire:model.live="service_group_id" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900">
+                                <option value="">-- Pilih Kelompok --</option>
                                 @foreach($groups as $g) <option value="{{ $g->id }}">{{ $g->nama_kelompok }}</option> @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Tema Ibadah</label>
+                            <input wire:model="tema" type="text" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900" placeholder="Cth: Keluarga Beriman">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Tanggal & Jam</label>
+                            <div class="flex gap-2">
+                                <input wire:model.live="tanggal" type="date" class="flex-[2] bg-slate-50 border-none rounded-2xl p-4 font-bold text-sm">
+                                <input wire:model="jam_mulai" type="time" class="flex-1 bg-slate-50 border-none rounded-2xl p-4 font-bold text-sm">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Pelayan Firman</label>
+                            <select wire:model.live="selected_pf_id" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900">
+                                <option value="">-- Pilih PF --</option>
+                                @foreach($staffList as $s) <option value="{{ $s->member_id }}">{{ $s->member->churchPeople->full_name }}</option> @endforeach
                             </select>
                         </div>
                     </div>
 
-                    <!-- TEMA / FIRMAN TUHAN -->
+                    <button wire:click="save" wire:loading.attr="disabled" {{ $clashWarning ? 'disabled' : '' }} class="w-full py-5 bg-slate-900 text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-primary transition-all mt-4 disabled:bg-slate-300 disabled:cursor-not-allowed">
+                        <span wire:loading.remove wire:target="save">Simpan Jadwal</span>
+                        <span wire:loading wire:target="save">Memproses...</span>
+                    </button>
+                    @if($clashWarning) <p class="text-[9px] text-center font-black text-rose-500 uppercase mt-2 italic">Tombol dikunci karena ada jadwal bentrok.</p> @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GENERATOR MASSAL (BATCH) -->
+    <div x-show="showBatch" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" @click="showBatch = false"></div>
+        <div class="relative bg-white w-full max-w-lg rounded-[50px] shadow-2xl p-10 overflow-hidden animate-in zoom-in-95">
+            <div class="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
+            <h2 class="text-2xl font-black uppercase tracking-tight mb-8 text-emerald-600">Generator Massal</h2>
+
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Target Wilayah</label>
+                    <select wire:model="batch_wilayah_id" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 appearance-none">
+                        <option value="">-- Pilih Wilayah --</option>
+                        @foreach($wilayahs as $w) <option value="{{ $w->id }}">{{ $w->nama }}</option> @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Kelompok Pelayan</label>
+                    <select wire:model="batch_group_id" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 appearance-none">
+                        <option value="">-- Pilih Tim --</option>
+                        @foreach($groups as $g) <option value="{{ $g->id }}">{{ $g->nama_kelompok }}</option> @endforeach
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tema Ibadah / Firman Tuhan</label>
-                        <input wire:model="tema" type="text" class="w-full bg-slate-50 border-none rounded-3xl p-5 font-bold shadow-inner focus:ring-4 focus:ring-primary/5 transition-all" placeholder="Contoh: Keluarga Yang Diberkati Untuk Memberkati">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Tanggal Mulai</label>
+                        <input wire:model="batch_start_date" type="date" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-sm">
                     </div>
-
-                    <div class="grid grid-cols-2 gap-8">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tanggal</label>
-                            <input wire:model="tanggal" type="date" class="w-full bg-slate-50 border-none rounded-3xl p-5 font-bold shadow-inner">
-                            @error('tanggal') <span class="text-rose-600 text-[10px] font-bold mt-1 block ml-2">{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Jam Mulai</label>
-                            <input wire:model="jam_mulai" type="time" class="w-full bg-slate-50 border-none rounded-3xl p-5 font-bold shadow-inner">
-                        </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Jam Ibadah</label>
+                        <input wire:model="batch_time" type="time" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-sm">
                     </div>
+                </div>
 
-                    <!-- PELAYAN FIRMAN (AUTO FILLED FROM GROUP) -->
-                    <div class="bg-slate-900 rounded-[32px] p-8 text-white relative overflow-hidden group">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Penugasan Utama (Pelayan Firman)</label>
-                        <select wire:model="selected_pf_id" class="w-full bg-white/10 border-none rounded-2xl p-4 font-black text-sm text-white focus:ring-2 focus:ring-primary appearance-none cursor-pointer">
-                            <option value="">-- Pilih PF --</option>
-                            @foreach($staffList as $staff) <option value="{{ $staff->member_id }}">{{ $staff->member->nama }} ({{ $staff->position->nama }})</option> @endforeach
-                        </select>
-                        <p class="mt-4 text-[9px] font-bold text-amber-400 uppercase italic">* Pelayan Firman terisi otomatis jika kelompok dipilih.</p>
-                        @error('selected_pf_id') <span class="text-rose-400 text-[10px] font-bold mt-2 block">{{ $message }}</span> @enderror
+                <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                    <p class="text-[10px] text-emerald-700 font-bold leading-snug">
+                        Sistem akan otomatis menjadwalkan keluarga di wilayah ini satu per satu setiap minggu. Keluarga yang baru saja melayani (< 2 bulan) akan dilewati secara otomatis.
+                            </p>
+                </div>
 
-                        <div class="absolute right-[-20px] bottom-[-20px] opacity-10 rotate-12 group-hover:scale-110 transition-transform duration-500">
-                            <svg class="w-32 h-32 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9 4.804A7.993 7.993 0 002 12a7.998 7.998 0 003 6.31V15c0-1.105.895-2 2-2h6c1.105 0 2 .895 2 2v3.31A7.998 7.998 0 0018 12a7.993 7.993 0 00-7-7.196V4a1 1 0 00-2 0v.804z"></path>
-                            </svg>
-                        </div>
-                    </div>
-
-                    <div class="pt-6 flex gap-4">
-                        <button type="button" @click="showModal = false" class="flex-1 py-5 bg-slate-100 rounded-[28px] font-black text-[10px] uppercase text-slate-400 hover:bg-slate-200 transition-all">Batal</button>
-                        <button type="submit" class="flex-[2] py-5 bg-primary text-white rounded-[28px] font-black text-[10px] uppercase shadow-2xl hover:bg-blue-800 transition transform active:scale-95 shadow-blue-500/30">
-                            <span wire:loading.remove>Simpan Jadwal</span>
-                            <span wire:loading>Memproses...</span>
-                        </button>
-                    </div>
-                </form>
+                <button wire:click="generateBatch" wire:loading.attr="disabled" class="w-full py-5 bg-emerald-600 text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-emerald-700 transition-all mt-4">
+                    <span wire:loading.remove wire:target="generateBatch">Mulai Generate</span>
+                    <span wire:loading wire:target="generateBatch">Memproses...</span>
+                </button>
             </div>
         </div>
     </div>

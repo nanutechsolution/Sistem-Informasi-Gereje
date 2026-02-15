@@ -1,203 +1,177 @@
-<div class="py-6 sm:py-12 bg-slate-50 min-h-screen">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="py-6 sm:py-12 bg-slate-50 min-h-screen text-slate-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
 
-        <div class="mb-10">
-            <h1 class="text-3xl font-black text-slate-900 tracking-tight leading-none uppercase">Tambah Personil</h1>
-            <p class="text-slate-500 mt-2 font-medium">Registrasi pegawai dengan struktur gaji fleksibel.</p>
+        <div class="mb-8">
+            <a href="{{ route('officers.index') }}" class="text-xs font-bold text-slate-400 hover:text-primary flex items-center gap-2 mb-2 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M15 19l-7-7 7-7" />
+                </svg> Kembali
+            </a>
+            <h1 class="text-3xl font-black text-slate-900 uppercase tracking-tight">Daftarkan Pejabat</h1>
+            <p class="text-slate-500 mt-2 font-medium">Input data kepegawaian dan rincian anggaran gaji.</p>
         </div>
 
-        <form wire:submit="save" class="space-y-8"
-            x-data="{ 
-                  formatRupiah(value) { return value.toString().replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); } 
-              }">
+        <form wire:submit="save" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-white rounded-[32px] p-6 sm:p-10 shadow-xl border border-slate-100 relative overflow-visible">
+                    <div class="absolute top-0 left-0 w-full h-1.5 bg-primary rounded-t-[32px]"></div>
 
-            <!-- SECTION 1: PILIH JEMAAT -->
-            <div class="bg-white rounded-[40px] p-8 border border-slate-200/60 shadow-sm relative overflow-visible">
-                <div class="absolute -top-4 left-8 bg-slate-900 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Langkah 1: Identitas</div>
+                    <div class="space-y-8">
+                        <!-- Cari Jemaat -->
+                        <div class="relative">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Pilih Jemaat</label>
+                            @if($selectedMemberName)
+                            <div class="flex justify-between items-center bg-blue-50 p-5 rounded-2xl border border-blue-100 animate-in zoom-in-95">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 font-black text-sm">
+                                        {{ substr($selectedMemberName, 0, 1) }}
+                                    </div>
+                                    <span class="font-bold text-blue-900">{{ $selectedMemberName }}</span>
+                                </div>
+                                <button type="button" wire:click="$set('selectedMemberName', '')" class="text-[10px] text-rose-500 font-black uppercase hover:underline">Ganti</button>
+                            </div>
+                            @else
+                            <div class="relative">
+                                <input wire:model.live.debounce.300ms="searchMember" type="text" placeholder="Ketik Nama atau NIK..." class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 transition-all">
+                                <div class="absolute right-4 top-4 text-slate-300" wire:loading wire:target="searchMember">
+                                    <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            @if(!empty($searchResults))
+                            <div class="absolute z-20 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden divide-y divide-slate-50">
+                                @foreach($searchResults as $m)
+                                <button type="button" wire:click="selectMember({{ $m->id }}, '{{ $m->churchPeople->full_name }}')" class="w-full text-left p-4 hover:bg-slate-50 transition-colors group">
+                                    <span class="block font-black text-slate-700 group-hover:text-primary">{{ $m->churchPeople->full_name }}</span>
+                                    <span class="text-[10px] text-slate-400 font-mono tracking-wider uppercase">{{ $m->churchPeople->nik ?? 'TANPA NIK' }}</span>
+                                </button>
+                                @endforeach
+                            </div>
+                            @endif
+                            @endif
+                            @error('member_id') <span class="text-rose-500 text-[10px] font-bold mt-2 block ml-1">{{ $message }}</span> @enderror
+                        </div>
 
-                <div class="relative mt-4">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">Cari Nama Anggota</label>
-                    <input wire:model.live.debounce.300ms="searchMember" type="text"
-                        class="w-full bg-slate-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-primary/10 placeholder:text-slate-300 transition-all"
-                        placeholder="Ketik minimal 3 huruf...">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Jabatan Struktural</label>
+                                <select wire:model="ref_position_id" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 appearance-none transition-all cursor-pointer">
+                                    <option value="">Pilih Jabatan...</option>
+                                    @foreach($positions as $pos) <option value="{{ $pos->id }}">{{ $pos->nama }}</option> @endforeach
+                                </select>
+                                @error('ref_position_id') <span class="text-rose-500 text-[10px] font-bold mt-2 block ml-1">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">NIP Gereja (Opsional)</label>
+                                <input wire:model="nip_gereja" type="text" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 transition-all">
+                            </div>
+                        </div>
 
-                    @if($selectedMemberName)
-                    <div class="mt-3 p-4 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-2xl font-bold flex justify-between items-center animate-in fade-in slide-in-from-top-2">
-                        <span class="flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                            </svg>
-                            {{ $selectedMemberName }}
-                        </span>
-                        <button type="button" wire:click="$set('selectedMemberName', '')" class="text-[9px] uppercase font-black tracking-widest hover:underline text-rose-500">Ganti</button>
+                        <div class="grid grid-cols-2 gap-6 border-t border-slate-50 pt-8">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Mulai Tugas</label>
+                                <input wire:model="tanggal_mulai" type="date" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Status Kepegawaian</label>
+                                <select wire:model="status_kepegawaian" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 appearance-none transition-all cursor-pointer">
+                                    <option value="organik">Organik</option>
+                                    <option value="majelis">Majelis</option>
+                                    <option value="vicaris">Vicaris</option>
+                                    <option value="non_organik">Non Organik</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    @endif
+                </div>
+            </div>
 
-                    @if(!empty($foundMembers))
-                    <div class="absolute z-50 w-full mt-2 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden divide-y divide-slate-50 max-h-60 overflow-y-auto">
-                        @foreach($foundMembers as $m)
-                        <button type="button" wire:click="selectMember({{ $m->id }}, '{{ $m->nama }}')" class="w-full text-left p-5 hover:bg-blue-50 transition-colors group">
-                            <p class="font-black text-slate-900 group-hover:text-primary">{{ $m->nama }}</p>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase">{{ $m->nik }} • {{ $m->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan' }}</p>
+            <!-- STRUKTUR GAJI -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-white rounded-[32px] p-6 shadow-xl border border-slate-100 flex flex-col h-full min-h-[500px]">
+                    <div class="flex justify-between items-center mb-6 px-1">
+                        <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Struktur Gaji</h3>
+                        <button type="button" wire:click="addComponent" class="p-2 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors shadow-sm">
+                            <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
                         </button>
+                    </div>
+
+                    <div class="flex-1 space-y-4 max-h-[450px] overflow-y-auto pr-1 custom-scrollbar">
+                        @foreach($components as $index => $comp)
+                        <div class="p-4 bg-slate-50 rounded-[24px] border border-slate-100 relative group animate-in slide-in-from-right" wire:key="comp-{{ $index }}">
+                            <button type="button" wire:click="removeComponent({{ $index }})" class="absolute -top-2 -right-2 w-7 h-7 bg-white shadow-md rounded-full flex items-center justify-center text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all border border-slate-100 z-10">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Jenis Komponen</label>
+                                    <select wire:model.live="components.{{ $index }}.ref_salary_component_id" class="w-full bg-white border-none rounded-xl text-xs font-black text-slate-700 focus:ring-2 focus:ring-primary/10 appearance-none">
+                                        <option value="">-- Pilih --</option>
+                                        @foreach($refSalaryComponents as $ref)
+                                        <option value="{{ $ref->id }}">{{ $ref->nama }} ({{ $ref->jenis == 'penerimaan' ? '+' : '-' }})</option>
+                                        @endforeach
+                                    </select>
+                                    @error("components.$index.ref_salary_component_id") <span class="text-rose-500 text-[8px] font-bold mt-1 block">Wajib dipilih</span> @enderror
+                                </div>
+
+                                <div>
+                                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Pos Anggaran (RAPB)</label>
+                                    <select wire:model.live="components.{{ $index }}.ref_budget_post_id" class="w-full bg-white border-none rounded-xl text-xs font-black text-slate-700 focus:ring-2 focus:ring-primary/10 appearance-none">
+                                        <option value="">-- Pilih Pos --</option>
+                                        @foreach($budgetPosts as $bp)
+                                        <option value="{{ $bp->id }}">{{ $bp->kode }} - {{ $bp->nama }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error("components.$index.ref_budget_post_id") <span class="text-rose-500 text-[8px] font-bold mt-1 block">Pos anggaran wajib</span> @enderror
+                                </div>
+
+                                <div>
+                                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Nominal (Rp)</label>
+                                    <input type="number" wire:model.live="components.{{ $index }}.nominal" class="w-full bg-white border-none rounded-xl py-2 px-3 text-sm font-mono font-bold text-right text-slate-800 focus:ring-2 focus:ring-primary/10 shadow-inner">
+                                </div>
+                            </div>
+                        </div>
                         @endforeach
                     </div>
-                    @endif
-                    @error('member_id') <span class="text-rose-500 text-[10px] font-bold mt-2 block ml-2 uppercase tracking-widest">{{ $message }}</span> @enderror
-                </div>
-            </div>
 
-            <!-- SECTION 2: PENUGASAN -->
-            <div class="bg-white rounded-[40px] p-8 border border-slate-200/60 shadow-sm relative">
-                <div class="absolute -top-4 left-8 bg-blue-600 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Langkah 2: Penugasan</div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Jabatan Struktur</label>
-                        <select wire:model="ref_position_id" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold focus:ring-2 focus:ring-primary/20 cursor-pointer transition-all">
-                            <option value="">-- Pilih --</option>
-                            @foreach($positions as $pos) <option value="{{ $pos->id }}">{{ $pos->nama }}</option> @endforeach
-                        </select>
-                        @error('ref_position_id') <span class="text-rose-500 text-[10px] font-bold mt-1 block">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Status Kepegawaian</label>
-                        <select wire:model="status_kepegawaian" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold cursor-pointer">
-                            <option value="organik">Organik GKS</option>
-                            <option value="vicaris">Vicaris</option>
-                            <option value="majelis">Majelis (PHJ/PHM)</option>
-                            <option value="staf">Staf / Karyawan</option>
-                            <option value="relawan">Relawan</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Lokasi Tugas</label>
-                        <select wire:model="lokasi_tugas" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold cursor-pointer">
-                            <option value="pusat">Gereja Pusat</option>
-                            <option value="cabang">Gereja Cabang</option>
-                            <option value="umum">Umum</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nomor SK</label>
-                        <input wire:model="nomor_sk" type="text" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold" placeholder="SK/001/GKS/2026">
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4 col-span-1 md:col-span-2">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tgl Mulai</label>
-                            <input wire:model="tanggal_mulai" type="date" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold">
-                            @error('tanggal_mulai') <span class="text-rose-500 text-[10px] font-bold mt-1 block">{{ $message }}</span> @enderror
+                    <div class="mt-6 pt-6 border-t border-slate-100">
+                        <div class="flex justify-between items-center mb-6">
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Take Home Pay</span>
+                            <span class="text-xl font-black text-emerald-500">Rp {{ number_format($this->estimatedThp, 0, ',', '.') }}</span>
                         </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tgl Selesai (Opsional)</label>
-                            <input wire:model="tanggal_selesai" type="date" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-600">
-                        </div>
+
+                        <button type="submit" wire:loading.attr="disabled" wire:target="save" class="group w-full py-5 bg-slate-900 text-white rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-slate-800 hover:scale-[1.02] active:scale-95 transition-all">
+                            <span wire:loading.remove wire:target="save">Simpan Pejabat</span>
+                            <span wire:loading wire:target="save" class="flex items-center justify-center gap-2">
+                                <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Memproses...
+                            </span>
+                        </button>
                     </div>
                 </div>
-            </div>
-
-            <!-- SECTION 3: STRUKTUR GAJI FLEKSIBEL -->
-            <div class="bg-white rounded-[32px] md:rounded-[40px] p-5 md:p-8 border border-slate-200/60 shadow-sm relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-1.5 bg-emerald-500"></div>
-
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-                    <h3 class="text-base md:text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
-                        <span class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm shadow-inner">Rp</span>
-                        Komponen Gaji
-                    </h3>
-                    <button type="button" wire:click="addComponent" class="w-full sm:w-auto px-6 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 active:scale-95 transition-all shadow-md flex justify-center items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Tambah Baris
-                    </button>
-                </div>
-
-                <div class="space-y-4">
-                    @foreach($components as $index => $comp)
-                    <div class="p-5 rounded-[24px] border-2 transition-all relative group 
-            {{ $comp['jenis'] == 'penerimaan' ? 'border-emerald-50 bg-emerald-50/20' : 'border-rose-50 bg-rose-50/20' }} 
-            hover:border-slate-200 hover:bg-white hover:shadow-xl">
-
-                        <div class="grid grid-cols-12 gap-4">
-
-                            <div class="col-span-12 lg:col-span-4">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block ml-1">Nama Komponen</label>
-                                <input type="text" wire:model="components.{{ $index }}.nama_komponen"
-                                    class="w-full bg-white border-slate-100 rounded-xl p-3 font-bold text-slate-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
-                                    placeholder="Contoh: Tunjangan Makan">
-                                @error("components.$index.nama_komponen") <p class="text-rose-500 text-[10px] mt-1 font-bold">{{ $message }}</p> @enderror
-                            </div>
-
-                            <div class="col-span-6 lg:col-span-2">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block ml-1">Jenis</label>
-                                <select wire:model.live="components.{{ $index }}.jenis"
-                                    class="w-full border-none rounded-xl p-3 font-black text-[10px] shadow-sm cursor-pointer appearance-none transition-colors {{ $comp['jenis'] == 'penerimaan' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white' }}">
-                                    <option value="penerimaan">(+) PLUS</option>
-                                    <option value="potongan">(-) MINUS</option>
-                                </select>
-                            </div>
-
-                            <div class="col-span-6 lg:col-span-2">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block ml-1">Nominal</label>
-                                <input type="tel" wire:model="components.{{ $index }}.nominal" x-on:input="$el.value = formatRupiah($el.value)"
-                                    class="w-full bg-white border-slate-100 rounded-xl p-3 font-black text-right text-slate-700 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
-                            </div>
-
-                            <div class="col-span-10 lg:col-span-3">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block ml-1">Pos RAPB</label>
-                                <select wire:model="components.{{ $index }}.ref_budget_post_id"
-                                    class="w-full bg-white border-slate-100 rounded-xl p-3 font-bold text-[11px] text-blue-600 focus:ring-4 focus:ring-blue-500/10">
-                                    <option value="">-- Pilih Pos --</option>
-                                    @foreach($budgetPosts as $bp)
-                                    <option value="{{ $bp->id }}">{{ $bp->kode }} - {{ $bp->nama }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="col-span-2 lg:col-span-1 flex items-end justify-center pb-1">
-                                <button type="button" wire:click="removeComponent({{ $index }})"
-                                    class="w-10 h-10 flex items-center justify-center bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-600 hover:text-white transition-all transform active:scale-90">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-
-                <div class="mt-8 p-6 bg-slate-900 rounded-[28px] flex flex-col sm:flex-row justify-between items-center gap-4 text-white shadow-2xl border border-slate-700">
-                    <div class="flex items-center gap-3 text-center sm:text-left">
-                        <div class="hidden sm:block p-3 bg-white/10 rounded-2xl text-emerald-400">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Total Take Home Pay</p>
-                            <p class="text-[10px] text-emerald-400 font-bold italic">Estimasi Bersih</p>
-                        </div>
-                    </div>
-                    <span class="text-3xl md:text-4xl font-black tracking-tighter text-emerald-400">
-                        <span class="text-lg font-light mr-1">Rp</span>{{ number_format($this->estimatedThp, 0, ',', '.') }}
-                    </span>
-                </div>
-            </div>
-
-            <!-- BUTTONS -->
-            <div class="flex flex-col sm:flex-row gap-4 pt-4 pb-12">
-                <a href="{{ route('officers.index') }}" class="flex-1 py-5 bg-white border-2 border-slate-200 rounded-[28px] font-black text-slate-400 text-center uppercase tracking-widest text-xs hover:bg-slate-50 transition-all">Batal</a>
-                <button type="submit" wire:loading.attr="disabled" class="flex-[2] py-5 bg-primary text-white rounded-[28px] font-black shadow-2xl shadow-blue-500/40 uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-all">
-                    <span wire:loading.remove>Simpan Personil</span>
-                    <span wire:loading>Menyimpan...</span>
-                </button>
             </div>
         </form>
     </div>
+
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+    </style>
+
 </div>

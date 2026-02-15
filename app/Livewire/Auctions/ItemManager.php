@@ -28,29 +28,28 @@ class ItemManager extends Component
     public $isHistoryModalOpen = false;
     public $editId = null;
 
-    // Properti Form Barang
+    // Form Barang
     public $nama_barang, $harga_jadi = 0, $jumlah = 1;
     public $donatur_nama, $donatur_member_id;
     
-    // Properti khusus Batch
+    // Batch Properties
     public $items_list = []; 
     public $activeSearchIndex = null;
 
     public $searchDonatur = '';
     public $foundDonatur = [], $foundPemenangBatch = [];
 
-    // Properti Form Pembayaran
+    // Form Pembayaran
     public $selectedAuctionId;
     public $nominal_bayar, $tanggal_bayar, $ref_account_id, $ref_budget_post_id;
 
     public $paymentHistory = [];
     public $activeItemName = '';
 
-    // Pesan error bahasa Indonesia
     protected $messages = [
         'nominal_bayar.required' => 'Nominal pembayaran wajib diisi.',
-        'ref_account_id.required' => 'Pilih dompet/kas penyimpanan uang.',
-        'ref_budget_post_id.required' => 'Pilih pos anggaran untuk pelaporan RAPB.',
+        'ref_account_id.required' => 'Pilih dompet/kas penyimpanan.',
+        'ref_budget_post_id.required' => 'Pilih pos anggaran RAPB.',
         'nama_barang.required' => 'Nama barang wajib diisi.',
     ];
 
@@ -60,24 +59,29 @@ class ItemManager extends Component
         $this->tanggal_bayar = date('Y-m-d');
     }
 
+    /**
+     * Helper untuk membersihkan format rupiah secara ketat.
+     * Menghapus semua karakter kecuali angka untuk mencegah "100.000" terbaca sebagai "100".
+     */
+    private function parseRupiah($value)
+    {
+        if (!$value) return 0;
+        // Hapus semua karakter yang bukan angka
+        $clean = preg_replace('/[^0-9]/', '', (string) $value);
+        return (float) $clean;
+    }
+
     public function updatedJumlah($value)
     {
-        $qty = (int)$value;
-        if ($qty > 50) $qty = 50;
-        if ($qty < 1) $qty = 1;
+        $qty = max(1, min(50, (int)$value));
         $this->jumlah = $qty;
 
         $currentCount = count($this->items_list);
-
         if ($qty > $currentCount) {
             for ($i = $currentCount; $i < $qty; $i++) {
-                $this->items_list[] = [
-                    'pemenang_nama' => '',
-                    'pemenang_member_id' => null,
-                    'harga_jadi' => $this->harga_jadi ?: 0 
-                ];
+                $this->items_list[] = ['pemenang_nama' => '', 'pemenang_member_id' => null, 'harga_jadi' => 0];
             }
-        } elseif ($qty < $currentCount) {
+        } else {
             $this->items_list = array_slice($this->items_list, 0, $qty);
         }
     }
@@ -88,8 +92,9 @@ class ItemManager extends Component
         $this->items_list[$index]['pemenang_nama'] = $query;
 
         if (strlen($query) > 2) {
-            $this->foundPemenangBatch = Member::where('nama', 'like', "%{$query}%")
-                ->limit(5)->get()->toArray();
+            $this->foundPemenangBatch = Member::whereHas('churchPeople', function ($q) use ($query) {
+                $q->where('full_name', 'like', "%{$query}%");
+            })->with('churchPeople')->limit(5)->get()->toArray();
         } else {
             $this->foundPemenangBatch = [];
         }
@@ -101,6 +106,25 @@ class ItemManager extends Component
         $this->items_list[$index]['pemenang_nama'] = $memberName;
         $this->foundPemenangBatch = [];
         $this->activeSearchIndex = null;
+    }
+
+    public function updatedSearchDonatur($value)
+    {
+        if (strlen($value) > 2) {
+            $this->foundDonatur = Member::whereHas('churchPeople', function ($q) use ($value) {
+                $q->where('full_name', 'like', "%{$value}%");
+            })->with('churchPeople')->limit(5)->get();
+        } else {
+            $this->foundDonatur = [];
+        }
+    }
+
+    public function selectDonatur($id, $name)
+    {
+        $this->donatur_member_id = $id;
+        $this->donatur_nama = $name;
+        $this->searchDonatur = $name;
+        $this->foundDonatur = [];
     }
 
     public function create()
@@ -117,17 +141,17 @@ class ItemManager extends Component
 
         DB::transaction(function () {
             foreach ($this->items_list as $index => $itemData) {
-                $cleanHarga = (float) str_replace(['.', ','], '', $itemData['harga_jadi']);
+                $cleanHarga = $this->parseRupiah($itemData['harga_jadi']);
                 $finalName = $this->jumlah > 1 ? "{$this->nama_barang} #" . ($index + 1) : $this->nama_barang;
 
                 Auction::create([
                     'uuid' => (string) Str::uuid(),
                     'auction_event_id' => $this->event->id,
                     'nama_barang' => $finalName,
-                    'donatur_nama' => $this->searchDonatur ?: $this->donatur_nama,
-                    'donatur_member_id' => $this->donatur_member_id ?: null,
+                    'donatur_nama' => $this->donatur_nama ?: $this->searchDonatur,
+                    'donatur_member_id' => $this->donatur_member_id,
                     'pemenang_nama' => $itemData['pemenang_nama'],
-                    'pemenang_member_id' => $itemData['pemenang_member_id'] ?? null,
+                    'pemenang_member_id' => $itemData['pemenang_member_id'],
                     'harga_jadi' => $cleanHarga,
                 ]);
             }
@@ -144,13 +168,11 @@ class ItemManager extends Component
         $item = Auction::findOrFail($id);
         
         $this->activeItemName = $item->nama_barang;
-        $this->nominal_bayar = number_format($item->sisa_piutang, 0, ',', '.');
+        // Format nominal awal untuk display
+        $this->nominal_bayar = number_format($item->sisa_piutang, 0, '', '');
         
-        // Auto-detect Kas berdasarkan tujuan event
         $acc = RefAccount::where('nama', 'like', $this->event->tujuan_kas == 'pembangunan' ? '%Pembangunan%' : '%Umum%')->first();
         $this->ref_account_id = $acc?->id;
-        
-        // Ambil pos anggaran dari setting event
         $this->ref_budget_post_id = $this->event->ref_budget_post_id;
         
         $this->isPaymentModalOpen = true;
@@ -164,7 +186,7 @@ class ItemManager extends Component
             'ref_budget_post_id' => 'required|exists:ref_budget_posts,id'
         ]);
         
-        $cleanNominal = (float) str_replace(['.', ','], '', $this->nominal_bayar);
+        $cleanNominal = $this->parseRupiah($this->nominal_bayar);
 
         if ($cleanNominal <= 0) {
             $this->addError('nominal_bayar', 'Nominal harus lebih dari 0.');
@@ -182,8 +204,8 @@ class ItemManager extends Component
                 'ref_account_id' => $this->ref_account_id,
                 'ref_budget_post_id' => $this->ref_budget_post_id,
                 'nominal' => $cleanNominal,
-                'keterangan' => "Bayar Lelang: {$item->nama_barang} (Acara: {$this->event->nama_event})",
-                'user_id' => Auth::id(),
+                'keterangan' => "Lelang: {$item->nama_barang} ({$this->event->nama_event})",
+                'user_id' => Auth::id()
             ]);
 
             AuctionPayment::create([
@@ -194,12 +216,11 @@ class ItemManager extends Component
                 'tanggal_bayar' => $this->tanggal_bayar,
             ]);
 
-            // Sync cache nominal terbayar di tabel auctions
             $item->update(['total_terbayar_cache' => $item->payments()->sum('nominal')]);
         });
 
         $this->isPaymentModalOpen = false;
-        $this->dispatch('notify', message: 'Pembayaran lelang berhasil diverifikasi.', type: 'success');
+        $this->dispatch('notify', message: 'Pembayaran berhasil diverifikasi.', type: 'success');
     }
 
     public function openHistoryModal($id)
@@ -215,6 +236,7 @@ class ItemManager extends Component
         return view('livewire.auctions.item-manager', [
             'items' => Auction::where('auction_event_id', $this->event->id)
                 ->where(fn($q) => $q->where('nama_barang', 'like', "%{$this->search}%")->orWhere('pemenang_nama', 'like', "%{$this->search}%"))
+                ->with(['pemenang.churchPeople', 'donatur.churchPeople'])
                 ->latest()->paginate(15),
             'accounts' => RefAccount::where('is_active', true)->get(),
             'budgetPosts' => RefBudgetPost::where('jenis', 'pemasukan')->orderBy('kode')->get()

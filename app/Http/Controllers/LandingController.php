@@ -23,39 +23,43 @@ class LandingController extends Controller
      */
     public function index()
     {
-        $setting = ChurchSetting::current();
+        // 1. Identitas Gereja (First row)
+        $setting = ChurchSetting::first();
         $today = Carbon::today();
-        $activeYear = FiscalYear::active();
+        $activeYear = FiscalYear::where('is_active', true)->first();
 
-        // 1. STATISTIK REAL-TIME
+        // 2. STATISTIK JEMAAT AKTIF
         $stats = [
             'total_kk' => Family::where('status', 'aktif')->count(),
-            'total_jiwa' => Member::count(),
+            'total_jiwa' => Member::where('status_keanggotaan', 'aktif')->count(),
             'total_wilayah' => RefWilayah::count(),
         ];
 
-        // 2. JADWAL PELAYANAN MENDATANG (Limit 3)
-        // Mengambil jadwal yang belum terlaksana dan diurutkan dari yang terdekat
-        $schedules = ActivitySchedule::with(['type', 'family', 'wilayah', 'servants.member'])
+        // 3. JADWAL PELAYANAN (Include Host/Tuan Rumah)
+        $schedules = ActivitySchedule::with([
+                'type', 
+                'family.wilayah', 
+                'family.members.churchPeople', 
+                'servants.member.churchPeople'
+            ])
             ->where('tanggal', '>=', $today)
             ->where('status', 'rencana')
             ->orderBy('tanggal', 'asc')
             ->limit(3)
             ->get();
 
-        // 3. WARTA & BERITA TERBARU (Limit 2 sesuai desain UI)
+        // 4. WARTA & BERITA
         $posts = Post::with('author')
             ->where('is_published', true)
             ->latest('published_at')
-            ->limit(2)
+            ->limit(3)
             ->get();
 
-        // 4. GALERI DOKUMENTASI (Limit 6)
-        $galleries = Gallery::latest()->limit(6)->get();
+        // 5. GALERI (Limit 4 untuk layout grid)
+        $galleries = Gallery::latest()->limit(4)->get();
 
-        // 5. TRANSPARANSI SALDO KAS UMUM
-        // Mengambil saldo akun yang mengandung nama 'Umum'
-        $kasUmum = RefAccount::where('nama', 'like', '%Umum%')->first();
+        // 6. TRANSPARANSI KAS (Logic Saldo Akurat)
+        $kasUmum = RefAccount::where('nama', 'like', '%Kas%')->first();
         $saldo = 0;
 
         if ($kasUmum && $activeYear) {
@@ -65,6 +69,7 @@ class LandingController extends Controller
             $keluar = Transaction::where('ref_account_id', $kasUmum->id)->whereIn('jenis', ['keluar', 'pindah_buku'])->sum('nominal');
             $saldo = $base + $masuk - $keluar;
         }
-        return view('public.index', compact('stats', 'schedules', 'posts', 'galleries', 'saldo'));
+
+        return view('public.index', compact('setting', 'stats', 'schedules', 'posts', 'galleries', 'saldo'));
     }
 }

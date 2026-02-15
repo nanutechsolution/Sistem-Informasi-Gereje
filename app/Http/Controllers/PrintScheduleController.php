@@ -12,17 +12,19 @@ use Illuminate\Support\Str;
 
 class PrintScheduleController extends Controller
 {
-    /**
-     * Generate PDF Jadwal PKS menggunakan DomPDF
-     */
     public function pks(Request $request)
     {
-        $pksTypeId = RefActivityType::where('nama', 'like', '%PKS%')->value('id');
+        // Pastikan nama type sesuai dengan di database
+        $pksType = RefActivityType::where('nama', 'like', '%PKS%')->first();
         
-        $query = ActivitySchedule::with(['family.refWilayah', 'servants.member'])
-            ->where('ref_activity_type_id', $pksTypeId);
+        $query = ActivitySchedule::with([
+                'family.wilayah', 
+                'family.members.churchPeople', 
+                'servants.member.churchPeople'
+            ])
+            ->where('ref_activity_type_id', $pksType?->id ?? 0);
 
-        // Filter Sinkron dengan UI
+        // Filter dari Request (Sinkron dengan Livewire)
         if ($request->startDate && $request->endDate) {
             $query->whereBetween('tanggal', [$request->startDate, $request->endDate]);
         }
@@ -37,14 +39,14 @@ class PrintScheduleController extends Controller
         $data = [
             'schedules' => $schedules,
             'wilayah' => $wilayahName,
-            'periode' => Carbon::parse($request->startDate)->isoFormat('D MMMM') . ' - ' . Carbon::parse($request->endDate)->isoFormat('D MMMM Y')
+            'periode' => $request->startDate && $request->endDate 
+                ? Carbon::parse($request->startDate)->isoFormat('D MMMM') . ' - ' . Carbon::parse($request->endDate)->isoFormat('D MMMM Y')
+                : 'Semua Periode'
         ];
 
-        // Load View dan Convert ke PDF
         $pdf = Pdf::loadView('schedules.print-pks', $data);
-        
-        // Atur Kertas A4 Portrait
         $pdf->setPaper('a4', 'portrait');
+        
         return $pdf->stream('Jadwal_PKS_' . Str::slug($wilayahName) . '.pdf');
     }
 }

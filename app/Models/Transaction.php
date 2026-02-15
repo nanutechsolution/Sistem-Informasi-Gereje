@@ -48,4 +48,6 @@ class Transaction extends Model
     {
         return $this->belongsTo(Transaction::class, 'related_transaction_id');
     }
+
+    
 }

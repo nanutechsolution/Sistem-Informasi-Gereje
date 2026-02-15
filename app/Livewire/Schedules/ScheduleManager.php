@@ -9,13 +9,15 @@ use App\Models\Family;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class ScheduleManager extends Component
 {
     use WithPagination;
 
+    // State UI
     public $search = '';
-    public $filterType = ''; // Filter jenis kegiatan
+    public $filterType = '';
     public $isModalOpen = false;
     public $editId = null;
 
@@ -26,10 +28,24 @@ class ScheduleManager extends Component
     // Search Helper
     public $searchFamily = '', $foundFamilies = [], $selectedFamilyLabel = '';
 
-    protected $rules = [
-        'ref_activity_type_id' => 'required',
-        'tanggal' => 'required|date',
-        'jam_mulai' => 'required',
+    protected function rules()
+    {
+        return [
+            'ref_activity_type_id' => 'required|exists:ref_activity_types,id',
+            'tanggal' => 'required|date',
+            'jam_mulai' => 'required',
+            'tema' => 'required|min:5',
+            'lokasi_manual' => 'required_if:family_id,null',
+        ];
+    }
+
+    protected $messages = [
+        'ref_activity_type_id.required' => 'Jenis kegiatan wajib dipilih.',
+        'tanggal.required' => 'Tanggal pelaksanaan harus diisi.',
+        'jam_mulai.required' => 'Jam mulai harus ditentukan.',
+        'tema.required' => 'Tema atau nama kegiatan wajib diisi.',
+        'tema.min' => 'Tema kegiatan minimal 5 karakter.',
+        'lokasi_manual.required_if' => 'Lokasi harus diisi jika tidak memilih Tuan Rumah.',
     ];
 
     public function mount()
@@ -38,39 +54,54 @@ class ScheduleManager extends Component
         $this->jam_mulai = '09:00';
     }
 
-    // --- LOGIKA PENCARIAN KELUARGA (Opsional untuk jadwal umum) ---
     public function updatedSearchFamily($value)
     {
         if (strlen($value) > 2) {
-            $this->foundFamilies = Family::where('kepala_keluarga', 'like', "%{$value}%")
-                ->orWhere('nomor_kk', 'like', "%{$value}%")->limit(5)->get()->toArray();
+            $this->foundFamilies = Family::where('nomor_kk', 'like', "%{$value}%")
+                ->orWhereHas('members.churchPeople', fn($q) => $q->where('full_name', 'like', "%{$value}%"))
+                ->limit(5)->get();
         } else {
             $this->foundFamilies = [];
         }
     }
 
-    public function selectFamily($id, $name, $kk)
+    public function selectFamily($id, $name)
     {
         $this->family_id = $id;
-        $this->selectedFamilyLabel = "Kel. $name ($kk)";
+        $this->selectedFamilyLabel = "Keluarga $name";
         $this->searchFamily = '';
         $this->foundFamilies = [];
     }
 
-    // --- CRUD ---
     public function create()
     {
-        $this->reset(['editId', 'ref_activity_type_id', 'ref_wilayah_id', 'family_id', 'tema', 'lokasi_manual', 'keterangan']);
+        $this->reset(['editId', 'ref_activity_type_id', 'ref_wilayah_id', 'family_id', 'tema', 'lokasi_manual', 'keterangan', 'selectedFamilyLabel']);
         $this->tanggal = date('Y-m-d');
+        $this->jam_mulai = '09:00';
         $this->isModalOpen = true;
     }
 
-    function closeModal()
+    public function edit($id)
     {
-        $this->reset(['editId', 'ref_activity_type_id', 'ref_wilayah_id', 'family_id', 'tema', 'lokasi_manual', 'keterangan']);
-        $this->tanggal = date('Y-m-d');
-        $this->isModalOpen = false;
+        $schedule = ActivitySchedule::with('family.members.churchPeople')->findOrFail($id);
+        $this->editId = $schedule->id;
+        $this->ref_activity_type_id = $schedule->ref_activity_type_id;
+        $this->ref_wilayah_id = $schedule->ref_wilayah_id;
+        $this->family_id = $schedule->family_id;
+        $this->tanggal = $schedule->tanggal->format('Y-m-d');
+        $this->jam_mulai = Carbon::parse($schedule->jam_mulai)->format('H:i');
+        $this->tema = $schedule->tema;
+        $this->lokasi_manual = $schedule->lokasi_manual;
+        $this->keterangan = $schedule->keterangan;
+
+        if ($schedule->family) {
+            $head = $schedule->family->members->sortBy('hubungan_keluarga_id')->first();
+            $this->selectedFamilyLabel = "Keluarga " . ($head->churchPeople->full_name ?? '-');
+        }
+
+        $this->isModalOpen = true;
     }
+
     public function save()
     {
         $this->validate();
@@ -85,6 +116,7 @@ class ScheduleManager extends Component
             'tema' => $this->tema,
             'lokasi_manual' => $this->lokasi_manual,
             'keterangan' => $this->keterangan,
+            'status' => 'rencana'
         ]);
 
         $this->isModalOpen = false;
@@ -94,52 +126,24 @@ class ScheduleManager extends Component
     public function delete($id)
     {
         ActivitySchedule::findOrFail($id)->delete();
-        $this->dispatch('notify', message: 'Agenda dihapus.', type: 'success');
-    }
-
-    public function edit($id)
-    {
-        $schedule = ActivitySchedule::with('family')->findOrFail($id);
-        $this->editId = $schedule->id;
-        $this->ref_activity_type_id = $schedule->ref_activity_type_id;
-        $this->ref_wilayah_id = $schedule->ref_wilayah_id;
-        $this->family_id = $schedule->family_id;
-        $this->tanggal = $schedule->tanggal->format('Y-m-d');
-        $this->jam_mulai = $schedule->jam_mulai->format('H:i');
-        $this->tema = $schedule->tema;
-        $this->lokasi_manual = $schedule->lokasi_manual;
-        $this->keterangan = $schedule->keterangan;
-
-        if ($schedule->family) {
-            $this->selectedFamilyLabel = "Kel. " . $schedule->family->kepala_keluarga;
-        }
-
-        $this->isModalOpen = true;
+        $this->dispatch('notify', message: 'Agenda telah dihapus.', type: 'success');
     }
 
     public function render()
     {
-        // FILTER UTAMA: Hanya ambil kegiatan yang BUKAN PKS
-        $schedules = ActivitySchedule::with(['type', 'wilayah', 'family', 'servants.member'])
+        $query = ActivitySchedule::with(['type', 'wilayah', 'family.members.churchPeople'])
             ->whereHas('type', function ($q) {
-                $q->where('nama', 'not like', '%PKS%'); // Exclude PKS
+                $q->where('nama', 'not like', '%PKS%');
             })
-            ->when($this->filterType, function ($q) {
-                $q->where('ref_activity_type_id', $this->filterType);
-            })
+            ->when($this->filterType, fn($q) => $q->where('ref_activity_type_id', $this->filterType))
             ->where(function ($q) {
                 $q->where('tema', 'like', "%{$this->search}%")
-                    ->orWhere('lokasi_manual', 'like', "%{$this->search}%");
-            })
-            ->latest('tanggal')
-            ->paginate(9);
-
-        // Ambil jenis kegiatan selain PKS untuk dropdown
-        $types = RefActivityType::where('nama', 'not like', '%PKS%')->get();
+                  ->orWhere('lokasi_manual', 'like', "%{$this->search}%");
+            });
 
         return view('livewire.schedules.schedule-manager', [
-            'schedules' => $schedules,
-            'types' => $types,
+            'schedules' => $query->orderBy('tanggal', 'desc')->paginate(10),
+            'types' => RefActivityType::where('nama', 'not like', '%PKS%')->get(),
             'wilayahs' => RefWilayah::orderBy('nama')->get()
         ]);
     }

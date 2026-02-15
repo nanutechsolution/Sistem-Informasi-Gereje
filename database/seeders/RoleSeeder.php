@@ -5,42 +5,64 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use App\Models\User;
+use Spatie\Permission\PermissionRegistrar;
 
 class RoleSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Reset cache permission
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        // Reset cache
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // 2. Buat Permissions (Daftar Aksi yang boleh dilakukan)
+        $guard = 'web';
+
+        // ======================
+        // 1. PERMISSIONS
+        // ======================
         $permissions = [
             'view_dashboard',
-            'manage_users',       // CRUD User
-            'manage_database',    // Jemaat & Keluarga
-            'manage_finance',     // Input Transaksi
-            'approve_transaction',// Verifikasi Setoran
-            'manage_budget',      // Atur RAPB
-            'view_reports',       // Lihat Laporan
-            'manage_schedules',   // Atur Jadwal
-            'input_pks',          // Input Kolekte PKS
-            'manage_settings',    // Akses Master Data
+            'manage_users',
+            'manage_database',
+            'manage_finance',
+            'approve_transaction',
+            'manage_budget',
+            'view_reports',
+            'manage_schedules',
+            'input_pks',
+            'manage_settings',
         ];
 
-        foreach ($permissions as $p) {
-            Permission::firstOrCreate(['name' => $p]);
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate([
+                'name' => $permission,
+                'guard_name' => $guard
+            ]);
         }
 
-        // 3. Buat Roles & Assign Permissions
+        // ======================
+        // 2. ROLES
+        // ======================
 
-        // A. ADMIN (Super User)
-        $roleAdmin = Role::firstOrCreate(['name' => 'admin']);
-        $roleAdmin->givePermissionTo(Permission::all());
+        // SUPER ADMIN (Full Access)
+        $superAdmin = Role::firstOrCreate([
+            'name' => 'super_admin',
+            'guard_name' => $guard
+        ]);
+        $superAdmin->syncPermissions(Permission::all());
 
-        // B. BENDAHARA (Fokus Keuangan)
-        $roleBendahara = Role::firstOrCreate(['name' => 'bendahara']);
-        $roleBendahara->givePermissionTo([
+        // ADMIN
+        $admin = Role::firstOrCreate([
+            'name' => 'admin',
+            'guard_name' => $guard
+        ]);
+        $admin->syncPermissions(Permission::all());
+
+        // BENDAHARA
+        $bendahara = Role::firstOrCreate([
+            'name' => 'bendahara',
+            'guard_name' => $guard
+        ]);
+        $bendahara->syncPermissions([
             'view_dashboard',
             'manage_finance',
             'approve_transaction',
@@ -48,36 +70,38 @@ class RoleSeeder extends Seeder
             'view_reports'
         ]);
 
-        // C. SEKRETARIS (Fokus Data & Jadwal)
-        $roleSekretaris = Role::firstOrCreate(['name' => 'sekretaris']);
-        $roleSekretaris->givePermissionTo([
+        // SEKRETARIS
+        $sekretaris = Role::firstOrCreate([
+            'name' => 'sekretaris',
+            'guard_name' => $guard
+        ]);
+        $sekretaris->syncPermissions([
             'view_dashboard',
             'manage_database',
             'manage_schedules',
             'view_reports'
         ]);
 
-        // D. PENDETA (Supervisi)
-        $rolePendeta = Role::firstOrCreate(['name' => 'pendeta']);
-        $rolePendeta->givePermissionTo([
+        // PENDETA
+        $pendeta = Role::firstOrCreate([
+            'name' => 'pendeta',
+            'guard_name' => $guard
+        ]);
+        $pendeta->syncPermissions([
             'view_dashboard',
             'view_reports',
-            'approve_transaction', // Pendeta juga bisa verifikasi jika perlu
+            'approve_transaction',
             'manage_schedules'
         ]);
 
-        // E. MAJELIS / OPERATOR WILAYAH
-        $roleMajelis = Role::firstOrCreate(['name' => 'majelis']);
-        $roleMajelis->givePermissionTo([
+        // MAJELIS / OPERATOR
+        $majelis = Role::firstOrCreate([
+            'name' => 'majelis',
+            'guard_name' => $guard
+        ]);
+        $majelis->syncPermissions([
             'view_dashboard',
             'input_pks'
         ]);
-
-        // 4. Assign Role ke User (Opsional: Update user yang sudah ada)
-        // Contoh: Set user ID 1 jadi admin
-        $user = User::find(1);
-        if ($user) {
-            $user->assignRole('admin');
-        }
     }
 }

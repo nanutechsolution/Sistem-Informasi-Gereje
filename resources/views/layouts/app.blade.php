@@ -93,12 +93,13 @@
                         @canany(['manage_database'])
                         <div class="relative" x-data="{ drop: false }" @click.away="drop = false">
                             <button @click="drop = !drop" 
-                                :class="{'bg-white/10 text-white shadow-inner': drop || {{ request()->is('members*', 'families*', 'officers*', 'letters*', 'clerical*', 'sermons*') ? 'true' : 'false' }} }"
+                                :class="{'bg-white/10 text-white shadow-inner': drop || {{ request()->is('members*', 'families*', 'officers*', 'letters*', 'clerical*', 'sermons*', 'people.index') ? 'true' : 'false' }} }"
                                 class="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-bold text-blue-100 hover:bg-white/5 transition">
                                 Administrasi <svg class="w-4 h-4 transition-transform" :class="drop ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                             </button>
                             <div x-show="drop" x-cloak class="absolute left-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl py-3 text-slate-700 ring-1 ring-black/5 animate-fade-in-up dropdown-scrollbar max-h-[85vh] overflow-y-auto">
                                 <div class="px-4 py-1 text-[10px] font-black text-slate-400 uppercase tracking-widest">Database Jemaat</div>
+                                <a href="{{ route('people.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 {{ request()->routeIs('people.index.*') ? 'text-primary bg-primary/5 border-l-4 border-primary' : '' }}">Data Jemaat</a>
                                 <a href="{{ route('members.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 {{ request()->routeIs('members.*') ? 'text-primary bg-primary/5 border-l-4 border-primary' : '' }}">Data Anggota</a>
                                 <a href="{{ route('families.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 {{ request()->routeIs('families.*') ? 'text-primary bg-primary/5 border-l-4 border-primary' : '' }}">Data Keluarga</a>
                                 <a href="{{ route('officers.index') }}" class="block px-4 py-2 text-sm font-semibold hover:bg-slate-50 {{ request()->routeIs('officers.*') ? 'text-primary bg-primary/5 border-l-4 border-primary' : '' }}">Pejabat & Pelayan</a>
@@ -193,7 +194,7 @@
                         @endcanany
 
                         <!-- Pilar 5: Sistem (Admin) -->
-                        @role('admin')
+                        @role('super_admin')
                         <div class="relative" x-data="{ drop: false }" @click.away="drop = false">
                             <button @click="drop = !drop" 
                                 :class="{'bg-white/20 text-white': drop || {{ request()->is('users*', 'settings*') ? 'true' : 'false' }} }"

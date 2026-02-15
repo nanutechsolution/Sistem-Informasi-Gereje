@@ -2,10 +2,11 @@
 
 namespace App\Livewire\Finance;
 
-use App\Models\Payroll;
-use App\Models\PayrollPayment;
+use App\Models\OfficerPayroll;
+use App\Models\OfficerPayrollItem;
 use App\Models\ChurchOfficer;
 use App\Models\FiscalYear;
+use App\Models\OfficerPayrollPayment;
 use App\Models\Transaction;
 use App\Models\RefAccount;
 use Livewire\Component;
@@ -17,209 +18,229 @@ use Illuminate\Support\Facades\Log;
 class PayrollManager extends Component
 {
     public $bulan, $tahun, $ref_account_id;
-    public $isPaymentModalOpen = false, $selectedPayrollId, $nominal_bayar, $catatan_bayar;
+    public $isPaymentModalOpen = false, $selectedPayrollId, $nominal_bayar = 0, $catatan_bayar;
     public $selectedPayrollDetails = null;
+
+    public function openPaymentModal($payrollId)
+    {
+        $this->selectedPayrollId = $payrollId;
+        $this->isPaymentModalOpen = true;
+    }
 
     public function mount()
     {
         $this->bulan = date('n');
         $this->tahun = date('Y');
-        $acc = RefAccount::where('nama', 'like', '%Umum%')->first() ?: RefAccount::where('jenis', 'kas_tunai')->first();
+        $acc = RefAccount::where('nama', 'like', '%Umum%')->first()
+            ?: RefAccount::where('jenis', 'kas_tunai')->first();
         $this->ref_account_id = $acc?->id;
     }
 
+
     public function generate()
     {
-        $fiscalYear = FiscalYear::active();
-        if (!$fiscalYear) {
-            $this->dispatch('notify', message: 'Tahun Anggaran Aktif tidak ditemukan!', type: 'error');
+        // Ambil periode aktif sesuai bulan & tahun yang dipilih
+        $currentPeriod = \App\Models\PayrollPeriod::whereMonth('tanggal_mulai', $this->bulan)
+            ->whereYear('tanggal_mulai', $this->tahun)
+            ->first();
+
+        if (!$currentPeriod) {
+            $this->dispatch('notify', message: 'Periode gaji untuk bulan ini belum dibuat!', type: 'error');
             return;
         }
 
-        $activeOfficers = ChurchOfficer::with(['salaryComponents', 'position'])->where('is_active', true)->get();
+        $activeOfficers = \App\Models\ChurchOfficer::with('salaryComponents.component')
+            ->where('is_active', true)
+            ->get();
+
         $count = 0;
 
-        foreach ($activeOfficers as $off) {
-            $exists = Payroll::where('church_officer_id', $off->id)->where('bulan', $this->bulan)->where('tahun', $this->tahun)->exists();
+        DB::transaction(function () use ($activeOfficers, $currentPeriod, &$count) {
+            foreach ($activeOfficers as $off) {
+                // Cek apakah sudah ada payroll untuk officer di periode ini
+                $exists = \App\Models\OfficerPayroll::where('church_officer_id', $off->id)
+                    ->where('payroll_period_id', $currentPeriod->id)
+                    ->exists();
 
-            if (!$exists) {
-                $totalPenerimaan = $off->salaryComponents->where('jenis', 'penerimaan')->where('is_active', true)->sum('nominal');
-                $tunjanganRumah = $off->salaryComponents->where('jenis', 'penerimaan')
-                    ->filter(fn($c) => str_contains(strtolower($c->nama_komponen), 'rumah'))->sum('nominal');
-                $gajiPokok = $totalPenerimaan - $tunjanganRumah;
-                $totalPensiun = $off->salaryComponents->where('jenis', 'potongan')
-                    ->filter(fn($c) => str_contains(strtolower($c->nama_komponen), 'pensiun'))->sum('nominal');
+                if ($exists) continue;
 
-                $netto = $off->net_salary;
+                $totalPenerimaan = $off->salaryComponents
+                    ->where('jenis', 'penerimaan')
+                    ->where('is_active', true)
+                    ->sum('nominal');
 
-                if ($netto > 0) {
-                    Payroll::create([
-                        'uuid' => (string) Str::uuid(),
-                        'church_officer_id' => $off->id,
-                        'fiscal_year_id' => $fiscalYear->id,
-                        'bulan' => $this->bulan,
-                        'tahun' => $this->tahun,
-                        'gaji_pokok' => $gajiPokok,
-                        'tunjangan_perumahan' => $tunjanganRumah,
-                        'iuran_pensiun' => $totalPensiun,
-                        'netto' => $netto,
-                        'status' => 'draft',
-                        'status_bayar' => 'belum'
+                $totalPotongan = $off->salaryComponents
+                    ->where('jenis', 'potongan')
+                    ->where('is_active', true)
+                    ->sum('nominal');
+
+                $thp = $totalPenerimaan - $totalPotongan;
+
+                // Buat payroll
+                $payroll = \App\Models\OfficerPayroll::create([
+                    'payroll_period_id' => $currentPeriod->id,
+                    'church_officer_id' => $off->id,
+                    'fiscal_year_id'    => $currentPeriod->fiscal_year_id,
+                    'total_penerimaan'  => $totalPenerimaan,
+                    'total_potongan'    => $totalPotongan,
+                    'take_home_pay'     => $thp,
+                    'status'            => 'draft',
+
+                ]);
+
+                // Buat item gaji sesuai salaryComponents
+                foreach ($off->salaryComponents as $comp) {
+                    if (!$comp->is_active) continue;
+
+                    // Pastikan nama snapshot valid
+                    $namaSnapshot = $comp->component->nama ?? null;
+                    if (!$namaSnapshot) {
+                        throw new \Exception("Nama komponen gaji untuk officer {$off->id} tidak ditemukan!");
+                    }
+
+                    \App\Models\OfficerPayrollItem::create([
+                        'officer_payroll_id'      => $payroll->id,
+                        'ref_salary_component_id' => $comp->ref_salary_component_id,
+                        'ref_budget_post_id'      => $comp->ref_budget_post_id,
+                        'nama_snapshot'           => $namaSnapshot,
+                        'jenis'                   => $comp->jenis,
+                        'nominal_snapshot'        => $comp->nominal,
                     ]);
-                    $count++;
                 }
+
+                $count++;
             }
-        }
+        });
 
         $this->dispatch('notify', message: $count > 0 ? "$count Draf gaji berhasil dibuat." : 'Semua sudah ada drafnya.', type: 'success');
     }
 
-    public function openPaymentModal($id)
-    {
-        $this->selectedPayrollId = $id;
-        $pay = Payroll::with('officer.member')->findOrFail($id);
-        $this->selectedPayrollDetails = $pay;
-        // Pre-fill nominal dengan sisa gaji (fresh calculation)
-        $this->nominal_bayar = number_format($pay->netto - $pay->payments()->sum('nominal'), 0, ',', '.');
-        $this->catatan_bayar = '';
-        $this->isPaymentModalOpen = true;
-    }
 
     public function payFull($id)
     {
-        if (!$this->ref_account_id) {
-            $this->dispatch('notify', message: 'Pilih Akun Sumber Dana dulu!', type: 'error');
-            return;
+        try {
+            $this->selectedPayrollId = $id;
+
+            // Ambil payroll beserta item dan officer
+            $payroll = OfficerPayroll::with(['items', 'officer.member.churchPerson'])->findOrFail($id);
+
+            // Hitung total yang bisa dibayar dari item
+            $totalNominal = $payroll->items->sum(function ($item) {
+                return ($item->nominal_snapshot - ($item->nominal_bayar ?? 0));
+            });
+
+            if ($totalNominal <= 0) {
+                $this->dispatch('notify', message: 'Gaji officer ini sudah lunas atau 0, tidak bisa diproses!', type: 'error');
+                return;
+            }
+
+            $this->nominal_bayar = $totalNominal;
+            $this->catatan_bayar = 'Pelunasan Gaji';
+            $this->savePayment();
+        } catch (\Exception $e) {
+            $this->dispatch('notify', message: 'Terjadi kesalahan: ' . $e->getMessage(), type: 'error');
         }
-        $this->selectedPayrollId = $id;
-        $pay = Payroll::findOrFail($id);
-        $this->nominal_bayar = number_format($pay->netto - $pay->payments()->sum('nominal'), 0, ',', '.');
-        $this->catatan_bayar = 'Pelunasan Gaji';
-        $this->savePayment();
     }
+
 
     public function savePayment()
     {
-        $this->validate(['nominal_bayar' => 'required', 'ref_account_id' => 'required']);
-        $cleanNominal = (float) str_replace(['.', ','], '', $this->nominal_bayar);
-        if ($cleanNominal <= 0) return;
+        try {
+            $this->validate([
+                'nominal_bayar' => 'required|numeric|min:1',
+                'ref_account_id' => 'required'
+            ]);
 
-        DB::transaction(function () use ($cleanNominal) {
-            // RE-LOAD FRESH DATA di dalam transaksi untuk akurasi saldo
-            $pay = Payroll::with(['officer.member', 'officer.salaryComponents'])->lockForUpdate()->findOrFail($this->selectedPayrollId);
-            // Hitung sisa riil sebelum transaksi ini
-            $sisaRiil = $pay->netto - $pay->payments()->sum('nominal');
 
-            // Cari Pos Anggaran Utama
-            $mainBudgetPostId = $pay->officer->ref_budget_post_id;
-            if (!$mainBudgetPostId) {
-                $mainBudgetPostId = $pay->officer->salaryComponents->where('jenis', 'penerimaan')->sortByDesc('nominal')->first()?->ref_budget_post_id;
-            }
+            $nominal = (float) $this->nominal_bayar;
 
-            if (!$mainBudgetPostId) {
-                throw new \Exception("Pos Anggaran tidak ditemukan pada profil pegawai.");
-            }
+            DB::transaction(function () use ($nominal) {
+                // Lock payroll untuk menghindari race condition
+                // Load relasi payroll_period saat ambil payroll
+                $payroll = OfficerPayroll::with(['items', 'officer.member.churchPerson', 'payroll_period'])
+                    ->lockForUpdate()
+                    ->findOrFail($this->selectedPayrollId);
 
-            $transactionId = null;
+                // Gunakan safe navigation atau fallback
+                $periodKode = $payroll->payroll_period->kode ?? 'N/A';
+                $memberName = $payroll->officer->member->churchPerson->full_name ?? 'N/A';
+                if (!$payroll) {
+                    throw new \Exception("Payroll tidak ditemukan");
+                }
+                $refBudgetPostId = $payroll->items->first()->ref_budget_post_id;
 
-            // 1. LOGIKA PEMBAYARAN
-            if ($cleanNominal >= $sisaRiil) {
-                // BAYAR LUNAS: Pecah Jurnal sesuai komponen
-                $trxGaji = Transaction::create([
+                // Buat transaksi pembayaran
+                $transaction = Transaction::create([
                     'uuid' => (string) Str::uuid(),
-                    'fiscal_year_id' => $pay->fiscal_year_id,
+                    'fiscal_year_id' => $payroll->fiscal_year_id,
                     'tanggal' => now(),
                     'jenis' => 'keluar',
                     'ref_account_id' => $this->ref_account_id,
-                    'ref_budget_post_id' => $mainBudgetPostId,
-                    'nominal' => $pay->gaji_pokok + $pay->tunjangan_lain,
-                    'keterangan' => "Gaji Pokok {$pay->nama_bulan}: " . $pay->officer->member->nama,
+                    'ref_budget_post_id' => $refBudgetPostId,
+                    'nominal' => $nominal,
+                    'keterangan' => "Pembayaran gaji {$periodKode}: {$memberName}",
                     'user_id' => Auth::id(),
                 ]);
-                $transactionId = $trxGaji->id;
 
-                // Tunjangan Rumah
-                $posRumah = $pay->officer->ref_perumahan_post_id;
-                if ($pay->tunjangan_perumahan > 0 && $posRumah) {
-                    Transaction::create([
-                        'uuid' => (string) Str::uuid(),
-                        'fiscal_year_id' => $pay->fiscal_year_id,
-                        'tanggal' => now(),
-                        'jenis' => 'keluar',
-                        'ref_account_id' => $this->ref_account_id,
-                        'ref_budget_post_id' => $posRumah,
-                        'nominal' => $pay->tunjangan_perumahan,
-                        'keterangan' => "Tunj. Rumah {$pay->nama_bulan}: " . $pay->officer->member->nama,
-                        'user_id' => Auth::id(),
-                    ]);
+                // Bayar tiap item sesuai proporsi (cicil)
+                $remaining = $nominal;
+                foreach ($payroll->items as $item) {
+                    if ($remaining <= 0) break;
+
+                    $due = $item->nominal_snapshot - ($item->nominal_bayar ?? 0);
+                    $toPay = min($due, $remaining);
+
+                    if ($toPay > 0) {
+                        $item->increment('nominal_bayar', $toPay);
+                        $remaining -= $toPay;
+                    }
                 }
 
-                // Iuran Pensiun
-                $posPensiun = $pay->officer->ref_pensiun_post_id;
-                if ($pay->iuran_pensiun > 0 && $posPensiun) {
-                    Transaction::create([
-                        'uuid' => (string) Str::uuid(),
-                        'fiscal_year_id' => $pay->fiscal_year_id,
-                        'tanggal' => now(),
-                        'jenis' => 'keluar',
-                        'ref_account_id' => $this->ref_account_id,
-                        'ref_budget_post_id' => $posPensiun,
-                        'nominal' => $pay->iuran_pensiun,
-                        'keterangan' => "Iuran Pensiun {$pay->nama_bulan}: " . $pay->officer->member->nama,
-                        'user_id' => Auth::id(),
-                    ]);
-                }
-            } else {
-                // BAYAR CICIL: Satu Jurnal Gabungan
-                $trx = Transaction::create([
+                // Update status payroll
+                $totalPaid = $payroll->items->sum('nominal_bayar');
+                $totalNominal = $payroll->items->sum('nominal_snapshot');
+                // $payroll->update([
+                //     'status' => $totalPaid >= $totalNominal ? 'paid' : ($totalPaid > 0 ? 'cicil' : 'draft')
+                // ]);
+                $payroll->update([
+                    'status_bayar' => $totalPaid >= $totalNominal ? 'lunas' : 'cicil',
+                    'status' => $totalPaid >= $totalNominal ? 'paid' : 'draft',
+                ]);
+                OfficerPayrollPayment::create([
                     'uuid' => (string) Str::uuid(),
-                    'fiscal_year_id' => $pay->fiscal_year_id,
-                    'tanggal' => now(),
-                    'jenis' => 'keluar',
-                    'ref_account_id' => $this->ref_account_id,
-                    'ref_budget_post_id' => $mainBudgetPostId,
-                    'nominal' => $cleanNominal,
-                    'keterangan' => "Cicilan Gaji {$pay->nama_bulan}: " . $pay->officer->member->nama . " ({$this->catatan_bayar})",
-                    'user_id' => Auth::id(),
+                    'officer_payroll_id' => $payroll->id,
+                    'transaction_id' => $transaction->id,
+                    'nominal' => $nominal,
+                    'tanggal_bayar' => now(),
+                    'keterangan' => $this->catatan_bayar,
                 ]);
-                $transactionId = $trx->id;
-            }
-
-            // 2. CATAT LOG PEMBAYARAN
-            PayrollPayment::create([
-                'uuid' => (string) Str::uuid(),
-                'payroll_id' => $pay->id,
-                'transaction_id' => $transactionId,
-                'nominal' => $cleanNominal,
-                'tanggal_bayar' => now(),
-                'keterangan' => $this->catatan_bayar ?: 'Pembayaran Gaji',
-            ]);
-
-            // 3. UPDATE STATUS (Re-calculate fresh)
-            $newTotalPaid = $pay->payments()->sum('nominal');
-            $isLunas = $newTotalPaid >= $pay->netto;
-
-            $pay->update([
-                'status_bayar' => $isLunas ? 'lunas' : 'cicil',
-                'status' => $isLunas ? 'paid' : 'draft',
-                'tanggal_bayar' => now(),
-                'transaction_id' => $transactionId
-            ]);
-        });
-
-        $this->dispatch('notify', message: 'Pembayaran gaji berhasil dicatat.', type: 'success');
-        $this->isPaymentModalOpen = false;
-        $this->reset(['nominal_bayar', 'catatan_bayar']);
+            });
+            $this->dispatch('notify', message: 'Pembayaran gaji berhasil dicatat.', type: 'success');
+            $this->isPaymentModalOpen = false;
+            $this->reset(['nominal_bayar', 'catatan_bayar']);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = implode(' | ', $e->validator->errors()->all());
+            $this->dispatch('notify', message: "Validasi gagal: $errors", type: 'error');
+        } catch (\Exception $e) {
+            Log::error("savePayment error: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            $this->dispatch('notify', message: 'Terjadi kesalahan saat menyimpan pembayaran gaji.', type: 'error');
+        }
     }
 
     public function render()
     {
+        $payrolls = OfficerPayroll::with([
+            'officer.member.churchPerson',
+            'officer.position'
+        ])
+            ->whereHas('period', function ($q) {
+                $q->whereMonth('tanggal_mulai', $this->bulan)
+                    ->whereYear('tanggal_mulai', $this->tahun);
+            })
+            ->get();
+
         return view('livewire.finance.payroll-manager', [
-            'payrolls' => Payroll::with(['officer.member', 'officer.position', 'payments'])
-                ->where('bulan', $this->bulan)
-                ->where('tahun', $this->tahun)
-                ->get()
-                ->sortBy(fn($q) => $q->officer->position->urutan ?? 99),
+            'payrolls' => $payrolls,
             'accounts' => RefAccount::where('is_active', true)->get()
         ]);
     }

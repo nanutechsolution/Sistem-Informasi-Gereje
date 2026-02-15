@@ -8,12 +8,12 @@ use App\Models\RefWilayah;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Url;
-use Livewire\Attributes\Layout; // Import Layout
-use Livewire\Attributes\Title;  // Import Title
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Carbon\Carbon;
 
-#[Layout('components.layouts.web')] // Definisi Layout di sini
-#[Title('Agenda Pelayanan | GKS Jemaat Reda Pada')] // Judul Halaman
+#[Layout('components.layouts.web')]
+#[Title('Agenda Pelayanan | GKS Jemaat Reda Pada')]
 class Schedules extends Component
 {
     use WithPagination;
@@ -32,7 +32,6 @@ class Schedules extends Component
 
     public function mount()
     {
-        // Default mulai hari ini jika tidak ada di URL
         if (!$this->start_date) {
             $this->start_date = Carbon::today()->format('Y-m-d');
         }
@@ -45,7 +44,8 @@ class Schedules extends Component
 
     public function render()
     {
-        $query = ActivitySchedule::with(['type', 'family.refWilayah', 'servants.member', 'wilayah'])
+        // Menggunakan join/relasi yang tepat sesuai struktur churchPeople
+        $query = ActivitySchedule::with(['type', 'family.members.churchPeople', 'servants.member.churchPeople', 'wilayah'])
             ->where('status', '!=', 'batal')
             ->orderBy('tanggal', 'asc')
             ->orderBy('jam_mulai', 'asc');
@@ -68,12 +68,12 @@ class Schedules extends Component
         if ($this->search) {
             $query->where(function($q) {
                 $q->where('tema', 'like', "%{$this->search}%")
-                  ->orWhereHas('family', fn($fq) => $fq->where('kepala_keluarga', 'like', "%{$this->search}%"))
-                  ->orWhereHas('servants.member', fn($sq) => $sq->where('nama', 'like', "%{$this->search}%"));
+                  ->orWhereHas('family.members.churchPeople', fn($mq) => $mq->where('full_name', 'like', "%{$this->search}%"))
+                  ->orWhereHas('servants.member.churchPeople', fn($sq) => $sq->where('full_name', 'like', "%{$this->search}%"));
             });
         }
 
-        return view('livewire.public.schedules', [ // Sesuaikan nama view jika perlu (biasanya public.schedules.index atau public.schedules)
+        return view('livewire.public.schedules', [
             'schedules' => $query->paginate(9),
             'types' => RefActivityType::all(),
             'wilayahs' => RefWilayah::orderBy('nama')->get()

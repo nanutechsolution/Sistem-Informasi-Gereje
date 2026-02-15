@@ -22,137 +22,120 @@ class PksScheduler extends Component
     // State Modals
     public $isModalOpen = false;
     public $isBatchModalOpen = false;
-    public $isAuditModalOpen = false; 
     public $editId = null; 
     
-    // Filters & Search
+    // Filters
     public $search = '';
     public $filterWilayah = '';
-    public $filterStatus = ''; 
     public $filterStartDate;
     public $filterEndDate;
 
-    // Form Properties (Manual Input)
+    // Form Manual
     public $family_id, $tanggal, $jam_mulai = '16:00', $tema;
-    public $service_group_id, $selected_pf_id, $selected_pendamping_ids = [];
+    public $selected_pf_id, $selected_pendamping_ids = [];
+    public $service_group_id;
 
-    // Form Batch Generator
-    public $batch_wilayah_id, $batch_start_date, $batch_time = '16:00', $batch_group_id;
+    // Form Batch
+    public $batch_wilayah_id, $batch_start_date, $batch_time = '16:00', $batch_group_id, $batch_tema;
 
-    // Search Helper
-    public $searchFamily = '', $foundFamilies = [], $selectedFamilyLabel = ''; 
+    // Search Helpers
+    public $searchFamily = '', $selectedFamilyLabel = '', $foundFamilies = []; 
 
-    protected $queryString = ['search', 'filterWilayah', 'filterStatus', 'filterStartDate', 'filterEndDate'];
+    // Clash Detection
+    public $clashWarning = null;
 
-    /**
-     * Pesan Error dalam Bahasa Indonesia (UX Friendly)
-     */
-    protected $messages = [
-        'family_id.required' => 'Tuan rumah (Keluarga) wajib dipilih.',
-        'tanggal.required' => 'Tanggal ibadah tidak boleh kosong.',
-        'tanggal.date' => 'Format tanggal tidak valid.',
-        'selected_pf_id.required' => 'Pelayan Firman wajib ditentukan.',
-        'batch_wilayah_id.required' => 'Pilih wilayah untuk generate massal.',
-        'batch_start_date.required' => 'Tentukan tanggal mulai jadwal.',
-        'batch_group_id.required' => 'Pilih kelompok tim pelayan.',
-    ];
+    protected $queryString = ['search', 'filterWilayah', 'filterStartDate', 'filterEndDate'];
 
     public function mount()
     {
-        $this->tanggal = date('Y-m-d');
-        // Default View: 2 Bulan (Sesuai siklus PKS jemaat)
         $this->filterStartDate = Carbon::now()->startOfMonth()->format('Y-m-d');
         $this->filterEndDate = Carbon::now()->addMonths(2)->endOfMonth()->format('Y-m-d');
+        $this->tanggal = date('Y-m-d');
     }
 
-    // --- LOGIKA OTOMATIS AMBIL PF DARI KELOMPOK (KETUA TIM) ---
+    // PENTING: Pastikan method ini PUBLIC
+    public function create()
+    {
+        $this->reset(['editId', 'family_id', 'selectedFamilyLabel', 'tema', 'selected_pf_id', 'selected_pendamping_ids', 'clashWarning', 'searchFamily', 'foundFamilies']);
+        $this->tanggal = date('Y-m-d');
+        $this->isModalOpen = true;
+    }
+
+    public function checkConflicts()
+    {
+        $this->clashWarning = null;
+        if (!$this->family_id || !$this->tanggal) return;
+
+        $date = Carbon::parse($this->tanggal);
+        
+        // 1. Cek Jeda 2 Bulan (60 Hari) untuk Keluarga
+        $familyClash = ActivitySchedule::where('family_id', $this->family_id)
+            ->where('id', '!=', $this->editId)
+            ->whereBetween('tanggal', [$date->copy()->subDays(60), $date->copy()->addDays(60)])
+            ->first();
+
+        if ($familyClash) {
+            $this->clashWarning = "BENTROK: Keluarga ini sudah terjadwal pada " . $familyClash->tanggal->format('d M Y') . ". Minimal jeda adalah 2 bulan.";
+            return;
+        }
+
+        // 2. Cek Bentrok Pelayan Firman
+        if ($this->selected_pf_id) {
+            $pfClash = ActivitySchedule::where('tanggal', $this->tanggal)
+                ->where('id', '!=', $this->editId)
+                ->whereHas('servants', fn($q) => $q->where('member_id', $this->selected_pf_id))
+                ->first();
+            
+            if ($pfClash) {
+                $this->clashWarning = "BENTROK: Pelayan Firman sudah memiliki tugas lain di tanggal ini.";
+            }
+        }
+    }
+
+    public function updatedTanggal() { $this->checkConflicts(); }
+    public function updatedSelectedPfId() { $this->checkConflicts(); }
+
+    public function updatedSearchFamily($value)
+    {
+        if (strlen($value) < 2) { $this->foundFamilies = []; return; }
+        $this->foundFamilies = Family::with(['wilayah', 'members.churchPeople'])
+            ->where('nomor_kk', 'like', "%{$value}%")
+            ->orWhereHas('members.churchPeople', fn($q) => $q->where('full_name', 'like', "%{$value}%"))
+            ->limit(5)->get();
+    }
+
+    public function selectFamily($id, $label)
+    {
+        $this->family_id = $id;
+        $this->selectedFamilyLabel = $label;
+        $this->foundFamilies = [];
+        $this->checkConflicts();
+    }
+
     public function updatedServiceGroupId($id)
     {
         if ($id) {
             $group = ServiceGroup::with('officers')->find($id);
             if ($group) {
-                // Ambil officer yang di-set sebagai 'Pembaca Firman' di pivot table
-                $pf = $group->officers->first(fn($o) => $o->pivot->peran_default === 'Pembaca Firman');
-                
-                // Set PF terpilih otomatis
-                $this->selected_pf_id = $pf ? $pf->member_id : null;
-
-                // Masukkan sisanya sebagai pendamping otomatis
-                $this->selected_pendamping_ids = $group->officers
-                    ->where('member_id', '!=', $this->selected_pf_id)
-                    ->pluck('member_id')
-                    ->map(fn($v) => (string)$v)
-                    ->toArray();
-                
-                if (!$pf) {
-                    $this->dispatch('notify', message: 'Kelompok ini belum memiliki Ketua Tim (PF) default.', type: 'error');
-                }
+                $pf = $group->officers->first(fn($o) => in_array($o->pivot->peran_default, ['Pembaca Firman', 'Ketua'])) ?? $group->officers->first();
+                $this->selected_pf_id = $pf?->member_id;
+                $this->selected_pendamping_ids = $group->officers->where('member_id', '!=', $this->selected_pf_id)->pluck('member_id')->toArray();
+                $this->checkConflicts();
             }
         }
     }
 
-    public function updatedSearchFamily($value)
-    {
-        if (strlen($value) > 2) {
-            $this->foundFamilies = Family::where('kepala_keluarga', 'like', "%{$value}%")
-                ->orWhere('nomor_kk', 'like', "%{$value}%")
-                ->limit(5)->get()->toArray();
-        } else {
-            $this->foundFamilies = [];
-        }
-    }
-
-    public function selectFamily($id, $name, $kk)
-    {
-        $this->family_id = $id;
-        $this->selectedFamilyLabel = "Kel. $name ($kk)";
-        $this->searchFamily = ''; 
-        $this->foundFamilies = []; 
-    }
-
-    public function create()
-    {
-        $this->reset(['family_id', 'selectedFamilyLabel', 'tema', 'selected_pf_id', 'selected_pendamping_ids', 'service_group_id', 'editId']);
-        $this->tanggal = date('Y-m-d');
-        $this->isModalOpen = true;
-    }
-
     public function save()
     {
-        $this->validate([
-            'family_id' => 'required',
-            'tanggal' => 'required|date',
-            'selected_pf_id' => 'required',
-        ]);
-
-        // --- VALIDASI BENTROK JADWAL (CLASH DETECTION) ---
-        
-        // 1. Cek Bentrok Tuan Rumah
-        $hostClash = ActivitySchedule::where('family_id', $this->family_id)
-            ->where('tanggal', $this->tanggal)
-            ->where('jam_mulai', $this->jam_mulai)
-            ->where('id', '!=', $this->editId)
-            ->exists();
-
-        if ($hostClash) {
-            $this->addError('family_id', 'Keluarga ini sudah memiliki jadwal ibadah di waktu yang sama.');
+        $this->checkConflicts();
+        if ($this->clashWarning) {
+            $this->addError('family_id', 'Simpan dibatalkan karena jadwal bentrok.');
             return;
         }
 
-        // 2. Cek Bentrok Pelayan Firman (PF)
-        $pfClash = ActivityServant::where('member_id', $this->selected_pf_id)
-            ->whereHas('schedule', function($q) {
-                $q->where('tanggal', $this->tanggal)
-                  ->where('jam_mulai', $this->jam_mulai)
-                  ->where('id', '!=', $this->editId);
-            })->exists();
+        $this->validate(['family_id' => 'required', 'tanggal' => 'required', 'selected_pf_id' => 'required']);
 
-        if ($pfClash) {
-            $this->addError('selected_pf_id', 'Pelayan Firman tersebut sudah bertugas di tempat lain pada waktu yang sama.');
-            return;
-        }
-
-        $pksType = RefActivityType::where('nama', 'like', '%PKS%')->first();
+        $pksType = RefActivityType::firstOrCreate(['nama' => 'Ibadah PKS'], ['uuid' => (string) Str::uuid()]);
 
         DB::transaction(function () use ($pksType) {
             $schedule = ActivitySchedule::updateOrCreate(['id' => $this->editId], [
@@ -161,132 +144,92 @@ class PksScheduler extends Component
                 'family_id' => $this->family_id,
                 'tanggal' => $this->tanggal,
                 'jam_mulai' => $this->jam_mulai,
-                'tema' => $this->tema ?? 'Ibadah Rumah Tangga',
-                'status' => $this->editId ? ActivitySchedule::find($this->editId)->status : 'rencana'
+                'tema' => $this->tema ?: 'Ibadah PKS',
+                'status' => 'rencana'
             ]);
 
-            // Sync Tim Pelayan
             $schedule->servants()->delete();
-            ActivityServant::create([
-                'activity_schedule_id' => $schedule->id, 
-                'member_id' => $this->selected_pf_id, 
-                'peran' => 'Pembaca Firman'
-            ]);
-            
+            ActivityServant::create(['activity_schedule_id' => $schedule->id, 'member_id' => $this->selected_pf_id, 'peran' => 'Pembaca Firman']);
             foreach ($this->selected_pendamping_ids as $mId) {
-                ActivityServant::create([
-                    'activity_schedule_id' => $schedule->id, 
-                    'member_id' => $mId, 
-                    'peran' => 'Pendamping'
-                ]);
+                ActivityServant::create(['activity_schedule_id' => $schedule->id, 'member_id' => $mId, 'peran' => 'Pendamping']);
             }
         });
 
-        $this->dispatch('notify', message: 'Jadwal PKS dan Tim Pelayan berhasil disimpan.', type: 'success');
+        $this->dispatch('notify', message: 'Jadwal berhasil disimpan.', type: 'success');
         $this->isModalOpen = false;
-    }
-
-    public function delete($id)
-    {
-        ActivitySchedule::findOrFail($id)->delete();
-        $this->dispatch('notify', message: 'Jadwal pelayanan telah dihapus.', type: 'warning');
     }
 
     public function generateBatch()
     {
         $this->validate([
-            'batch_wilayah_id' => 'required', 
-            'batch_start_date' => 'required|date', 
+            'batch_wilayah_id' => 'required',
+            'batch_start_date' => 'required',
             'batch_group_id' => 'required'
         ]);
-        
-        $families = Family::where('wilayah_id', $this->batch_wilayah_id)->orderBy('kepala_keluarga')->get();
-        if ($families->isEmpty()) {
-            $this->dispatch('notify', message: 'Wilayah tersebut tidak memiliki data Keluarga.', type: 'error');
-            return;
-        }
 
+        $families = Family::where('wilayah_id', $this->batch_wilayah_id)->get();
+        $pksType = RefActivityType::firstOrCreate(['nama' => 'Ibadah PKS'], ['uuid' => (string) Str::uuid()]);
         $group = ServiceGroup::with('officers')->find($this->batch_group_id);
-        $pf = $group->officers->first(fn($o) => $o->pivot->peran_default === 'Pembaca Firman');
-        $pendampingIds = $group->officers->where('member_id', '!=', $pf?->member_id)->pluck('member_id');
-        $pksType = RefActivityType::where('nama', 'like', '%PKS%')->first();
         
+        $pf = $group->officers->first(fn($o) => in_array($o->pivot->peran_default, ['Pembaca Firman', 'Ketua'])) ?? $group->officers->first();
+        $pendampingIds = $group->officers->where('id', '!=', $pf->id)->pluck('member_id');
+
         $currDate = Carbon::parse($this->batch_start_date);
-        
-        DB::transaction(function() use ($families, $pksType, $currDate, $pf, $pendampingIds) {
+        $count = 0;
+
+        DB::transaction(function() use ($families, $pksType, $currDate, $pf, $pendampingIds, &$count) {
             foreach($families as $f) {
-                // Cek bentrok tuan rumah sebelum generate otomatis
-                $exists = ActivitySchedule::where('family_id', $f->id)
-                    ->where('tanggal', $currDate->format('Y-m-d'))
-                    ->where('jam_mulai', $this->batch_time)
+                // Skip jika sudah melayani dalam 60 hari terakhir
+                $hasServed = ActivitySchedule::where('family_id', $f->id)
+                    ->whereBetween('tanggal', [$currDate->copy()->subDays(60), $currDate->copy()->addDays(60)])
                     ->exists();
 
-                if (!$exists) {
+                if (!$hasServed) {
                     $sch = ActivitySchedule::create([
                         'uuid' => (string) Str::uuid(), 
                         'ref_activity_type_id' => $pksType->id,
-                        'ref_wilayah_id' => $this->batch_wilayah_id, 
                         'family_id' => $f->id,
                         'tanggal' => $currDate->format('Y-m-d'), 
                         'jam_mulai' => $this->batch_time,
-                        'tema' => '-', 
+                        'tema' => $this->batch_tema ?: 'Ibadah PKS', 
                         'status' => 'rencana'
                     ]);
 
-                    if($pf) {
-                        ActivityServant::create(['activity_schedule_id' => $sch->id, 'member_id' => $pf->member_id, 'peran' => 'Pembaca Firman']);
-                    }
-                    
+                    ActivityServant::create(['activity_schedule_id' => $sch->id, 'member_id' => $pf->member_id, 'peran' => 'Pembaca Firman']);
                     foreach($pendampingIds as $mid) {
                         ActivityServant::create(['activity_schedule_id' => $sch->id, 'member_id' => $mid, 'peran' => 'Pendamping']);
                     }
+                    $count++;
                 }
-                
-                $currDate->addDays(7); // Bergulir tiap minggu
+                $currDate->addDays(7);
             }
         });
 
         $this->isBatchModalOpen = false;
-        $this->dispatch('notify', message: 'Berhasil membuat jadwal wilayah (Data bentrok otomatis dilewati).', type: 'success');
+        $this->dispatch('notify', message: "$count Jadwal massal berhasil dibuat.", type: 'success');
+    }
+
+    public function delete($id)
+    {
+        ActivitySchedule::findOrFail($id)->delete();
+        $this->dispatch('notify', message: 'Jadwal dihapus.', type: 'success');
     }
 
     public function render()
     {
-        $pksTypeId = RefActivityType::where('nama', 'like', '%PKS%')->value('id');
-
-        // Query Jadwal
-        $query = ActivitySchedule::with(['family.refWilayah', 'servants.member'])
-            ->where('ref_activity_type_id', $pksTypeId)
-            ->when($this->filterWilayah, fn($q) => $q->whereHas('family', fn($wf) => $wf->where('wilayah_id', $this->filterWilayah)))
-            ->when($this->filterStatus, fn($q) => $q->where('status', $this->filterStatus))
-            ->when($this->search, fn($q) => $q->whereHas('family', fn($sf) => $sf->where('kepala_keluarga', 'like', "%{$this->search}%")))
-            ->whereBetween('tanggal', [$this->filterStartDate, $this->filterEndDate]);
-
-        // Audit Antrian
-        $scheduledIds = ActivitySchedule::where('ref_activity_type_id', $pksTypeId)
+        $pksType = RefActivityType::where('nama', 'like', '%Ibadah PKS%')->first();
+        
+        $query = ActivitySchedule::with(['family.wilayah', 'family.members.churchPeople', 'servants.member.churchPeople'])
+            ->where('ref_activity_type_id', $pksType?->id ?? 0)
             ->whereBetween('tanggal', [$this->filterStartDate, $this->filterEndDate])
-            ->pluck('family_id');
-
-        $unscheduledFamilies = Family::with(['refWilayah', 'schedules' => fn($q) => $q->where('ref_activity_type_id', $pksTypeId)->latest('tanggal')])
-            ->whereNotIn('id', $scheduledIds)
-            ->when($this->filterWilayah, fn($q) => $q->where('wilayah_id', $this->filterWilayah))
-            ->orderBy('kepala_keluarga')
-            ->get();
-
-        $stats = [
-            'total' => (clone $query)->count(),
-            'terlaksana' => (clone $query)->where('status', 'terlaksana')->count(),
-            'rencana' => (clone $query)->where('status', 'rencana')->count(),
-            'belum_terjadwal' => $unscheduledFamilies->count()
-        ];
+            ->when($this->filterWilayah, fn($q) => $q->whereHas('family', fn($f) => $f->where('wilayah_id', $this->filterWilayah)))
+            ->when($this->search, fn($q) => $q->whereHas('family.members.churchPeople', fn($m) => $m->where('full_name', 'like', "%{$this->search}%")));
 
         return view('livewire.schedules.pks-scheduler', [
-            'schedules' => $query->orderBy('tanggal', 'asc')->paginate(9),
-            'unscheduledList' => $unscheduledFamilies,
-            'wilayahs' => RefWilayah::orderBy('nama')->get(),
+            'schedules' => $query->orderBy('tanggal', 'asc')->paginate(12),
+            'wilayahs' => RefWilayah::all(),
             'groups' => ServiceGroup::where('is_active', true)->get(),
-            'staffList' => ChurchOfficer::with(['member', 'position'])->active()->get(),
-            'stats' => $stats
+            'staffList' => ChurchOfficer::with('member.churchPeople')->where('is_active', true)->get()
         ]);
     }
 }

@@ -20,9 +20,10 @@ class Show extends Component
 
     public function mount(Member $member)
     {
-        // Eager load data profil dan relasi tanggungan
+        // Eager load data profil melalui churchPeople dan relasi lainnya
         $this->member = $member->load([
-            'family.refWilayah',
+            'churchPeople',
+            'family.wilayah',
             'refHubunganKeluarga',
             'refPekerjaan',
             'events.eventType'
@@ -30,22 +31,24 @@ class Show extends Component
         $this->tanggal = date('Y-m-d');
     }
 
-    // --- TAB LOGIC ---
     public function setTab($tab)
     {
         $this->activeTab = $tab;
     }
 
-    // --- EVENT LOGIC (Existing) ---
     public function saveEvent()
     {
         $this->validate([
             'event_type_id' => 'required|exists:ref_event_types,id',
             'tanggal' => 'required|date',
+        ], [
+            'event_type_id.required' => 'Jenis peristiwa wajib dipilih.',
+            'tanggal.required' => 'Tanggal peristiwa wajib diisi.',
         ]);
 
-        $eventType = \App\Models\RefEventType::find($this->event_type_id);
-        $event = $this->member->events()->create([
+        $eventType = RefEventType::find($this->event_type_id);
+        
+        $this->member->events()->create([
             'event_type_id' => $this->event_type_id,
             'tanggal' => $this->tanggal,
             'lokasi' => $this->lokasi,
@@ -63,21 +66,17 @@ class Show extends Component
             ]);
         }
 
-
-        if ($eventType->kode === 'MUTASI_KELUAR') {
+        if ($eventType->kode === 'MUTASI_KELUAR' || $eventType->kode === 'PINDAH') {
             $this->member->update([
                 'status_keanggotaan' => 'pindah',
                 'is_active' => 0,
             ]);
         }
 
-        $this->dispatch('notify', message: 'Riwayat peristiwa disimpan.', type: 'success');
-
-        $this->reset(['event_type_id', 'tanggal', 'lokasi', 'pendeta', 'nomor_surat', 'keterangan', 'isAddingEvent']);
-
+        $this->dispatch('notify', message: 'Riwayat peristiwa berhasil diperbarui.', type: 'success');
+        $this->reset(['event_type_id', 'lokasi', 'pendeta', 'nomor_surat', 'keterangan', 'isAddingEvent']);
         $this->member->refresh();
     }
-
 
     public function render()
     {

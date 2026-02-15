@@ -11,10 +11,14 @@ class RefPosition extends Model
     use HasUuids, SoftDeletes;
     protected $guarded = [];
 
-    public function uniqueIds() { return ['uuid']; }
+    public function uniqueIds()
+    {
+        return ['uuid'];
+    }
 
     // Jabatan ini bisa dipegang oleh banyak pegawai
-    public function officers() {
+    public function officers()
+    {
         return $this->hasMany(ChurchOfficer::class, 'ref_position_id');
     }
 }

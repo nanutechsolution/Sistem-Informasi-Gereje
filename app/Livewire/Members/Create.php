@@ -4,61 +4,103 @@ namespace App\Livewire\Members;
 
 use App\Models\Family;
 use App\Models\Member;
-use App\Models\RefHubunganKeluarga; // Import
-use App\Models\RefPekerjaan; // Import
+use App\Models\ChurchPeople;
+use App\Models\RefHubunganKeluarga;
+use App\Models\RefPekerjaan;
 use Livewire\Component;
+use Illuminate\Support\Str;
 
 class Create extends Component
 {
     public Family $family;
 
-    // Properti Form
-    public $nama, $nik, $tempat_lahir, $tanggal_lahir, $jenis_kelamin = 'L', $no_hp;
-    public $hubungan_keluarga_id; // Ganti string jadi ID
-    public $pekerjaan_id; // Baru
+    // Search Logic
+    public $search = '';
+    public $searchResults = [];
+    public $selectedPerson = null; // Menyimpan obyek ChurchPeople yang dipilih
 
-    protected $messages = [
-        'nama.required' => 'Nama lengkap wajib diisi.',
-        'nik.required' => 'NIK Wajib lengkap wajib diisi.',
-        'tempat_lahir.required' => 'Tempat lahir wajib diisi.',
-        'tanggal_lahir.required' => 'Tanggal lahir wajib diisi.',
-        'nik.digits' => 'NIK wajib 16 digit.',
-        'nik.unique' => 'NIK ini sudah terdaftar.',
-        'hubungan_keluarga_id.required' => 'Hubungan keluarga wajib dipilih.',
-        'pekerjaan_id.required' => 'Pekerjaan wajib dipilih.',
-    ];
+    // Form Member Data
+    public $hubungan_keluarga_id;
+    public $pekerjaan_id;
 
     public function mount(Family $family)
     {
         $this->family = $family;
     }
 
+    // Real-time search saat mengetik
+    public function updatedSearch($value)
+    {
+        if (strlen($value) < 3) {
+            $this->searchResults = [];
+            return;
+        }
+
+        // Cari orang yang BELUM menjadi anggota keluarga ini (opsional: atau belum masuk KK manapun)
+        $this->searchResults = ChurchPeople::where('full_name', 'like', '%' . $value . '%')
+            ->orWhere('nik', 'like', '%' . $value . '%')
+            ->limit(5)
+            ->get();
+    }
+
+    public function selectPerson($id)
+    {
+        $person = ChurchPeople::find($id);
+        
+        // Validasi: Cek apakah orang ini sudah ada di tabel members (sudah punya KK)
+        // Jika kebijakan gereja: 1 Orang hanya boleh 1 KK aktif
+        $existingMember = Member::where('church_people_id', $id)
+            ->where('status_keanggotaan', 'aktif') // Cek status aktif
+            ->first();
+
+        if ($existingMember) {
+            $this->dispatch('notify', message: 'Orang ini sudah terdaftar di KK lain (No. KK: ' . $existingMember->family->nomor_kk . ')', type: 'error');
+            return;
+        }
+
+        $this->selectedPerson = $person;
+        $this->search = '';
+        $this->searchResults = [];
+    }
+
+    public function cancelSelection()
+    {
+        $this->selectedPerson = null;
+        $this->hubungan_keluarga_id = null;
+        $this->pekerjaan_id = null;
+    }
+
     public function save()
     {
         $this->validate([
-            'nama' => 'required|min:3',
-            'nik' => 'required|numeric|digits:16|unique:members,nik',
-            'tempat_lahir' => 'required|string',
-            'tanggal_lahir' => 'required|date',
-            'jenis_kelamin' => 'required|in:L,P',
+            'selectedPerson' => 'required', // Pastikan orang sudah dipilih
             'hubungan_keluarga_id' => 'required|exists:ref_hubungan_keluargas,id',
             'pekerjaan_id' => 'required|exists:ref_pekerjaans,id',
+        ], [
+            'selectedPerson.required' => 'Anda belum memilih data orang dari pencarian.',
+            'hubungan_keluarga_id.required' => 'Status hubungan keluarga wajib dipilih.',
+            'pekerjaan_id.required' => 'Pekerjaan wajib dipilih.',
         ]);
 
+        // Cek Double Entry di Keluarga yang sama (Validation Layer 2)
+        $exists = $this->family->members()->where('church_people_id', $this->selectedPerson->id)->exists();
+        if ($exists) {
+            $this->dispatch('notify', message: 'Orang ini sudah ada di keluarga ini.', type: 'error');
+            return;
+        }
+
+        // Simpan Member
         $this->family->members()->create([
-            'nama' => $this->nama,
-            'nik' => $this->nik,
-            'tempat_lahir' => $this->tempat_lahir,
-            'tanggal_lahir' => $this->tanggal_lahir,
-            'jenis_kelamin' => $this->jenis_kelamin,
-            'no_hp' => $this->no_hp,
+            'uuid' => Str::uuid(),
+            'church_people_id' => $this->selectedPerson->id,
             'hubungan_keluarga_id' => $this->hubungan_keluarga_id,
             'pekerjaan_id' => $this->pekerjaan_id,
-            'no_hp' => $this->no_hp,
+            'status_keanggotaan' => 'aktif',
+            'is_active' => 1,
         ]);
 
-        $this->dispatch('notify', message: 'Anggota keluarga berhasil ditambahkan!', type: 'success');
-        return redirect()->route('families.edit', $this->family);
+        $this->dispatch('notify', message: 'Anggota berhasil ditambahkan ke KK!', type: 'success');
+        return redirect()->route('families.edit', $this->family->uuid);
     }
 
     public function render()

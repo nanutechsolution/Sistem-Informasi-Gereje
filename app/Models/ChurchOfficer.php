@@ -37,7 +37,7 @@ class ChurchOfficer extends Model
      */
     public function member()
     {
-        return $this->belongsTo(Member::class);
+        return $this->belongsTo(Member::class, 'member_id');
     }
     public function position()
     {

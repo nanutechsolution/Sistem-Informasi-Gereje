@@ -2,8 +2,9 @@
 
 namespace App\Livewire\Users;
 
+use App\Models\ChurchPeople;
 use App\Models\User;
-use App\Models\Member;
+use App\Models\ChurchPerson;
 use Spatie\Permission\Models\Role;
 use Livewire\Component;
 use Illuminate\Support\Facades\Hash;
@@ -11,11 +12,17 @@ use Illuminate\Validation\Rules\Password;
 
 class Create extends Component
 {
-    public $name, $email, $password, $password_confirmation;
-    public $role; // Slug role yang dipilih
-    
-    // Opsional: Link ke Data Jemaat
-    public $searchMember = '', $selectedMemberId, $selectedMemberName;
+    // Form Inputs
+    public $name = '';
+    public $email = '';
+    public $password = '';
+    public $password_confirmation = '';
+    public $role = '';
+
+    // Search Logic
+    public $searchMember = '';
+    public $selectedMemberId = null;
+    public $selectedMemberName = ''; // <--- WAJIB ADA
     public $foundMembers = [];
 
     protected function rules()
@@ -25,22 +32,44 @@ class Create extends Component
             'email' => 'required|email|unique:users,email',
             'password' => ['required', 'confirmed', Password::defaults()],
             'role' => 'required|exists:roles,name',
+            'selectedMemberId' => 'nullable|exists:church_people,id',
         ];
     }
 
     public function updatedSearchMember($value)
     {
-        $this->foundMembers = strlen($value) > 2 
-            ? Member::where('nama', 'like', "%{$value}%")->limit(5)->get() 
-            : [];
+        if (strlen($value) < 3) {
+            $this->foundMembers = [];
+            return;
+        }
+
+        $this->foundMembers = ChurchPeople::where('full_name', 'like', "%{$value}%")
+            ->orWhere('nik', 'like', "%{$value}%")
+            ->limit(5)
+            ->get();
     }
 
-    public function selectMember($id, $name)
+    public function selectMember($id, $fullName, $email = null)
     {
         $this->selectedMemberId = $id;
-        $this->selectedMemberName = $name;
-        $this->name = $name; // Auto-fill nama user
-        $this->searchMember = ''; $this->foundMembers = [];
+        $this->selectedMemberName = $fullName; // <--- Set nama untuk ditampilkan
+        
+        $this->searchMember = '';
+        $this->foundMembers = [];
+
+        // Auto-fill form
+        $this->name = $fullName;
+        if ($email) {
+            $this->email = $email;
+        }
+    }
+
+    public function clearMember()
+    {
+        $this->selectedMemberId = null;
+        $this->selectedMemberName = ''; // <--- Reset nama
+        $this->name = '';
+        $this->email = '';
     }
 
     public function save()
@@ -51,13 +80,13 @@ class Create extends Component
             'name' => $this->name,
             'email' => $this->email,
             'password' => Hash::make($this->password),
-            'member_id' => $this->selectedMemberId, // Link ke Data Jemaat
+            'church_people_id' => $this->selectedMemberId,
+            'is_active' => 1,
         ]);
 
-        // Assign Role Spatie
         $user->assignRole($this->role);
 
-        $this->dispatch('notify', message: 'User baru berhasil dibuat!', type: 'success');
+        $this->dispatch('notify', message: 'User berhasil dibuat.', type: 'success');
         return redirect()->route('users.index');
     }
 

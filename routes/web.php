@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\LetterPrintController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -57,16 +58,12 @@ Route::middleware('auth')->group(function () {
         $request->session()->regenerateToken();
         return redirect('/login');
     })->name('logout');
-
-
     // --- HAK AKSES KHUSUS (ROLE & PERMISSION) ---
-
     // A. SUPER ADMIN (Manajemen User & Sistem)
-    Route::middleware(['role:admin'])->group(function () {
+    Route::middleware(['role:super_admin'])->group(function () {
         Route::get('/users', Users\Index::class)->name('users.index');
         Route::get('/users/create', Users\Create::class)->name('users.create');
         Route::get('/users/{user}/edit', Users\Edit::class)->name('users.edit');
-
         // Master Data & Settings
         Route::get('/settings/positions', Settings\Positions::class)->name('settings.positions');
         Route::get('/settings/activity-types', Settings\ActivityTypes::class)->name('settings.activity-types');
@@ -88,12 +85,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/families/{family}', \App\Livewire\Families\Show::class)->name('families.show');
         Route::get('/families/{family}/edit', Families\Edit::class)->name('families.edit');
         Route::get('/families/{family}/members/create', Members\Create::class)->name('members.create');
-
         // Jemaat
         Route::get('/members', Members\Index::class)->name('members.index');
         Route::get('/members/{member}/edit', Members\Edit::class)->name('members.edit');
         Route::get('/members/{member}', Members\Show::class)->name('members.show');
-
         // Pejabat (HR)
         Route::get('/officers', Officers\Index::class)->name('officers.index');
         Route::get('/officers/create', Officers\Create::class)->name('officers.create');
@@ -103,6 +98,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/pastoral/visits', \App\Livewire\Pastoral\PastoralManager::class)->name('pastoral.visits');
         Route::get('/clerical/sacraments', SacramentManager::class)->name('clerical.sacraments');
         Route::get('/clerical/sacraments/{record}/print', [SacramentPrintController::class, 'show'])->name('clerical.sacraments.print');
+        Route::get('/letters/{letter}/print', [LetterPrintController::class, 'show'])->name('letters.print');
         // Surat & Jadwal Umum
         Route::get('/letters', Letters\LetterManager::class)->name('letters.index');
         Route::get('/schedules', Schedules\ScheduleManager::class)->name('schedules.index');
@@ -113,6 +109,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/pastoral/prayers', \App\Livewire\Pastoral\PrayerInbox::class)->name('pastoral.prayers');
         Route::get('/clerical/documents', \App\Livewire\Clerical\DocumentManager::class)->name('clerical.documents');
         Route::get('/news/sermons', \App\Livewire\Public\SermonManager::class)->name('sermons.manage');
+        Route::get('/admin/people', \App\Livewire\Admin\ChurchPeopleManager::class)->name('people.index');
+        Route::get('/admin/peoples', \App\Livewire\Admin\ChurchPeopleManager::class)->name('people.create');
     });
 
     // C. KEUANGAN (Bendahara & Admin) -> Transaksi, Lelang, Gaji

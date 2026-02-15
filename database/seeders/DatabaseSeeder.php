@@ -17,29 +17,30 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Buat Akun Super Admin
-        User::create([
-            'name' => 'Administrator GKS',
-            'email' => 'admin@gks.id',
-            'role' => 'admin',
-            'password' => Hash::make('password'), // Password default: password
-        ]);
         $this->call([
+            RoleSeeder::class,
+            UserSeeder::class,
+            // ChurchPeopleSeeder::class,
             EventTypeSeeder::class,
             RefWilayahSeeder::class,
             RefPekerjaanSeeder::class,
             RefHubunganKeluargaSeeder::class,
             FinanceSeeder::class,
             PositionSeeder::class,
-            ActivityTypeSeeder::class,
             ConstructionSeeder::class,
-            DueTypeSeeder::class,
-            RoleSeeder::class,
-            FullDeploymentSeeder::class,
-            ServiceGroupSeeder::class,
-            ChurchSettingSeeder::class,
+            RefSalaryComponentSeeder::class,
             SacramentTypeSeeder::class,
+            FamilySeeder::class,
+            PayrollPeriodSeeder::class,
+            ChurchSettingSeeder::class,
+            ActivityTypeSeeder::class,
             RefDiakoniaTypeSeeder::class,
+            DueTypeSeeder::class,
             RefUnitSeeder::class,
+            // ChurchPeopleSeeder::class,
+            // KelompokMajelisSeeder::class,
+            // FullDeploymentSeeder::class,
+            // ServiceGroupSeeder::class,
             // DiakoniaRequestSeeder::class,
             // DiakoniaRequestItemSeeder::class
         ]);

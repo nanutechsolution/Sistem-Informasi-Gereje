@@ -1,88 +1,101 @@
 <div class="py-6 sm:py-12 bg-slate-50 min-h-screen">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <!-- Header -->
-        <div class="mb-10 flex items-center justify-between">
-            <div>
-                <a href="{{ route('users.index') }}" class="text-xs font-bold text-slate-400 hover:text-primary flex items-center gap-2 mb-2 transition-colors group">
-                    <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    Kembali ke Daftar
-                </a>
-                <h1 class="text-3xl font-black text-slate-900 tracking-tight leading-none uppercase italic">Edit Pengguna</h1>
-                <p class="text-slate-500 mt-2 font-medium italic border-l-4 border-amber-400 pl-4">Perbarui informasi akun dan hak akses login.</p>
-            </div>
-            
-            <div class="h-16 w-16 rounded-3xl bg-slate-900 text-white flex items-center justify-center font-black text-2xl shadow-xl">
-                {{ substr($name, 0, 1) }}
-            </div>
+        <div class="mb-10">
+            <a href="{{ route('users.index') }}" class="text-xs font-bold text-slate-400 hover:text-primary flex items-center gap-2 mb-2 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                Kembali
+            </a>
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight leading-none uppercase">Edit User</h1>
+            <p class="text-slate-500 mt-2 font-medium">Perbarui informasi akun pengurus.</p>
         </div>
 
-        <form wire:submit="save" class="bg-white rounded-[40px] p-8 sm:p-12 shadow-xl border border-slate-100 relative overflow-hidden">
-            <!-- Dekorasi Atas -->
-            <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-400 to-primary"></div>
-
-            <div class="space-y-8">
+        <form wire:submit="save" class="bg-white rounded-[40px] p-8 sm:p-12 shadow-xl border border-slate-100 relative overflow-visible">
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-amber-400 rounded-t-[40px]"></div> <div class="space-y-8">
                 
-                <!-- Identitas Utama -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nama Lengkap</label>
-                        <input wire:model="name" type="text" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-4 focus:ring-primary/10 transition-all">
-                        @error('name') <span class="text-rose-500 text-[10px] font-bold block mt-1 ml-1 uppercase">{{ $message }}</span> @enderror
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Email Login</label>
-                        <input wire:model="email" type="email" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-4 focus:ring-primary/10 transition-all">
-                        @error('email') <span class="text-rose-500 text-[10px] font-bold block mt-1 ml-1 uppercase">{{ $message }}</span> @enderror
-                    </div>
+                <div class="relative">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tautkan ke Data Jemaat</label>
+                    
+                    @if($selectedMemberId)
+                        <div class="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex justify-between items-center animate-in zoom-in-95">
+                            <div>
+                                <span class="block font-bold text-blue-900">{{ $selectedMemberName }}</span>
+                                <span class="text-[10px] text-blue-600 font-medium">Data terhubung ke sistem jemaat</span>
+                            </div>
+                            <button type="button" wire:click="clearMember" class="text-[10px] font-black uppercase text-rose-500 hover:underline">
+                                Lepaskan Tautan
+                            </button>
+                        </div>
+                    @else
+                        <div class="relative">
+                            <input wire:model.live.debounce.300ms="searchMember" type="text" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-4 focus:ring-amber-400/10 transition-all placeholder:text-slate-300" placeholder="Cari nama jemaat...">
+                            
+                            @if(count($foundMembers) > 0)
+                                <div class="absolute z-20 w-full mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden divide-y divide-slate-50 max-h-60 overflow-y-auto">
+                                    @foreach($foundMembers as $m)
+                                    <button type="button" 
+                                        wire:click="selectMember({{ $m->id }}, '{{ $m->full_name }}')" 
+                                        class="w-full text-left p-4 hover:bg-slate-50 transition-colors group">
+                                        <span class="block font-bold text-sm text-slate-700 group-hover:text-amber-500">{{ $m->full_name }}</span>
+                                        <span class="block text-[10px] text-slate-400">NIK: {{ $m->nik ?? '-' }}</span>
+                                    </button>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 <hr class="border-slate-100">
 
-                <!-- Pilihan Role -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nama Lengkap</label>
+                        <input wire:model="name" type="text" class="w-full bg-white border-2 border-slate-100 rounded-2xl p-4 font-bold text-slate-900 focus:border-amber-400 focus:ring-0 transition-all">
+                        @error('name') <span class="text-rose-500 text-[10px] font-bold block mt-1">{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Email Login</label>
+                        <input wire:model="email" type="email" class="w-full bg-white border-2 border-slate-100 rounded-2xl p-4 font-bold text-slate-900 focus:border-amber-400 focus:ring-0 transition-all">
+                        @error('email') <span class="text-rose-500 text-[10px] font-bold block mt-1">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Hak Akses (Role)</label>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Hak Akses (Role)</label>
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         @foreach($roles as $r)
-                        <label class="cursor-pointer group">
+                        <label class="cursor-pointer group relative">
                             <input type="radio" wire:model="role" value="{{ $r->name }}" class="peer sr-only">
-                            <div class="p-4 rounded-2xl border-2 border-slate-50 bg-slate-50 hover:border-primary/20 peer-checked:border-primary peer-checked:bg-blue-50 peer-checked:text-primary transition-all text-center">
-                                <span class="block font-black text-slate-400 peer-checked:text-primary uppercase text-[10px] tracking-widest">{{ $r->name }}</span>
+                            <div class="p-4 rounded-2xl border-2 border-slate-100 bg-white hover:border-slate-300 peer-checked:border-amber-400 peer-checked:bg-amber-50 transition-all text-center h-full flex items-center justify-center">
+                                <span class="block font-black text-slate-600 peer-checked:text-amber-600 uppercase text-[10px] tracking-wider">{{ $r->name }}</span>
+                            </div>
+                            <div class="absolute top-2 right-2 opacity-0 peer-checked:opacity-100 text-amber-500 transition-opacity">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
                             </div>
                         </label>
                         @endforeach
                     </div>
-                    @error('role') <span class="text-rose-500 text-[10px] font-bold block mt-3 uppercase">{{ $message }}</span> @enderror
+                    @error('role') <span class="text-rose-500 text-[10px] font-bold block mt-2">{{ $message }}</span> @enderror
                 </div>
 
-                <hr class="border-slate-100">
-
-                <!-- Keamanan -->
-                <div class="bg-amber-50 rounded-3xl p-6 border border-amber-100">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="p-2 bg-white rounded-xl shadow-sm text-amber-500">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                        </div>
-                        <h4 class="text-sm font-black text-amber-900 uppercase italic">Ganti Password</h4>
+                <div>
+                    <div class="flex items-baseline justify-between mb-2 ml-1">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ganti Password (Opsional)</label>
+                        <span class="text-[10px] text-slate-400 italic">Biarkan kosong jika tidak ingin mengganti</span>
                     </div>
-                    
-                    <p class="text-[10px] text-amber-600 font-bold mb-4 uppercase tracking-wide">Isi jika ingin mengganti password, jika tidak biarkan kosong.</p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input wire:model="password" type="password" class="w-full bg-white border-none rounded-2xl p-4 font-bold text-slate-900 focus:ring-4 focus:ring-amber-200 shadow-sm" placeholder="Password baru...">
-                    </div>
-                    @error('password') <span class="text-rose-500 text-[10px] font-bold block mt-2 ml-1 uppercase">{{ $message }}</span> @enderror
+                    <input wire:model="password" type="password" placeholder="••••••••" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-slate-900 focus:bg-white focus:border-amber-400 focus:ring-0 transition-all placeholder:text-slate-300">
+                    @error('password') <span class="text-rose-500 text-[10px] font-bold block mt-1">{{ $message }}</span> @enderror
                 </div>
 
-                <!-- Tombol Aksi -->
-                <div class="pt-6 flex flex-col sm:flex-row gap-4">
-                    <button type="submit" wire:loading.attr="disabled" class="flex-[2] py-5 bg-primary text-white rounded-[28px] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-blue-500/40 hover:scale-[1.02] transition-all active:scale-95 disabled:opacity-70">
-                        <span wire:loading.remove italic>Update Data Pengguna</span>
-                        <span wire:loading>Memproses Perubahan...</span>
+                <div class="pt-6">
+                    <button type="submit" wire:loading.attr="disabled" class="w-full py-5 bg-slate-900 text-white rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:shadow-2xl hover:scale-[1.01] transition-all active:scale-[0.98] disabled:opacity-70">
+                        <span wire:loading.remove>Simpan Perubahan</span>
+                        <span wire:loading class="flex items-center justify-center gap-2">
+                            Memproses...
+                        </span>
                     </button>
-                    <a href="{{ route('users.index') }}" class="flex-1 py-5 bg-slate-100 text-slate-400 rounded-[28px] font-black text-xs text-center uppercase tracking-[0.2em] hover:bg-slate-200 transition-all italic">Batal</a>
                 </div>
-
             </div>
         </form>
     </div>

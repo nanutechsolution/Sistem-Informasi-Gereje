@@ -1,108 +1,73 @@
-<div class="py-6 sm:py-12 bg-gray-50 min-h-screen">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="py-6 sm:py-12 bg-slate-50 min-h-screen">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6">
         
-        <!-- Header -->
-        <div class="mb-8 border-b border-gray-200 pb-6">
-            <a href="{{ route('families.edit', $member->family) }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-primary transition-colors mb-2">
-                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                Kembali ke KK {{ Str::limit($member->family->kepala_keluarga, 15) }}
+        <div class="mb-8">
+            <a href="{{ route('families.edit', $member->family->uuid) }}" class="text-xs font-bold text-slate-400 hover:text-primary flex items-center gap-2 mb-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                Kembali
             </a>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-primary tracking-tight">Edit Anggota Jemaat</h1>
-            <p class="text-gray-500 mt-1">Memperbarui data untuk <span class="font-bold text-gray-800">{{ $member->nama }}</span>.</p>
+            <h1 class="text-3xl font-black text-slate-900 uppercase">Edit Keanggotaan</h1>
         </div>
 
-        <form wire:submit="update">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                <!-- KOLOM KIRI: Biodata -->
-                <div class="lg:col-span-2 space-y-6">
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
-                        <h3 class="text-lg font-bold text-gray-900 mb-6">Biodata Diri</h3>
+        <form wire:submit="update" class="bg-white rounded-[40px] p-6 sm:p-10 shadow-xl border border-slate-100 relative overflow-visible">
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-amber-400 rounded-t-[40px]"></div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Nama Lengkap -->
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Lengkap</label>
-                                <input wire:model="nama" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:ring-primary/20 focus:border-primary">
-                                @error('nama') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                            </div>
+            <div class="bg-slate-50 rounded-2xl p-4 mb-6 border border-slate-100">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Nama Anggota</label>
+                <p class="font-black text-slate-800 text-lg">{{ $personName }}</p>
+                <p class="text-[10px] text-slate-400 mt-1 italic">
+                    *Untuk mengubah nama/tgl lahir, silakan edit di menu "Master Data Orang".
+                </p>
+            </div>
 
-                            <!-- NIK -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">NIK</label>
-                                <input wire:model="nik" type="number" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:ring-primary/20 focus:border-primary">
-                                @error('nik') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                            </div>
-
-                            <!-- Jenis Kelamin -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis Kelamin</label>
-                                <select wire:model="jenis_kelamin" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:ring-primary/20 focus:border-primary">
-                                    <option value="L">Laki-laki</option>
-                                    <option value="P">Perempuan</option>
-                                </select>
-                            </div>
-
-                            <!-- Tempat Lahir -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Tempat Lahir</label>
-                                <input wire:model="tempat_lahir" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:ring-primary/20 focus:border-primary">
-                            </div>
-
-                            <!-- Tanggal Lahir -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Lahir</label>
-                                <input wire:model="tanggal_lahir" type="date" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:ring-primary/20 focus:border-primary">
-                            </div>
-
-                             <!-- No HP -->
-                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Nomor HP</label>
-                                <input wire:model="no_hp" type="number" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:ring-primary/20 focus:border-primary">
-                            </div>
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Status Hubungan</label>
+                    <div class="relative">
+                        <select wire:model="hubungan_keluarga_id" class="w-full bg-white border-2 border-slate-100 rounded-2xl p-4 font-bold text-slate-900 focus:border-amber-400 appearance-none">
+                            @foreach($refHubungans as $hub)
+                                <option value="{{ $hub->id }}">{{ $hub->nama }}</option>
+                            @endforeach
+                        </select>
+                        <div class="absolute right-4 top-4 pointer-events-none text-slate-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </div>
                     </div>
                 </div>
 
-                <!-- KOLOM KANAN: Data Gerejawi -->
-                <div class="space-y-6">
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        <h3 class="text-lg font-bold text-gray-900 mb-6">Data Gerejawi & Sipil</h3>
-                        
-                        <div class="space-y-5">
-                            <!-- Hubungan Keluarga (Master) -->
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Hubungan Keluarga</label>
-                                <select wire:model="hubungan_keluarga_id" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:ring-primary/20 focus:border-primary">
-                                    <option value="">-- Pilih --</option>
-                                    @foreach($refHubungans as $rh)
-                                        <option value="{{ $rh->id }}">{{ $rh->nama }}</option>
-                                    @endforeach
-                                </select>
-                                @error('hubungan_keluarga_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                            </div>
-
-                            <!-- Pekerjaan (Master) -->
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Pekerjaan</label>
-                                <select wire:model="pekerjaan_id" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:ring-primary/20 focus:border-primary">
-                                    <option value="">-- Pilih --</option>
-                                    @foreach($refPekerjaans as $rp)
-                                        <option value="{{ $rp->id }}">{{ $rp->nama }}</option>
-                                    @endforeach
-                                </select>
-                                @error('pekerjaan_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                            </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Pekerjaan</label>
+                    <div class="relative">
+                        <select wire:model="pekerjaan_id" class="w-full bg-white border-2 border-slate-100 rounded-2xl p-4 font-bold text-slate-900 focus:border-amber-400 appearance-none">
+                            @foreach($refPekerjaans as $job)
+                                <option value="{{ $job->id }}">{{ $job->nama }}</option>
+                            @endforeach
+                        </select>
+                        <div class="absolute right-4 top-4 pointer-events-none text-slate-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Actions -->
-                    <div>
-                        <button type="submit" wire:loading.attr="disabled" class="w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-lg shadow-blue-500/30 text-sm font-bold text-white bg-primary hover:bg-blue-800 focus:outline-none transition-all disabled:opacity-70">
-                            <span wire:loading.remove>Simpan Perubahan</span>
-                            <span wire:loading>Menyimpan...</span>
-                        </button>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Status Keanggotaan</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        @foreach(['aktif', 'pindah', 'meninggal'] as $st)
+                        <label class="cursor-pointer group">
+                            <input type="radio" wire:model="status_keanggotaan" value="{{ $st }}" class="peer sr-only">
+                            <div class="p-3 rounded-xl border-2 border-slate-100 bg-slate-50 peer-checked:border-amber-400 peer-checked:bg-amber-50 text-center transition-all">
+                                <span class="block font-black text-slate-600 peer-checked:text-amber-700 uppercase text-[10px]">{{ $st }}</span>
+                            </div>
+                        </label>
+                        @endforeach
                     </div>
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" wire:loading.attr="disabled" class="w-full py-5 bg-slate-900 text-white rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:scale-[1.01] transition-transform">
+                        <span wire:loading.remove>Simpan Perubahan</span>
+                        <span wire:loading>Menyimpan...</span>
+                    </button>
                 </div>
             </div>
         </form>

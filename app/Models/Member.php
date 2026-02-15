@@ -4,17 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Member extends Model
 {
     use HasUuids, SoftDeletes;
-    protected $guarded = [];
 
-    protected $casts = [
-        'tanggal_lahir' => 'date',
-        'tanggal_meninggal' => 'date',
+    protected $fillable = [
+        'church_people_id',
+        'uuid',
+        'family_id',
+        'hubungan_keluarga_id',
+        'pekerjaan_id',
+        'status_keanggotaan',
+        'tanggal_meninggal',
+        'is_active',
     ];
 
     public function uniqueIds()
@@ -27,38 +34,50 @@ class Member extends Model
         return 'uuid';
     }
 
-    public function family()
+    /**
+     * Relasi ke data personil (Nama, NIK, dll)
+     */
+    public function churchPeople(): BelongsTo
     {
-        return $this->belongsTo(Family::class);
+        return $this->belongsTo(ChurchPeople::class, 'church_people_id');
     }
 
-    public function refHubunganKeluarga()
+    // Alias relasi untuk fleksibilitas pemanggilan
+    public function person() { return $this->churchPeople(); }
+    public function churchPerson() { return $this->churchPeople(); }
+
+    /**
+     * Relasi ke data Keluarga (KK)
+     */
+    public function family(): BelongsTo
+    {
+        return $this->belongsTo(Family::class, 'family_id');
+    }
+
+    public function refHubunganKeluarga(): BelongsTo
     {
         return $this->belongsTo(RefHubunganKeluarga::class, 'hubungan_keluarga_id');
     }
 
-    public function refPekerjaan()
+    public function refPekerjaan(): BelongsTo
     {
         return $this->belongsTo(RefPekerjaan::class, 'pekerjaan_id');
     }
 
-    // Mengambil semua riwayat peristiwa member ini
-    public function events()
+    /**
+     * Relasi ke data Pejabat (Jika member ini adalah pelayan/officer)
+     */
+    public function officer(): HasOne
     {
-        return $this->hasMany(MemberEvent::class)->orderBy('tanggal', 'desc');
+        return $this->hasOne(ChurchOfficer::class, 'member_id');
     }
 
-    // Helper: Ambil event terakhir (misal: status terakhir)
-    public function latestEvent()
+    /**
+     * Relasi ke riwayat pelayanan di jadwal kegiatan
+     */
+    public function assignments(): HasMany
     {
-        return $this->hasOne(MemberEvent::class)->latestOfMany('tanggal');
-    }
-
-    public function hasEvent($kode)
-    {
-        return $this->events()->whereHas('eventType', function ($q) use ($kode) {
-            $q->where('kode', $kode);
-        })->exists();
+        return $this->hasMany(ActivityServant::class, 'member_id');
     }
 
     /**
@@ -69,12 +88,33 @@ class Member extends Model
         return $this->hasMany(SacramentRecord::class);
     }
 
+    /**
+     * Manajemen Event Member
+     */
+    public function events(): HasMany
+    {
+        return $this->hasMany(MemberEvent::class)->orderBy('tanggal', 'desc');
+    }
 
+    public function latestEvent(): HasOne
+    {
+        return $this->hasOne(MemberEvent::class)->latestOfMany('tanggal');
+    }
+
+    public function hasEvent($kode): bool
+    {
+        return $this->events()->whereHas('eventType', function ($q) use ($kode) {
+            $q->where('kode', $kode);
+        })->exists();
+    }
+
+    /**
+     * Scopes & Helpers
+     */
     public function scopeActive($query)
     {
         return $query->where('status_keanggotaan', 'aktif');
     }
-
 
     public function isActive(): bool
     {
@@ -85,7 +125,6 @@ class Member extends Model
     {
         return $this->status_keanggotaan === 'meninggal';
     }
-
 
     public function markAsDeceased($tanggal)
     {

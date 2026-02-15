@@ -2,28 +2,69 @@
 
 namespace App\Livewire\Finance;
 
-use App\Models\Payroll;
 use Livewire\Component;
-use Illuminate\Support\Facades\Gate;
+use App\Models\OfficerPayroll;
 
 class PayrollSlip extends Component
 {
     public $payroll;
 
+    /**
+     * $uuid -> officer_payroll uuid
+     */
     public function mount($uuid)
     {
-        $this->payroll = Payroll::with(['officer.member', 'officer.position', 'transaction.account'])
-            ->where('uuid', $uuid)
+        // Ambil payroll lengkap dengan relasi
+        $this->payroll = OfficerPayroll::with([
+            'officer.member.churchPerson',
+            'officer.position',
+            'items.component',
+            'payments.transaction.account'
+        ])->where('id', $uuid)
             ->firstOrFail();
 
-        // Keamanan: Hanya admin, bendahara, atau pemilik gaji yang bisa melihat
-        if (!in_array(auth()->user()->role, ['admin', 'bendahara']) && auth()->id() !== $this->payroll->officer->member->user_id) {
+        // Keamanan: admin, bendahara, atau pemilik payroll
+        $user = auth()->user();
+        if (
+            !$user->hasAnyRole(['admin', 'super_admin', 'bendahara'])
+            && $user->id !== optional($this->payroll->officer->member)->user_id
+        ) {
             abort(403);
         }
     }
 
+    /**
+     * Hitung total bayar dari item
+     */
+    public function getTotalPaidProperty()
+    {
+        return $this->payroll->items->sum('nominal_bayar');
+    }
+
+    /**
+     * Hitung sisa yang belum dibayar
+     */
+    public function getRemainingProperty()
+    {
+        return $this->payroll->items->sum('nominal_snapshot') - $this->totalPaid;
+    }
+
+    /**
+     * Status virtual: draft / cicil / paid
+     */
+    public function getStatusLabelProperty()
+    {
+        $totalNominal = $this->payroll->items->sum('nominal_snapshot');
+        $totalPaid    = $this->payroll->items->sum('nominal_bayar');
+
+        if ($totalPaid >= $totalNominal) return 'paid';
+        if ($totalPaid > 0) return 'cicil';
+        return 'draft';
+    }
+
     public function render()
     {
-        return view('livewire.finance.payroll-slip')->layout('layouts.app');
+        return view('livewire.finance.payroll-slip')
+            ->layout('layouts.app');
     }
 }

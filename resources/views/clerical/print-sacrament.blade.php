@@ -2,9 +2,9 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>{{ $title }} - {{ $record->member->nama }}</title>
+    <title>{{ $title }} - {{ $record->member->churchPeople->full_name }}</title>
     <style>
-        /* Pengaturan Halaman A4 Portrait - Strict 1 Page */
+        /* Pengaturan Halaman A4 Portrait */
         @page {
             size: a4 portrait;
             margin: 0;
@@ -18,7 +18,7 @@
             background-color: #ffffff;
         }
 
-        /* Bingkai Klasik & Profesional */
+        /* Bingkai Klasik */
         .border-outer {
             position: absolute;
             top: 0.8cm; left: 0.8cm; right: 0.8cm; bottom: 0.8cm;
@@ -37,7 +37,7 @@
             text-align: center;
         }
 
-        /* Kop Surat Resmi */
+        /* Kop Surat */
         .header-table {
             width: 100%;
             border-bottom: 2px solid #1e3a8a;
@@ -77,7 +77,7 @@
             color: #555;
         }
 
-        /* Judul Dokumen Utama */
+        /* Judul Dokumen */
         .doc-title-section {
             margin: 30px 0 20px 0;
         }
@@ -98,7 +98,7 @@
             letter-spacing: 2px;
         }
 
-        /* Isi Informasi Jemaat */
+        /* Isi Informasi */
         .content-body {
             text-align: left;
             margin: 0 auto;
@@ -116,7 +116,7 @@
             border-collapse: collapse;
         }
         .data-table td {
-            padding: 5px 0;
+            padding: 6px 0;
             vertical-align: top;
         }
         .label-col {
@@ -136,14 +136,12 @@
             color: #000;
         }
 
-        /* Bagian Pelaksanaan */
         .event-context {
             margin: 25px 0 10px 0;
             text-align: center;
             font-size: 12pt;
         }
 
-        /* Penutup */
         .closing-section {
             margin-top: 30px;
             text-align: center;
@@ -175,7 +173,6 @@
             font-size: 11pt;
         }
 
-        /* Watermark Simbol Salib */
         .watermark {
             position: absolute;
             top: 45%;
@@ -195,11 +192,11 @@
     <div class="watermark">†</div>
 
     <div class="container">
-        <!-- KOP SURAT PROFESIONAL -->
+        <!-- Kop Surat -->
         <table class="header-table">
             <tr>
                 <td class="logo-cell">
-                    <img src="{{ public_path('logo.png') }}" class="logo" alt="Logo">
+                    <img src="{{ public_path('logo.png') }}" class="logo" alt="Logo" onerror="this.style.display='none'">
                 </td>
                 <td class="kop-text">
                     <h1>Gereja Kristen Sumba</h1>
@@ -210,67 +207,87 @@
             </tr>
         </table>
 
-        <!-- JUDUL SERTIFIKAT -->
+        <!-- Judul Sertifikat -->
         <div class="doc-title-section">
             <h3>{{ strtoupper($record->type->nama) }}</h3>
             <span class="nomor-surat">NOMOR REGISTER: {{ $record->nomor_surat }}</span>
         </div>
 
-        <!-- ISI SURAT -->
         <div class="content-body">
             @if($record->type->kode == 'NKH')
-                <!-- KHUSUS SURAT NIKAH -->
+                {{-- KHUSUS PERNIKAHAN --}}
                 <p class="intro-text">Telah diberkati dan diteguhkan dalam Pernikahan Kudus Pasangan Suami Istri:</p>
-
                 <table class="data-table">
                     <tr>
                         <td class="label-col">Mempelai Laki-laki</td>
                         <td class="dots-col">:</td>
-                        <td class="value-col">{{ $record->member->jenis_kelamin == 'L' ? $record->member->nama : ($record->partner->nama ?? $record->partner_external_name) }}</td>
+                        <td class="value-col">
+                            {{ $record->member->churchPeople->gender == 'L' ? $record->member->churchPeople->full_name : ($record->partner->churchPeople->full_name ?? $record->partner_external_name) }}
+                        </td>
                     </tr>
                     <tr>
                         <td class="label-col">Mempelai Perempuan</td>
                         <td class="dots-col">:</td>
-                        <td class="value-col">{{ $record->member->jenis_kelamin == 'P' ? $record->member->nama : ($record->partner->nama ?? $record->partner_external_name) }}</td>
+                        <td class="value-col">
+                            {{ $record->member->churchPeople->gender == 'P' ? $record->member->churchPeople->full_name : ($record->partner->churchPeople->full_name ?? $record->partner_external_name) }}
+                        </td>
                     </tr>
                 </table>
-            @else
-                <!-- STANDAR BAPTIS / SIDI -->
-                <p class="intro-text">Majelis Jemaat Gereja Kristen Sumba (GKS) Reda Pada menerangkan dengan sesungguhnya bahwa:</p>
-
+            @elseif($record->type->kode == 'BPT-A')
+                {{-- KHUSUS BAPTIS --}}
+                <p class="intro-text">Majelis Jemaat Gereja Kristen Sumba (GKS) Reda Pada menerangkan bahwa:</p>
                 <table class="data-table">
                     <tr>
                         <td class="label-col">Nama Lengkap</td>
                         <td class="dots-col">:</td>
-                        <td class="value-col">{{ $record->member->nama }}</td>
+                        <td class="value-col">{{ $record->member->churchPeople->full_name }}</td>
                     </tr>
                     <tr>
                         <td class="label-col">Tempat, Tanggal Lahir</td>
                         <td class="dots-col">:</td>
-                        <td class="value-col">{{ $record->member->tempat_lahir }}, {{ $record->member->tanggal_lahir?->isoFormat('D MMMM Y') }}</td>
+                        <td class="value-col">{{ $record->member->churchPeople->place_of_birth }}, {{ \Carbon\Carbon::parse($record->member->churchPeople->date_of_birth)->isoFormat('D MMMM Y') }}</td>
                     </tr>
                     <tr>
                         <td class="label-col">Jenis Kelamin</td>
                         <td class="dots-col">:</td>
-                        <td class="value-col">{{ $record->member->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan' }}</td>
+                        <td class="value-col">{{ $record->member->churchPeople->gender == 'L' ? 'Laki-laki' : 'Perempuan' }}</td>
                     </tr>
                     <tr>
-                        <td class="label-col">Anak dari Ayah / Ibu</td>
+                        <td class="label-col">Anak Dari (Ayah/Ibu)</td>
                         <td class="dots-col">:</td>
-                        <td class="value-col">{{ $record->member->family->kepala_keluarga }}</td>
+                        <td class="value-col">Keluarga {{ $record->member->family->nomor_kk }}</td>
                     </tr>
                 </table>
+                <div class="event-context">Telah menerima Sakramen Baptis Kudus pada:</div>
+            @else
+                {{-- KHUSUS SIDI / UMUM --}}
+                <p class="intro-text">Majelis Jemaat Gereja Kristen Sumba (GKS) Reda Pada menerangkan bahwa:</p>
+                <table class="data-table">
+                    <tr>
+                        <td class="label-col">Nama Lengkap</td>
+                        <td class="dots-col">:</td>
+                        <td class="value-col">{{ $record->member->churchPeople->full_name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label-col">Tempat, Tanggal Lahir</td>
+                        <td class="dots-col">:</td>
+                        <td class="value-col">{{ $record->member->churchPeople->place_of_birth }}, {{ \Carbon\Carbon::parse($record->member->churchPeople->date_of_birth)->isoFormat('D MMMM Y') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label-col">No. Kartu Keluarga</td>
+                        <td class="dots-col">:</td>
+                        <td class="value-col">{{ $record->member->family->nomor_kk }}</td>
+                    </tr>
+                </table>
+                <div class="event-context">Dilaksanakan Pelayanan Sakramen {{ $record->type->nama }} pada:</div>
             @endif
 
-            <div class="event-context">
-                Dilaksanakan Pelayanan Sakramen Kudus / Peneguhan pada:
-            </div>
-
+            {{-- Informasi Waktu & Pelayan (Muncul untuk semua jenis) --}}
             <table class="data-table">
                 <tr>
                     <td class="label-col">Hari / Tanggal</td>
                     <td class="dots-col">:</td>
-                    <td class="value-col">{{ $record->tanggal_pelaksanaan->isoFormat('dddd, D MMMM Y') }}</td>
+                    <td class="value-col">{{ \Carbon\Carbon::parse($record->tanggal_pelaksanaan)->isoFormat('dddd, D MMMM Y') }}</td>
                 </tr>
                 <tr>
                     <td class="label-col">Tempat Pelaksanaan</td>
@@ -285,13 +302,11 @@
             </table>
         </div>
 
-        <!-- KALIMAT PENUTUP -->
         <div class="closing-section">
             <p>Demikian surat ini diberikan untuk dipergunakan sebagaimana mestinya.<br>
             <strong>"Segala kemuliaan hanya bagi Tuhan Yesus Kristus Sang Kepala Gereja."</strong></p>
         </div>
 
-        <!-- PENGESAHAN -->
         <table class="signature-table">
             <tr>
                 <td></td>
@@ -308,6 +323,5 @@
             </tr>
         </table>
     </div>
-
 </body>
 </html>

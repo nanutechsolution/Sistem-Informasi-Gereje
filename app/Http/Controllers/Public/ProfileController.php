@@ -15,28 +15,35 @@ class ProfileController extends Controller
     public function index()
     {
         // 1. Ambil Identitas & Konfigurasi Gereja
-        $setting = ChurchSetting::current();
+        $setting = ChurchSetting::first();
 
         // 2. Ambil Data Pendeta & Vicaris (Pimpinan Jemaat)
-        $pastors = ChurchOfficer::with(['member', 'position'])
+        $pastors = ChurchOfficer::with(['member.churchPeople', 'position'])
             ->whereHas('position', function($q) {
                 $q->where('nama', 'like', '%Pendeta%')
                   ->orWhere('nama', 'like', '%Vicaris%');
             })
-            ->active()
+            ->where('is_active', 1)
+            ->where(function($q) {
+                $q->whereNull('tanggal_selesai')
+                  ->orWhere('tanggal_selesai', '>=', now());
+            })
             ->orderBy('ref_position_id')
             ->get();
 
-        // 3. Ambil Majelis / Badan Pengurus Harian (BPH)
-        // Asumsi: Jabatan selain Pendeta/Vicaris
-        $officers = ChurchOfficer::with(['member', 'position'])
+        // 3. Ambil Majelis (Penatua, Diaken, dan Pengurus lainnya)
+        $officers = ChurchOfficer::with(['member.churchPeople', 'position'])
             ->whereHas('position', function($q) {
+                // Mencari selain pimpinan jemaat
                 $q->where('nama', 'not like', '%Pendeta%')
                   ->where('nama', 'not like', '%Vicaris%');
             })
-            ->active()
-            ->orderBy('ref_position_id') // Urutkan berdasarkan hierarki jabatan
-            ->limit(12) // Batasi tampilan agar rapi
+            ->where('is_active', 1)
+            ->where(function($q) {
+                $q->whereNull('tanggal_selesai')
+                  ->orWhere('tanggal_selesai', '>=', now());
+            })
+            ->orderBy('ref_position_id')
             ->get();
 
         return view('public.profile', compact('setting', 'pastors', 'officers'));

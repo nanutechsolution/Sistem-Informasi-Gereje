@@ -9,6 +9,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 
 class LetterManager extends Component
 {
@@ -16,16 +17,29 @@ class LetterManager extends Component
 
     public $search = '';
     public $isModalOpen = false;
-    public $letterId = null; // Property untuk Edit
+    public $letterUuid = null; // Gunakan UUID untuk edit
 
     // Form Properties
     public $member_id, $jenis = 'keterangan';
     public $nomor_surat, $tanggal_cetak;
-    public $signed_by_id; // Penandatangan (Ketua/Sekretaris)
-    public $keperluan; // Khusus surat keterangan
+    public $signed_by_id; // Penandatangan (ChurchOfficer ID)
+    public $keperluan;
 
     // Search Helpers
     public $searchMember = '', $foundMembers = [], $selectedMemberName = '';
+
+    protected function rules()
+    {
+        return [
+            'member_id' => 'required|exists:members,id',
+            'jenis' => 'required|in:keterangan,pindah,baptis,sidi,nikah',
+            // Unique ignore UUID saat edit
+            'nomor_surat' => 'required|unique:letters,nomor_surat,' . ($this->letterUuid ? Letter::where('uuid', $this->letterUuid)->first()->id : 'NULL'),
+            'tanggal_cetak' => 'required|date',
+            'signed_by_id' => 'required|exists:church_officers,id',
+            'keperluan' => 'nullable|string',
+        ];
+    }
 
     protected $messages = [
         'member_id.required' => 'Pilih jemaat yang bersangkutan.',
@@ -36,16 +50,18 @@ class LetterManager extends Component
     public function mount()
     {
         $this->tanggal_cetak = date('Y-m-d');
-        // Default Penandatangan: Pendeta Aktif
-        $pdt = ChurchOfficer::whereHas('position', fn($q) => $q->where('nama', 'like', '%Pendeta%'))->active()->first();
+        // Default Penandatangan: Cari Ketua Majelis atau Pendeta Aktif
+        $pdt = ChurchOfficer::whereHas('position', fn($q) => $q->where('nama', 'like', '%Pendeta%')
+            ->orWhere('nama', 'like', '%Ketua%'))
+            ->where('is_active', true) // Asumsi ada scope atau kolom is_active
+            ->first();
         $this->signed_by_id = $pdt?->id;
     }
 
     // --- GENERATOR NOMOR SURAT OTOMATIS ---
     public function generateNumber()
     {
-        // Hanya generate otomatis jika mode Tambah Baru
-        if ($this->letterId) return;
+        if ($this->letterUuid) return; // Jangan generate kalau sedang edit
 
         $date = Carbon::parse($this->tanggal_cetak);
         $year = $date->year;
@@ -55,10 +71,9 @@ class LetterManager extends Component
             ->orderBy('id', 'desc')
             ->first();
 
-        // 2. Tentukan nomor urut berikutnya
+        // 2. Tentukan nomor urut
         $urutan = 1;
         if ($lastLetter) {
-            // Asumsi format: 001/GKS-RP/II/2026
             $parts = explode('/', $lastLetter->nomor_surat);
             if (is_numeric($parts[0])) {
                 $urutan = intval($parts[0]) + 1;
@@ -69,22 +84,35 @@ class LetterManager extends Component
         $romans = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'];
         $monthRoman = $romans[$date->month];
 
-        // 4. Susun Nomor
+        // 4. Kode Jenis Surat
+        $kodeJenis = match($this->jenis) {
+            'pindah' => 'PND',
+            'baptis' => 'BPT',
+            'sidi' => 'SDI',
+            'nikah' => 'NKH',
+            default => 'KET' // Keterangan
+        };
+
+        // 5. Susun Nomor: 001/GKS-RP-KET/II/2026
         $noPad = str_pad($urutan, 3, '0', STR_PAD_LEFT);
-        $this->nomor_surat = "{$noPad}/GKS-RP/{$monthRoman}/{$year}";
+        $this->nomor_surat = "{$noPad}/GKS-RP-{$kodeJenis}/{$monthRoman}/{$year}";
     }
 
-    // Trigger update nomor jika tanggal berubah
-    public function updatedTanggalCetak()
-    {
-        $this->generateNumber();
-    }
+    public function updatedTanggalCetak() { $this->generateNumber(); }
+    public function updatedJenis() { $this->generateNumber(); }
 
+    // --- SEARCH MEMBER (Fix Relation) ---
     public function updatedSearchMember($value)
     {
-        $this->foundMembers = strlen($value) > 2
-            ? Member::where('nama', 'like', "%{$value}%")->limit(5)->get()
-            : [];
+        if (strlen($value) < 3) {
+            $this->foundMembers = [];
+            return;
+        }
+
+        $this->foundMembers = Member::whereHas('churchPeople', function(Builder $q) use ($value) {
+            $q->where('full_name', 'like', "%{$value}%")
+              ->orWhere('nik', 'like', "%{$value}%");
+        })->with('churchPeople')->limit(5)->get();
     }
 
     public function selectMember($id, $name)
@@ -95,80 +123,88 @@ class LetterManager extends Component
         $this->foundMembers = [];
     }
 
+    // --- CRUD ACTIONS ---
     public function create()
     {
-        $this->reset(['member_id', 'selectedMemberName', 'keperluan', 'letterId']);
+        $this->reset(['member_id', 'selectedMemberName', 'keperluan', 'letterUuid']);
         $this->jenis = 'keterangan';
         $this->tanggal_cetak = date('Y-m-d');
-        $this->generateNumber(); // Auto generate saat buka modal
+        $this->generateNumber();
         $this->isModalOpen = true;
     }
-    function closeModal()
-    {
-        $this->reset(['member_id', 'selectedMemberName', 'keperluan', 'letterId']);
-        $this->jenis = 'keterangan';
-        $this->tanggal_cetak = date('Y-m-d');
-        $this->generateNumber(); // Auto generate saat buka modal
-        $this->isModalOpen = false;
-    }
 
-    // Fungsi Edit (Baru)
-    public function edit($id)
+    public function edit($uuid)
     {
-        $letter = Letter::with('member')->findOrFail($id);
-        $this->letterId = $letter->id;
+        $letter = Letter::where('uuid', $uuid)->with('member.churchPeople')->firstOrFail();
+        
+        $this->letterUuid = $letter->uuid;
         $this->member_id = $letter->member_id;
-        $this->selectedMemberName = $letter->member->nama;
+        $this->selectedMemberName = $letter->member->churchPeople->full_name ?? 'Data Orang Hilang';
         $this->jenis = $letter->jenis;
         $this->nomor_surat = $letter->nomor_surat;
         $this->tanggal_cetak = $letter->tanggal_cetak->format('Y-m-d');
         $this->signed_by_id = $letter->signed_by_id;
         $this->keperluan = $letter->keperluan;
+        
         $this->isModalOpen = true;
     }
 
     public function save()
     {
-        $this->validate([
-            'member_id' => 'required',
-            'jenis' => 'required',
-            // Unique ignore ID saat edit
-            'nomor_surat' => 'required|unique:letters,nomor_surat,' . $this->letterId,
-            'tanggal_cetak' => 'required|date',
-            'signed_by_id' => 'required',
-        ]);
+        $this->validate();
 
-        Letter::updateOrCreate(['id' => $this->letterId], [
-            'uuid' => $this->letterId ? Letter::find($this->letterId)->uuid : (string) Str::uuid(),
+        $data = [
             'member_id' => $this->member_id,
             'jenis' => $this->jenis,
             'nomor_surat' => $this->nomor_surat,
             'tanggal_cetak' => $this->tanggal_cetak,
             'signed_by_id' => $this->signed_by_id,
             'keperluan' => $this->keperluan,
-            'data_detail' => [] // Disiapkan untuk detail JSON (Nama Ayah/Ibu, dll)
-        ]);
+        ];
 
-        $msg = $this->letterId ? 'Surat berhasil diperbarui.' : 'Surat berhasil dibuat & diarsipkan.';
+        if ($this->letterUuid) {
+            Letter::where('uuid', $this->letterUuid)->update($data);
+            $msg = 'Surat berhasil diperbarui.';
+        } else {
+            $data['uuid'] = (string) Str::uuid();
+            Letter::create($data);
+            $msg = 'Surat berhasil dibuat & diarsipkan.';
+        }
+
         $this->dispatch('notify', message: $msg, type: 'success');
         $this->isModalOpen = false;
     }
 
-    public function delete($id)
+    public function delete($uuid)
     {
-        Letter::findOrFail($id)->delete();
-        $this->dispatch('notify', message: 'Arsip surat dihapus.', type: 'success');
+        $letter = Letter::where('uuid', $uuid)->first();
+        if ($letter) {
+            $letter->delete();
+            $this->dispatch('notify', message: 'Arsip surat dihapus.', type: 'success');
+        }
     }
 
     public function render()
     {
+        $letters = Letter::with(['member.churchPeople', 'signatory.member.churchPeople', 'signatory.position'])
+            ->where(function($q) {
+                $q->where('nomor_surat', 'like', "%{$this->search}%")
+                  ->orWhereHas('member.churchPeople', fn($m) => $m->where('full_name', 'like', "%{$this->search}%"));
+            })
+            ->latest('tanggal_cetak')
+            ->paginate(10);
+
+        // Ambil pejabat aktif untuk dropdown penandatangan
+        $officers = ChurchOfficer::with(['member.churchPeople', 'position'])
+            ->where(function($q) {
+                $q->whereNull('tanggal_selesai')
+                  ->orWhere('tanggal_selesai', '>=', now());
+            })
+            ->get();
+
         return view('livewire.letters.letter-manager', [
-            'letters' => Letter::with(['member', 'signatory.member'])
-                ->where('nomor_surat', 'like', "%{$this->search}%")
-                ->orWhereHas('member', fn($q) => $q->where('nama', 'like', "%{$this->search}%"))
-                ->latest('tanggal_cetak')
-                ->paginate(10),
-            'officers' => ChurchOfficer::with(['member', 'position'])->active()->get()
+            'letters' => $letters,
+            'officers' => $officers
         ]);
     }
 }

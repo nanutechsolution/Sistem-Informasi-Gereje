@@ -218,12 +218,12 @@
             <!-- ================= SUBMIT BAR (STICKY) ================= -->
             <div class="sticky bottom-8 z-50 flex justify-end">
                 <div class="bg-white/80 backdrop-blur-md p-2 rounded-full border border-white shadow-2xl">
-                    <button type="submit"
+                    <button type="submit" 
                         wire:loading.attr="disabled"
                         wire:target="save"
                         class="px-12 py-4 bg-slate-900 text-white rounded-full font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-primary transition-all flex items-center gap-3 active:scale-95 disabled:opacity-50">
                         
-                        <span wire:loading.remove wire:target="save" class="flex items-center gap-3">
+                        <span  wire:loading.remove wire:target="save" class="flex items-center gap-3">
                             Simpan Perubahan <i class="fas fa-check-circle text-xs text-green-400"></i>
                         </span>
                         
