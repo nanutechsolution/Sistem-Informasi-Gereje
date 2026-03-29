@@ -137,11 +137,25 @@ Perangkat lunak ini **PROPRIETARY** dan dilindungi oleh **UU Hak Cipta**.
 
 Sebelum menggunakan atau melakukan modifikasi pada SIG-GKS, harap **menghubungi tim developer** untuk mendapatkan izin dan panduan resmi.
 
-**Kontak Developer:**
 
-- **Email:** devteam@gks.id  
-- **Telepon / WhatsApp:** +62 812-3456-7890  
-- **Website / Portal:** [https://gks.id](https://gks.id)  
+---
+### 🛡️ Kontak, Kontribusi & Donasi
+Jika Anda ingin berkontribusi atau memiliki pertanyaan mengenai sistem ini, silakan hubungi pengembang melalui:
+
+- **WhatsApp**: [082247459503](https://wa.me/6287750124895)
+- **Kontribusi**:
+    1. Fork repositori ini.
+    2. Buat branch fitur baru (`git checkout -b feature/NamaFitur`).
+    3. Commit perubahan Anda (`git commit -m 'Menambah fitur X'`).
+    4. Push ke branch tersebut.
+    5. Buat Pull Request.
+
+- **Dukungan / Donasi**:  
+Jika sistem ini membantu Anda dan ingin mendukung pengembangannya, Anda dapat memberikan apresiasi melalui **Saweria**:  
+
+[![Dukung Saya di Saweria](https://img.shields.io/badge/Dukung-Saweria-orange?style=flat-square)](https://saweria.co/nanutechsolution)  
+
+> Setiap kontribusi sangat berarti untuk keberlanjutan pengembangan fitur-fitur baru.  
 
 > ⚠️ Pastikan untuk mendapatkan izin resmi sebelum mendistribusikan, menjual, atau menggunakan kode ini di luar GKS Jemaat Reda Pada.
 
